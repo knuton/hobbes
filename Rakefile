@@ -9,7 +9,7 @@ namespace :spec do
   directory 'test/spec'
   task :new, :suite_name do |t, args|
     unless args[:suite_name]
-      puts "Suit title is missing."
+      puts "Suite title is missing."
       exit
     end
 
