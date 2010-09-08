@@ -8,16 +8,12 @@ namespace :spec do
   desc 'Create a new Vava test suite'
   directory 'test/spec'
   task :new, :suite_name do |t, args|
-    unless args[:suite_name]
-      puts "Suite title is missing."
-      exit
-    end
+    abort "Suite title is missing." unless args[:suite_name]
 
     suite_file_name = ActiveSupport::Inflector.underscore(args[:suite_name])
     suite_file_path = 'test/spec/' << suite_file_name << '.yml'
     
     unless File.exists?(suite_file_path)
-      puts "Creating spec file `#{suite_file_path}`."
       yaml = <<-YML
 suite: "#{args[:suite_name]}"
 specifications:
@@ -25,6 +21,7 @@ specifications:
   - description: ""
 YML
       File.open(suite_file_path, 'w') {|f| f.write(yaml) }
+      puts "Created spec file `#{suite_file_path}`."
     else
       puts "File exists. Opening it."
     end
