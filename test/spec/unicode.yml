@@ -1,0 +1,5 @@
+suite: "Unicode"
+specifications:
+  
+  - description: "Except for comments, identifiers, and the contents of character and string literals, all input elements in a program written in the Java programming language are formed from only ASCII characters. ASCII (ANSI X3.4) is the American Standard Code for Information Interchange. The first 128 characters of the Unicode character encoding are the ASCII characters."
+    test_files:

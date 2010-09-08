@@ -1,0 +1,15 @@
+suite: "Identifier"
+specifications:
+  
+  - description: "An identifier is an unlimited-length sequence of Unicode letters and digits, the first of which must be a letter."
+    test_files:
+
+  - description: "Letters and digits may be drawn from the entire Unicode character set, which supports most writing scripts in use in the world today."    test_files:
+
+  - description: "The method Character.isJavaLetter returns true when passed a Unicode character that is considered to be a letter in an identifier."
+
+  - description: "The method Character.isJavaLetterOrDigit returns true when passed a Unicode character that is considered to be a letter or digit in an identifier."
+
+  - description: "Two identifiers are the same only if they have the same Unicode character for each letter or digit; identifiers that have the same external appearance may still be different."
+
+  - description: "An identifier must not be the same as a boolean literal, the null literal, or a keyword in the Java programming language."
