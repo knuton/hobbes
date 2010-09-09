@@ -1,5 +1,6 @@
 require 'rubygems'
-require 'active_support/inflector'
+require 'active_support/all'
+$KCODE = 'UTF8'
 
 task :default => :spec
 
@@ -10,7 +11,7 @@ namespace :spec do
   task :new, :suite_name do |t, args|
     abort "Suite title is missing." unless args[:suite_name]
 
-    suite_file_name = ActiveSupport::Inflector.underscore(args[:suite_name])
+    suite_file_name = args[:suite_name].parameterize('_')
     suite_file_path = 'test/spec/' << suite_file_name << '.yml'
     
     unless File.exists?(suite_file_path)
