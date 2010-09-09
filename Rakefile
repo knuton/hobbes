@@ -8,19 +8,21 @@ namespace :spec do
 
   desc 'Create a new Vava test suite'
   directory 'test/spec'
-  task :new, :suite_name do |t, args|
+  task :new, :suite_name, :subsuite_name do |t, args|
     abort "Suite title is missing." unless args[:suite_name]
 
     suite_file_name = args[:suite_name].parameterize('_')
-    suite_file_path = 'test/spec/' << suite_file_name << '.yml'
+    subsuite_file_name = (ssn = args[:subsuite_name]) ? ssn.parameterize('_') : nil
+    suite_file_path = 'test/spec/' << suite_file_name << (subsuite_file_name ? '/' << subsuite_file_name : '') << '.yml'
     
     unless File.exists?(suite_file_path)
       yaml = <<-YML
-suite: "#{args[:suite_name]}"
+suite: "#{args[:subsuite_name] || args[:suite_name]}"
 specifications:
   
   - description: ""
 YML
+      mkdir 'test/spec/' << suite_file_name
       File.open(suite_file_path, 'w') {|f| f.write(yaml) }
       puts "Created spec file `#{suite_file_path}`."
     else
