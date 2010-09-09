@@ -22,7 +22,9 @@ specifications:
   
   - description: ""
 YML
-      mkdir 'test/spec/' << suite_file_name
+      if subsuite_file_name && !File.directory?(dirname = 'test/spec/' << suite_file_name)
+        mkdir dirname
+      end
       File.open(suite_file_path, 'w') {|f| f.write(yaml) }
       puts "Created spec file `#{suite_file_path}`."
     else
