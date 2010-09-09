@@ -1,0 +1,10 @@
+suite: "Types and Values"
+specifications:
+  
+  - description: "Vava is a strongly typed language, which means that every variable and every expression has a type that is known at compile time. Types limit the values that a variable can hold or that an expression can produce, limit the operations supported on those values, and determine the meaning of those operations. Strong typing helps detect errors at compile time."
+
+  - description: "The types of the Vava language are divided into two categories: primitive types and reference types."
+  
+  - description: "There is also a special null type, the type of the expression null, which has no name. The null reference is the only possible value of an expression of null type, and can always be converted to any reference type. In practice, the Vava programmer can ignore the null type and just pretend that null is a special literal that can be of any reference type."
+
+  - description: "Corresponding to the primitive types and reference types, there are two categories of data values that can be stored in variables, passed as arguments, returned by methods, and operated upon: primitive values and reference values."
