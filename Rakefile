@@ -18,6 +18,7 @@ namespace :spec do
     unless File.exists?(suite_file_path)
       yaml = <<-YML
 suite: "#{args[:subsuite_name] || args[:suite_name]}"
+section: 
 specifications:
   
   - description: ""
