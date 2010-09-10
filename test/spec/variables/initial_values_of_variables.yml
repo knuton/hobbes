@@ -1,0 +1,33 @@
+suite: "Initial Values of Variables"
+section: 1
+specifications:
+  
+  - description: "Every variable in a Java program must have a value before it is used."
+
+  - description: "Each class variable, instance variable, and array component is initialized with a default value when it is created."
+
+  - description: "For type `byte`, the default value is zero, that is, the value of `(byte)0`."
+
+  - description: "For type `short`, the default value is zero, that is, the value of `(short)0`."
+
+  - description: "For type `int`, the default value is zero, that is, `0`."
+
+  - description: "For type `long`, the default value is zero, that is, `0L`."
+
+  - description: "For type `float`, the default value is positive zero, that is, `0.0f`."
+
+  - description: "For type `double`, the default value is positive zero, that is, `0.0d`."
+
+  - description: "For type `char`, the default value is the null character, that is, `'u0000'`."
+
+  - description: "For type `boolean`, the default value is `false`."
+  
+  - description: "For all reference types, the default value is `null`."
+
+  - description: "Each method parameter is initialized to the corresponding argument value provided by the invoker of the method."
+
+  - description: "Each constructor parameter is initialized to the corresponding argument value provided by an object creation expression or explicit constructor invocation."
+
+  - description: "An exception-handler parameter is initialized to the thrown object representing the exception."
+
+  - description: "A local variable must be explicitly given a value before it is used, by either initialization or assignment."

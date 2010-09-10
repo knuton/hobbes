@@ -1,0 +1,29 @@
+suite: "Widening Primitive Conversions"
+section: 2
+specifications:
+  
+  - description: "The following conversions on primitive types are called the widening primitive conversions:"
+
+  - description: "`byte` to `short`, `int`, `long`, `float`, or `double`"
+
+  - description: "`short` to `int`, `long`, `float`, or `double`"
+
+  - description: "`char` to `int`, `long`, `float`, or `double`"
+
+  - description: "`int` to `long`, `float`, or `double`"
+
+  - description: "`long` to `float` or `double`"
+
+  - description: "`float` to `double`"
+
+  - description: "Widening conversions do not lose information about the sign or order of magnitude of a numeric value."
+
+  - description: "Conversions widening from an integral type to another integral type and from `float` to `double` do not lose any information at all; the numeric value is preserved exactly."
+  
+  - description: "Conversion of an `int` or a `long` value to `float`, or of a `long` value to `double`, may lose precision, that is, the result may lose some of the least significant bits of the value; the resulting floating-point value is a correctly rounded version of the integer value, using IEEE 754 round-to-nearest mode."
+
+  - description: "According to this rule, a widening conversion of a signed integer value to an integral type simply sign-extends the two's-complement representation of the integer value to fill the wider format."
+
+  - description: "A widening conversion of a value of type char to an integral type zero-extends the representation of the character value to fill the wider format."
+
+  - description: "Despite the fact that loss of precision may occur, widening conversions among primitive types never result in a runtime exception."

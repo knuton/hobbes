@@ -1,0 +1,23 @@
+suite: "Narrowing Reference Conversions"
+section: 5
+specifications:
+  
+  - description: "The following permitted conversions are called the narrowing reference conversions:"
+
+  - description: "From any class type S to any class type T, provided that S is a superclass of T. (An important special case is that there is a narrowing conversion from the class type `Object` to any other class type.)"
+
+  - description: "From any class type S to any interface type K, provided that S is not `final` and does not implement K. (An important special case is that there is a narrowing conversion from the class type `Object` to any interface type.)"
+
+  - description: "From type `Object` to any array type."
+
+  - description: "From type `Object` to any interface type."
+
+  - description: "From any interface type J to any class type T that is not `final`."
+
+  - description: "From any interface type J to any class type T that is `final`, provided that T implements J."
+
+  - description: "From any interface type J to any interface type K, provided that J is not a subinterface of K and there is no method name m such that J and K both declare a method named m with the same signature but different return types."
+
+  - description: "From any array type SC[] to any array type TC[], provided that SC and TC are reference types and there is a permitted narrowing conversion from SC to TC."
+
+  - description: "Such conversions require a test at run time to find out whether the actual reference value is a legitimate value of the new type. If it is not, the Vava Virtual Machine throws a `ClassCastException`."

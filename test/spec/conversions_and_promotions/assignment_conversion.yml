@@ -1,0 +1,40 @@
+suite: "Assignment Conversion"
+section: 6
+specifications:
+  
+  - description: "Assignment conversion occurs when the value of an expression is assigned to a variable: the type of the expression must be converted to the type of the variable."
+
+  - description: "Assignment contexts allow the use of an identity conversion, a widening primitive conversion, or a widening reference conversion."
+  
+  - description: "In addition, a narrowing primitive conversion may be used if all of the following conditions are satisfied:"
+
+  - description: "The expression is a constant expression of type `int`. The type of the variable is `byte`, `short`, or `char`. The value of the expression is representable in the type of the variable."
+
+  - description: "If the type of the expression can be converted to the type of a variable by assignment conversion, we say the expression (or its value) is assignable to the variable or, equivalently, that the type of the expression is assignment compatible with the type of the variable."
+
+  - description: "An assignment conversion never causes an exception."
+
+  # Auto-boxing?
+  - description: "A value of primitive type must not be assigned to a variable of reference type."
+
+  - description: "A value of reference type must not be assigned to a variable of primitive type."
+
+  - description: "A value of type `boolean` can be assigned only to a variable to type `boolean`."
+
+  - description: "A value of the null type may be assigned to any reference type."
+
+  - description: "Assignment of a value of compile-time reference type S (source) to a variable of compile-time reference type T (target) is permitted:"
+
+  - description: "If S is a class type and T is a class type, then S must be the same class as T, or S must be a subclass of T."
+
+  - description: "If S is a class type and T is an interface type, then S must implement interface T."
+
+  - description: "If S is an interface type and T is a class type, then T must be `Object`."
+
+  - description: "If S is an interface type and T is an interface type, then T must be the same interface as S, or T a superinterface of S."
+
+  - description: "If S is an array type SC[], that is, an array of components of type SC, and T is a class type, then T must be `Object`."
+
+  - description: "If S is an array type SC[], that is, an array of components of type SC, and T is an interface type, then T must be `Cloneable`."
+
+  - description: "If S is an array type SC[], that is, an array of components of type SC, and If T is an array type, namely, the type TC[], array of components of type TC, then either TC and SC must be the same primitive type, or TC and SC are both reference types and type SC is assignable to TC."

@@ -1,0 +1,9 @@
+suite: "The Class `String`"
+section: 7
+specifications:
+  
+  - description: "Instances of class `String` represent sequences of Unicode characters."
+
+  - description: "A `String` object has a constant, unchanging value."
+
+  - description: "String literals are references to instances of class `String`."

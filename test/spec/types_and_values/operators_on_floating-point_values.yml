@@ -1,0 +1,33 @@
+suite: "Operators on Floating-Point Values"
+section: 3
+specifications:
+  
+  - description: "Vava provides a number of operators that act on floating-point values, including numerical comparison (which results in a value of type `boolean`), arithmetic operators, increment and decrement, and numeric cast."
+  - description: "If at least one of the operands to a binary operator is of floating-point type, then the operation is a floating-point operation, even if the other operand is integral."
+
+  - description: "Operands of certain unary and binary operators are subject to numeric promotion."
+
+  # It is not yet clear, whether Vava will be able to follow this specification.
+  - description: "Operators on floating-point numbers behave exactly as specified by IEEE 754."
+
+  - description: "In particular, Vava requires support of IEEE 754 denormalized floating-point numbers and gradual underflow, which make it easier to prove desirable properties of particular numerical algorithms."
+
+  - description: "Vava requires that floating-point arithmetic behave as if every floating-point operator rounded its floating-point result to the result precision."
+
+  - description: "Inexact results must be rounded to the representable value nearest to the infinitely precise result; if the two nearest representable values are equally near, the one with its least significant bit zero is chosen. This is the IEEE 754 standard's default rounding mode known as round-to-nearest."
+
+  - description: "Vava uses round-towards-zero mode when converting a floating-point value to an integer. Round-towards-zero mode acts as though the number were truncated, discarding the mantissa bits. Round-towards-zero chooses as its result the format's value closest to and no greater in magnitude than the infinitely precise result."
+
+  - description: "Vava floating-point operators produce no exceptions."
+
+  - description: "An operation that overflows produces a signed infinity."
+
+  - description: "An operation that underflows produces a signed zero."
+
+  - description: "An operation that has no mathematically definite result produces NaN."
+
+  - description: "All numeric operations (except for numeric comparison) with NaN as an operand produce NaN as a result."
+
+  - description: "Any value of any floating-point type may be cast to or from any numeric type."
+
+  - description: "There are no casts between floating-point types and the type `boolean`."

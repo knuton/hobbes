@@ -1,0 +1,57 @@
+suite: "Variables"
+section: 5
+specifications:
+  
+  - description: "A variable is a storage location."
+
+  - description: "It has an associated type, sometimes called its compile-time type, that is either a primitive type or a reference type."
+
+  - description: "A variable always contains a value that is assignment compatible with its type."
+
+  - description: "A variable of a primitive type always holds a value of that exact primitive type."
+
+  - description: "A variable of reference type can hold either a null reference or a reference to any object whose class is assignment compatible with the type of the variable."
+
+  - description: "Compatibility of the value of a variable with its type is guaranteed by the design of the Vava language because default values are compatible and all assignments to a variable are checked, at compile time, for assignment compatibility."
+
+  - description: "There are seven kinds of variables:"
+
+  - description: "A _class variable_ is a field of a class type declared using the keyword static within a class declaration, or with or without the keyword static in an interface declaration."
+
+  - description: "Class variables are created when the class or interface is loaded and are initialized on creation to default values."
+
+  - description: "The class variable effectively ceases to exist when its class or interface is unloaded after any necessary finalization of the class has been completed."
+
+  - description: "An _instance variable_ is a field declared within a class declaration without using the keyword static."
+
+  - description: "If a class T has a field a that is an instance variable, then a new instance variable a is created and initialized to a default value as part of each newly created object of class T or of any class that is a subclass of T."
+
+  - description: "The instance variable effectively ceases to exist when the object of which it is a field is no longer referenced, after any necessary finalization of the object has been completed."
+
+  - description: "_Array components_ are unnamed variables that are created and initialized to default values whenever a new object that is an array is created."
+
+  - description: "The array components effectively cease to exist when the array is no longer referenced."
+
+  - description: "_Method parameters_ name argument values passed to a method. For every parameter declared in a method declaration, a new parameter variable is created each time that method is invoked."
+
+  - description: "The new variable is initialized with the corresponding argument value from the method invocation."
+
+  - description: "The method parameter effectively ceases to exist when the execution of the body of the method is complete."
+
+  - description: "_Constructor parameters_ name argument values passed to a constructor. For every parameter declared in a constructor declaration, a new parameter variable is created each time a class instance creation expression or explicit constructor invocation is evaluated."
+
+  - description: "The new variable is initialized with the corresponding argument value from the creation expression or constructor invocation."
+
+  - description: "The constructor parameter effectively ceases to exist when the execution of the body of the constructor is complete."
+
+  - description: "An _exception-handler parameter_ variable is created each time an exception is caught by a catch clause of a try statement."
+
+  - description: "The new variable is initialized with the actual object associated with the exception, i.e. an instance of the type or a subtype of `Throwable`."
+
+  - description: "The exception-handler parameter effectively ceases to exist when execution of the block associated with the catch clause (§2.15.2) is complete."
+
+  - description: "Local variables are declared by local variable declaration statements. Whenever the flow of control enters a block or a for statement, a new variable is created for each local variable declared in a local variable declaration statement immediately contained within that block or for statement."
+
+  - description: "The local variable is not initialized, however, until the local variable declaration statement that declares it is executed."
+
+  - description: "The local variable effectively ceases to exist when the execution of the block or for statement is complete."

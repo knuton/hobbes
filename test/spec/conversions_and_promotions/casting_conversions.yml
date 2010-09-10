@@ -1,0 +1,32 @@
+suite: "Casting Conversions"
+section: 8
+specifications:
+  
+  - description: "Casting conversions are more powerful than assignment or method invocation conversions applied to the operand of a cast operator: the type of the operand expression must be converted to the type explicitly named by the cast operator."
+
+  - description: "Casting contexts allow the use of an identity conversion."
+
+  - description: "Casting contexts allow the use of a widening primitive conversion."
+  
+  - description: "Casting contexts allow the use of a narrowing primitive conversion."
+
+  - description: "Casting contexts allow the use of a widening reference conversion."
+
+  - description: "Casting contexts allow the use of a narrowing reference conversion."
+
+  - description: "Thus, casting conversions are more inclusive than assignment or method invocation conversions: a cast can do any permitted conversion other than a string conversion."
+
+  - description: "Casting can convert a value of any numeric type to any other numeric type."
+
+  - description: "A value of type boolean cannot be cast to another type."
+
+  - description: "A value of reference type cannot be cast to a value of primitive type."
+
+  # Which?
+  - description: "Some casts can be proven incorrect at compile time and result in a compile-time error."
+
+  - description: "Otherwise, either the cast can be proven correct at compile time, or a runtime validity check is required."
+
+  - description: "If the value at run time is a null reference, then the cast is allowed."
+
+  - description: "If the check at run time fails, a ClassCastException is thrown."

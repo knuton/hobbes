@@ -1,0 +1,13 @@
+suite: "Operators on Integral Values"
+section: 2
+specifications:
+  
+  - description: "Vava provides a number of operators that act on integral values, including numerical comparison (which results in a value of type boolean), arithmetic operators, increment and decrement, bitwise logical and shift operators, and numeric cast."
+
+  - description: "Operands of certain unary and binary operators are subject to numeric promotion."
+
+  - description: "The built-in integer operators do not indicate overflow or underflow in any way; they wrap around on overflow or underflow. The only integer operators that can throw an exception are the integer divide and integer remainder operators, which can throw an ArithmeticException if the right-hand operand is zero."
+
+  - description: "Any value of any integral type may be cast to or from any numeric type."
+
+  - description: "There are no casts between integral types and the type boolean."

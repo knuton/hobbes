@@ -1,0 +1,9 @@
+suite: "Method Invocation Conversion"
+section: 7
+specifications:
+  
+  - description: "Method invocation conversion is applied to each argument value in a method or constructor invocation: the type of the argument expression must be converted to the type of the corresponding parameter."
+
+  - description: "Method invocation contexts allow the use of an identity conversion, a widening primitive conversion, or a widening reference conversion."
+
+  - description: "Method invocation conversions specifically do not include the implicit narrowing of integer constants that is part of assignment conversion."

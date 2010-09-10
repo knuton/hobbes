@@ -1,4 +1,5 @@
 suite: "Types and Values"
+section: 4
 specifications:
   
   - description: "Vava is a strongly typed language, which means that every variable and every expression has a type that is known at compile time. Types limit the values that a variable can hold or that an expression can produce, limit the operations supported on those values, and determine the meaning of those operations. Strong typing helps detect errors at compile time."

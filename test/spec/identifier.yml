@@ -1,4 +1,5 @@
 suite: "Identifier"
+section: 2
 specifications:
   
   - description: "An identifier is an unlimited-length sequence of Unicode letters and digits, the first of which must be a letter."

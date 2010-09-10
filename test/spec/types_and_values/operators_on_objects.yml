@@ -1,0 +1,5 @@
+suite: "Operators on Objects"
+section: 8
+specifications:
+  
+  - description: "The operators on objects include field access, method invocation, cast, string concatenation, comparison for equality, `instanceof`, and the conditional operator ?:."

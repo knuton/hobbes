@@ -1,0 +1,5 @@
+suite: "Widening Reference Conversions"
+section: 4
+specifications:
+  
+  - description: "Widening reference conversions never require a special action at run time and therefore never throw an exception at run time. Because they do not affect the Vava Virtual Machine, they will not be considered further."

@@ -1,22 +1,23 @@
-- suite: "Primitve Types and Values"
-  specifications:
-    
-    - description: "A primitive type is a type that is predefined by the Vava language and named by a reserved keyword."
+suite: "Primitve Types and Values"
+section: 1
+specifications:
+  
+  - description: "A primitive type is a type that is predefined by the Vava language and named by a reserved keyword."
 
-    - description: "Primitive values do not share state with other primitive values."
+  - description: "Primitive values do not share state with other primitive values."
 
-    - description: "A variable whose type is a primitive type always holds a primitive value of that type."
+  - description: "A variable whose type is a primitive type always holds a primitive value of that type."
 
-    - description: "The primitive types are the `boolean` type and the numeric types."
+  - description: "The primitive types are the `boolean` type and the numeric types."
 
-    - description: "The numeric types are the integral types and the floating-point types."
+  - description: "The numeric types are the integral types and the floating-point types."
 
-    - description: "The integral types are `byte`, `short`, `int`, and `long`, whose values are 8-bit, 16-bit, 32-bit, and 64-bit signed two's-complement integers, respectively, and `char`, whose values are 16-bit unsigned integers representing Unicode characters."
+  - description: "The integral types are `byte`, `short`, `int`, and `long`, whose values are 8-bit, 16-bit, 32-bit, and 64-bit signed two's-complement integers, respectively, and `char`, whose values are 16-bit unsigned integers representing Unicode characters."
 
-    - description: "The floating-point types are `float`, whose values are 32-bit IEEE 754 floating-point numbers, and `double`, whose values are 64-bit IEEE 754 floating-point numbers as specified in IEEE Standard for Binary Floating-Point Arithmetic, ANSI/IEEE Standard 754-1985 (IEEE, New York)."
+  - description: "The floating-point types are `float`, whose values are 32-bit IEEE 754 floating-point numbers, and `double`, whose values are 64-bit IEEE 754 floating-point numbers as specified in IEEE Standard for Binary Floating-Point Arithmetic, ANSI/IEEE Standard 754-1985 (IEEE, New York)."
 
-    - description: "The IEEE 754 standard includes not only positive and negative sign-magnitude numbers, but also positive and negative zeroes, positive and negative infinities, and a special Not-a-Number (hereafter abbreviated NaN) value."
+  - description: "The IEEE 754 standard includes not only positive and negative sign-magnitude numbers, but also positive and negative zeroes, positive and negative infinities, and a special Not-a-Number (hereafter abbreviated NaN) value."
 
-    - description: "The NaN value is used to represent the result of certain operations such as dividing zero by zero."
+  - description: "The NaN value is used to represent the result of certain operations such as dividing zero by zero."
 
-    - description: "The `boolean` type has the truth values `true` and `false`."
+  - description: "The `boolean` type has the truth values `true` and `false`."

@@ -1,0 +1,25 @@
+suite: "Reference Types, Objects, and Reference Values"
+section: 5
+specifications:
+  
+  - description: "There are three kinds of reference types: the class types, the interface types, and the array types."
+
+  - description: "An object is a dynamically created class instance or an array."
+
+  - description: "The reference values (often just references) are pointers to these objects and a special null reference, which refers to no object."
+
+  - description: "A class instance is explicitly created by a class instance creation expression, or by invoking the newInstance method of class Class."
+
+  - description: "An array is explicitly created by an array creation expression."
+
+  - description: "An object is created in the Vava heap, and is garbage collected after there are no more references to it. Objects are never reclaimed or freed by explicit Vava language directives."
+
+  - description: "There may be many references to the same object."
+
+  - description: "Most objects have state, stored in the fields of objects that are instances of classes or in the variables that are the components of an array object. If two variables contain references to the same object, the state of the object can be modified using one variable's reference to the object, and then the altered state can be observed through the other variable's reference."
+
+  - description: "Reference types form a hierarchy. Each class type is a subclass of another class type, except for the class Object, which is the superclass of all other class types."
+
+  - description: "All objects, including arrays, support the methods of class Object."
+
+  - description: "String literals are references to instances of class String."

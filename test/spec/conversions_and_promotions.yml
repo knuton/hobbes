@@ -1,0 +1,25 @@
+suite: "Conversions and Promotions"
+section: 6
+specifications:
+  
+  - description: "Conversions implicitly change the type, and sometimes the value, of an expression to a type acceptable for its surrounding context."
+
+  - description: "In some cases this will require a corresponding action at run time to check the validity of the conversion or to translate the runtime value of the expression into a form appropriate for the new type."
+
+  - description: "Numeric promotions are conversions that change an operand of a numeric operation to a wider type, or both operands of a numeric operation to a common type, so that an operation can be performed."
+
+  - description: "In Java, there are six broad kinds of conversions, _Identity conversions_, _Widening primitive conversions_, _Narrowing primitive conversions_, _Widening reference conversions_, _Narrowing reference conversions_, _String conversions_."
+
+  - description: "There are five conversion contexts in which conversion expressions can occur. Each context allows conversions in some of the above-named categories but not others. The conversion contexts are:"
+
+  - description: "Assignment conversion, which converts the type of an expression to the type of a specified variable. The conversions permitted for assignment are limited in such a way that assignment conversion never causes an exception."
+
+  - description: "Method invocation conversion, which is applied to each argument in a method or constructor invocation, and, except in one case, performs the same conversions that assignment conversion does. Method invocation conversion never causes an exception."
+
+  - description: "Casting conversion, which converts the type of an expression to a type explicitly specified by a cast operator. It is more inclusive than assignment or method invocation conversion, allowing any specific conversion other than a string conversion, but certain casts to a reference type may cause an exception at run time."
+
+  - description: "String conversion, which allows any type to be converted to type `String`."
+
+  - description: "Numeric promotion, which brings the operands of a numeric operator to a common type so that an operation can be performed."
+
+  - description: "String conversion only applies to operands of the binary + operator when one of the arguments is a `String`."

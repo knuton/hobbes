@@ -1,0 +1,23 @@
+suite: "Numeric Promotion"
+section: 9
+specifications:
+  
+  - description: "Numeric promotion is applied to the operands of an arithmetic operator."
+
+  - description: "Numeric promotion contexts allow the use of an identity conversion or a widening primitive conversion."
+
+  - description: "Numeric promotions are used to convert the operands of a numeric operator to a common type where an operation can be performed. The two kinds of numeric promotion are unary numeric promotion and binary numeric promotion. Numeric promotion is not a general feature of Vava, but rather a property of the specific definitions of built-in operators."
+
+  - description: "An operator that applies unary numeric promotion to a single operand of numeric type converts an operand of type `byte`, `short`, or `char` to `int`, and otherwise leaves the operand alone."
+
+  - description: "The operands of the shift operators are promoted independently using unary numeric promotions."
+
+  - description: "When an operator applies binary numeric promotion to a pair of numeric operands, the following rules apply, in order, using widening conversion to convert operands as necessary:"
+
+  - description: "If either operand is of type `double`, the other is converted to `double`."
+
+  - description: "Otherwise, if either operand is of type `float`, the other is converted to `float`."
+  
+  - description: "Otherwise, if either operand is of type `long`, the other is converted to `long`."
+
+  - description: "Otherwise, both operands are converted to type `int`."

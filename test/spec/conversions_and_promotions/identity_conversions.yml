@@ -1,0 +1,5 @@
+suite: "Identity Conversions"
+section: 1
+specifications:
+  
+  - description: "A conversion from a type to that same type is permitted for any type."

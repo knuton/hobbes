@@ -1,0 +1,9 @@
+suite: "The Class Object"
+section: 6
+specifications:
+  
+  - description: "The standard class Object` is the superclass of all other classes."
+
+  - description: "A variable of type `Object` can hold a reference to any object, whether it is an instance of a class or an array."
+
+  - description: "All class and array types inherit the methods of class `Object`."

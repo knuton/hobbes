@@ -1,0 +1,45 @@
+suite: "Narrowing Primitive Conversions"
+section: 3
+specifications:
+  
+  - description: "The following conversions on primitive types are called narrowing primitive conversions:"
+
+  - description: "`byte` to `char`"
+
+  - description: "`short` to `byte` or `char`"
+
+  - description: "`char` to `byte` or `short`"
+
+  - description: "`int` to `byte`, `short`, or `char`"
+
+  - description: "`long` to `byte`, `short`, `char`, or `int`"
+
+  - description: "`float` to `byte`, `short`, `char`, `int`, or `long`"
+
+  - description: "`double` to `byte`, `short`, `char`, int`, `long`, or `float`"
+
+  - description: "Narrowing conversions may lose information about the sign or order of magnitude, or both, of a numeric value (for example, narrowing an int value 32763 to type byte produces the value -5)."
+
+  - description: "Narrowing conversions may also lose precision."
+
+  - description: "A narrowing conversion of a signed integer to an integral type simply discards all but the n lowest-order bits, where n is the number of bits used to represent the type. This may cause the resulting value to have a different sign than the input value."
+
+  - description: "A narrowing conversion of a character to an integral type likewise simply discards all but the n lowest bits, where n is the number of bits used to represent the type. This may cause the resulting value to be a negative number, even though characters represent 16-bit unsigned integer values."
+
+  - description: "In a narrowing conversion of a floating-point number to an integral type, if the floating-point number is NaN, the result of the conversion is 0 of the appropriate type."
+
+  - description: "If the floating-point number is too large to be represented by the integral type, or is positive infinity, the result is the largest representable value of the integral type."
+
+  - description: "If the floating-point number is too small to be represented, or is negative infinity, the result is the smallest representable value of the integral type."
+
+  - description: "Otherwise, the result is the floating-point number rounded towards zero to an integer value using IEEE 754 round-towards-zero mode."
+
+  - description: "A narrowing conversion from `double` to `float` behaves in accordance with IEEE 754. The result is correctly rounded using IEEE 754 round-to-nearest mode."
+
+  - description: "A value too small to be represented as a `float` is converted to a positive or negative zero."
+
+  - description: "A value too large to be represented as a `float` is converted to a positive or negative infinity."
+
+  - description: "A `double` NaN is always converted to a `float` NaN."
+
+  - description: "Despite the fact that overflow, underflow, or loss of precision may occur, narrowing conversions among primitive types never result in a runtime exception."

@@ -1,0 +1,21 @@
+suite: "Variables Have Types"
+section: 2
+specifications:
+  
+  - description: "Every object belongs to some particular class. This is the class that was mentioned in the class instance creation expression that produced the object, or the class whose class object was used to invoke the newInstance method to produce the object. This class is called the class of the object."
+
+  - description: "An object is said to be an instance of its class and of all superclasses of its class."
+
+  - description: "Sometimes the class of an object is called its \"runtime type,\" but \"class\" is the more accurate term."
+
+  - description: "The type of a variable is always declared, and the type of an expression can be deduced at compile time."
+
+  - description: "The type limits the possible values that the variable can hold or the expression can produce at run time."
+
+  - description: "If a runtime value is a reference that is not `null`, it refers to an object or array that has a class (not a type), and that class will necessarily be compatible with the compile-time type."
+
+  - description: "Even though a variable or expression may have a compile-time type that is an interface type, there are no instances of interfaces."
+
+  - description: "A variable or expression whose type is an interface type can reference any object whose class implements that interface."
+
+  - description: "Every array also has a class. The classes for arrays have strange names that are not valid Java identifiers; for example, the class for an array of int components has the name \"[I\"."
