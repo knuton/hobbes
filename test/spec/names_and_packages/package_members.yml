@@ -1,0 +1,11 @@
+suite: "Package Members"
+section: 4
+specifications:
+  
+  - description: "The members of a package are its subpackages and types declared in the compilation units of the package."
+
+  - description: "In general, the subpackages of a package are determined by the host system."
+
+  - description: "However, the standard package `java` always has the subpackages `lang`, `util`, `io`, and `net`."
+
+  - description: "No two distinct members of the same package may have the same simple name, but members of different packages may have the same simple name."

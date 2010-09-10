@@ -1,0 +1,9 @@
+suite: "Members"
+section: 3
+specifications:
+  
+  - description: "Packages and reference types have members."
+
+  - description: "The members of a package are subpackages and all the class and interface types declared in all the compilation units of the package."
+
+  - description: "The members of a reference type are fields and methods."

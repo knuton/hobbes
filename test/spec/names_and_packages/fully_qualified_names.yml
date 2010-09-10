@@ -1,0 +1,17 @@
+suite: "Fully Qualified Names"
+section: 9
+specifications:
+  
+  - description: "Every package, class, interface, array type, and primitive type has a fully qualified name. It follows that every type except the null type has a fully qualified name."
+
+  - description: "The fully qualified name of a primitive type is the keyword for that primitive type, namely `boolean`, `char`, `byte`, `short`, `int`, `long`, `float`, or `double`."
+
+  - description: "The fully qualified name of a named package that is not a subpackage of a named package is its simple name."
+
+  - description: "The fully qualified name of a named package that is a subpackage of another named package consists of the fully qualified name of the containing package followed by \".\" followed by the simple (member) name of the subpackage."
+
+  - description: "The fully qualified name of a class or interface that is declared in an unnamed package is the simple name of the class or interface."
+
+  - description: "The fully qualified name of a class or interface that is declared in a named package consists of the fully qualified name of the package followed by \".\" followed by the simple name of the class or interface."
+
+  - description: "The fully qualified name of an array type consists of the fully qualified name of the component type of the array type followed by \"[]\"."

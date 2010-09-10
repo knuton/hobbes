@@ -1,0 +1,5 @@
+suite: "The Members of an Array Type"
+section: 7
+specifications:
+  
+  - description: "The members of an array type are the members inherited from its superclass, the class `Object`, and the field `length`, which is a constant (`final`) field of every array."

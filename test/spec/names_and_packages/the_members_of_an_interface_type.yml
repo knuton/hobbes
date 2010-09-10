@@ -1,0 +1,5 @@
+suite: "The Members of an Interface Type"
+section: 6
+specifications:
+  
+  - description: "The members of an interface type are fields and methods. The members of an interface are the members inherited from any direct superinterfaces and members declared in the body of the interface."

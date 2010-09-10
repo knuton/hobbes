@@ -1,0 +1,21 @@
+suite: "Packages"
+section: 2
+specifications:
+  
+  - description: "Vava programs are organized sets of packages. A package consists of a number of compilation units and has an hierarchical name."
+
+  - description: "Packages are independently developed, and each package has its own set of names, which helps to prevent name conflicts."
+
+  - description: "Each Vava host determines how packages, compilation units, and subpackages are created and stored; which top-level package names are in scope in a particular compilation; and which packages are accessible. Packages may be stored in a local file system, in a distributed file system, or in some form of database."
+
+  - description: "A package name component or class name might contain a character that cannot legally appear in a host file system's ordinary directory or file name: for instance, a Unicode character on a system that allows only ASCII characters in file names."
+
+  - description: "A Vava system must support at least one unnamed package; it may support more than one unnamed package but is not required to do so."
+
+  - description: "Which compilation units are in each unnamed package is determined by the host system. Unnamed packages are provided by Vava principally for convenience when developing small or temporary applications or when just beginning development."
+
+  - description: "An `import` declaration allows a type declared in another package to be known by a simple name rather than by the fully qualified name of the type."
+
+  - description: "An import declaration affects only the type declarations of a single compilation unit."
+
+  - description: "A compilation unit automatically imports each of the `public` type names declared in the predefined package `java.lang`."

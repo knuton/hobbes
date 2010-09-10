@@ -1,0 +1,17 @@
+suite: "The Members of a Class Type"
+section: 5
+specifications:
+  
+  - description: "The members of a class type are fields and methods."
+  
+  - description: "These include members inherited from its direct superclass , if it has one, members inherited from any direct superinterfaces , and any members declared in the body of the class."
+
+  - description: "There is no restriction against a field and a method of a class type having the same simple name."
+
+  - description: "A class type may have two or more methods with the same simple name if they have different numbers of parameters or different parameter types in at least one parameter position. Such a method member name is said to be overloaded."
+
+  - description: "A class type may contain a declaration for a method with the same name and the same signature as a method that would otherwise be inherited from a superclass or superinterface. In this case, the method of the superclass or superinterface is not inherited."
+
+  - description: "If the method not inherited is abstract, the new declaration is said to implement it."
+
+  - description: "If it is not abstract, the new declaration is said to override it."

@@ -1,0 +1,29 @@
+suite: "Qualified Names and Access Control"
+section: 8
+specifications:
+  
+  - description: "Qualified names are a means of access to members of packages and reference types; related means of access include field access expressions and method invocation expressions. All three are syntactically similar in that a \".\" token appears, preceded by some indication of a package, type, or expression having a type and followed by an identifier that names a member of the package or type. These are collectively known as constructs for qualified access."
+
+  - description: "Vava provides mechanisms for limiting qualified access, to prevent users of a package or class from depending on unnecessary details of the implementation of that package or class."
+  
+  - description: "Access control also applies to constructors."
+
+  - description: "A class or interface may be declared `public`, in which case it may be accessed, using a qualified name, by any Vava code that can access the package in which it is declared."
+
+  - description: "A class or interface that is not declared `public` may be accessed from, and only from, anywhere in the package in which it is declared."
+
+  - description: "Every member of a `public` interface is implicitly `public`, whether or not the keyword `public` appears in its declaration."
+
+  - description: "Every field or method of an interface must be `public`."
+
+  - description: "If an interface is not `public`, then every one of its fields and methods must be explicitly declared `public`."
+
+  - description: "A field, method, or constructor of a class may be declared using at most one of the `public`, `private`, or `protected` keywords."
+
+  - description: "A `public` member may be accessed by any Vava code."
+
+  - description: "A `private` member may be accessed only from within the class that contains its declaration."
+
+  - description: "A member that is not declared `public`, `protected`, or `private` is said to have default access and may be accessed from, and only from, anywhere in the package in which it is declared."
+
+  - description: "A `protected` member of an object may be accessed only by code responsible for the implementation of that object. To be precise, a protected member may be accessed from anywhere in the package in which it is declared and, in addition, it may be accessed from within any declaration of a subclass of the class type that contains its declaration, provided that certain restrictions are obeyed."

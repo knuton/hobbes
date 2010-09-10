@@ -1,0 +1,11 @@
+suite: "Names"
+section: 1
+specifications:
+  
+  - description: "Names are used to refer to entities declared in a Vava program. A declared entity is a package, type, member (field or method) of a type, parameter, or local variable."
+
+  - description: "A simple name is a single identifier."
+
+  - description: "Qualified names provide access to members of packages and reference types. A qualified name consists of a name, a "." token, and an identifier."
+
+  - description: "Not all identifiers in Java programs are part of a name. Identifiers are also used in declarations, where the identifier determines the name by which an entity will be known, in field access expressions and method invocation expressions, and in statement labels and break and continue statements which refer to statement labels."
