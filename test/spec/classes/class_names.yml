@@ -1,0 +1,9 @@
+suite: "Class Names"
+section: 1
+specifications:
+  
+  - description: "If a class is declared in a named package with the fully qualified name P, then the class has the fully qualified name P.Identifier."
+
+  - description: "If the class is in an unnamed package, then the class has the fully qualified name Identifier."
+
+  - description: "Two classes are the same class (and therefore the same type) if they are loaded by the same class loader and they have the same fully qualified name."

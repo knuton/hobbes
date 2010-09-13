@@ -1,0 +1,7 @@
+suite: "Classes"
+section: 8
+specifications:
+  
+  - description: "A class declaration specifies a new reference type and provides its implementation. Each class is implemented as an extension or subclass of a single existing class. A class may also implement one or more interfaces."
+
+  - description: "The body of a class declares members (fields and methods), static initializers, and constructors."

@@ -1,0 +1,17 @@
+suite: "The Class Members"
+section: 4
+specifications:
+  
+  - description: "The members of a class type include all of the following:"
+
+  - description: "Members inherited from its direct superclass, except in class `Object`, which has no direct superclass."
+
+  - description: "Members inherited from any direct superinterfaces."
+
+  - description: "Members declared in the body of the class."
+
+  - description: "Members of a superclass that are declared `private` are not inherited by subclasses of that class."
+
+  - description: "Members of a class that are not declared `private`, `protected`, or `public` are not inherited by subclasses declared in a package other than the one in which the class is declared."
+
+  - description: "Constructors and static initializers are not members and therefore are not inherited."

@@ -1,0 +1,17 @@
+suite: "Superclasses and Subclasses"
+section: 3
+specifications:
+  
+  - description: "The optional `extends` clause in a class declaration specifies the direct superclass of the current class, the class from whose implementation the implementation of the current class is derived."
+
+  - description: "A class is said to be a direct subclass of the class it `extends`."
+
+  - description: "Only the class `Object` has no direct superclass."
+
+  - description: "If the `extends` clause is omitted from a class declaration, then the superclass of the new class is `Object`."
+
+  - description: "The subclass relationship is the transitive closure of the direct subclass relationship."
+
+  - description: "A class A is a subclass of a class C if A is a direct subclass of C, or if there is a direct subclass B of C and class A is a subclass of B."
+
+  - description: "Class A is said to be a superclass of class C whenever C is a subclass of A."

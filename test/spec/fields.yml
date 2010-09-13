@@ -1,0 +1,17 @@
+suite: "Fields"
+section: 9
+specifications:
+  
+  - description: "The variables of a class type are its fields."
+
+  - description: "Class (`static`) variables exist once per class."
+
+  - description: "Instance variables exist once per instance of the class."
+
+  - description: "Fields may include initializers and may be modified using various modifier keywords."
+
+  - description: "If the class declares a field with a certain name, then the declaration of that field is said to hide any and all accessible declarations of fields with the same name in the superclasses and superinterfaces of the class."
+
+  - description: "A class inherits from its direct superclass and direct superinterfaces all the fields of the superclass and superinterfaces that are accessible to code in the class and are not hidden by a declaration in the class."
+
+  - description: "A hidden field can be accessed by using a qualified name (if it is static) or by using a field access expression that contains a cast to a superclass type or the keyword super."

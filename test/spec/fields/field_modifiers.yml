@@ -1,0 +1,21 @@
+suite: "Field Modifiers"
+section: 1
+specifications:
+  
+  - description: "Fields may be declared `public`, `protected`, or `private`."
+
+  - description: "If a field is declared `static`, there exists exactly one incarnation of the field, no matter how many instances (possibly zero) of the class may eventually be created."
+
+  - description: "A `static` field, sometimes called a class variable, is incarnated when the class is initialized."
+
+  - description: "A field that is not declared `static` is called an instance variable."
+
+  - description: "Whenever a new instance of a class is created, a new variable associated with that instance is created for every instance variable declared in that class or in any of its superclasses."
+
+  - description: "A field can be declared `final`, in which case its declarator must include a variable initializer."
+
+  - description: "Both class and instance variables (`static` and non-`static` fields) may be declared `final`."
+
+  - description: "Once a `final` field has been initialized, it always contains the same value."
+
+  - description: "If a `final` field holds a reference to an object, then the state of the object may be changed by operations on the object, but the field will always refer to the same object."

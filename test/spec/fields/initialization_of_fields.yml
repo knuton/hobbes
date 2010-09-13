@@ -1,0 +1,9 @@
+suite: "Initialization of Fields"
+section: 2
+specifications:
+  
+  - description: "If a field declaration contains a variable initializer, then it has the semantics of an assignment to the declared variable, and:"
+
+  - description: "If the declaration is for a class variable (that is, a `static` field), then the variable initializer is evaluated and the assignment performed exactly once, when the class is initialized."
+
+  - description: "If the declaration is for an instance variable (that is, a field that is not `static`), then the variable initializer is evaluated and the assignment performed each time an instance of the class is created."

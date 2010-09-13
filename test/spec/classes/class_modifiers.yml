@@ -1,0 +1,15 @@
+suite: "Class Modifiers"
+section: 2
+specifications:
+  
+  - description: "A class declaration may include class modifiers."
+
+  - description: "An `abstract` class is a class which is incomplete, or considered incomplete. Only `abstract` classes may have `abstract` methods, that is, methods which are declared but not yet implemented."
+
+  - description: "A class can be declared `final` if its definition is complete and no subclasses are desired or required. Because a final class never has any subclasses, the methods of a final class cannot be overridden in a subclass."
+
+  - description: "A class cannot be both `final` and `abstract`, because the implementation of such a class could never be completed."
+
+  - description: "A class is declared `public` to make its type available to packages other than the one in which it is declared. A `public` class is accessible from other packages, using either its fully qualified name or a shorter name created by an `import` declaration, whenever the host permits access to its package."
+
+  - description: "If a class lacks the `public` modifier, access to the class declaration is limited to the package in which it is declared."
