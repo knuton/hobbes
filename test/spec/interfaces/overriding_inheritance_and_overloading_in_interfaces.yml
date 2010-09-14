@@ -1,0 +1,9 @@
+suite: "Overriding, Inheritance, and Overloading in Interfaces"
+section: 6
+specifications:
+  
+  - description: "If the interface declares a method, then the declaration of that method is said to override any and all methods with the same signature in the superinterfaces of the interface that would otherwise be accessible to code in this interface."
+
+  - description: "An interface inherits from its direct superinterfaces all methods of the superinterfaces that are not overridden by a declaration in the interface."
+
+  - description: "If two methods of an interface (whether both declared in the same interface, or both inherited by an interface, or one declared and one inherited) have the same name but different signatures, then the method name is said to be overloaded."

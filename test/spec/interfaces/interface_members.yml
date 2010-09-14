@@ -1,0 +1,9 @@
+suite: "Interface Members"
+section: 3
+specifications:
+  
+  - description: "The members of an interface are those members inherited from direct superinterfaces and those members declared in the interface."
+
+  - description: "The interface inherits, from the interfaces it extends, all members of those interfaces, except for fields with the same names as fields it declares."
+
+  - description: "Interface members are either fields or methods."

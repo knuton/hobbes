@@ -1,0 +1,25 @@
+suite: "Constructors"
+section: 12
+specifications:
+  
+  - description: "A constructor is used in the creation of an object that is an instance of a class. The constructor declaration looks like a method declaration that has no result type."
+
+  - description: "Constructors are invoked by class instance creation expressions, by the conversions and concatenations caused by the string concatenation operator +, and by explicit constructor invocations from other constructors; they are never invoked by method invocation expressions."
+
+  - description: "Access to and inheritance of constructors are governed by the access modifiers `public`, `protected`, and `private`."
+
+  - description: "Constructor declarations are not members. They are never inherited and therefore are not subject to hiding or overriding."
+
+  - description: "If a constructor body does not begin with an explicit constructor invocation and the constructor being declared is not part of the primordial class `Object`, then the constructor body is implicitly assumed by the compiler to begin with a superclass constructor invocation `super();`, an invocation of the constructor of its direct superclass that takes no arguments."
+
+  - description: "If a class declares no constructors, then a default constructor which takes no arguments is automatically provided."
+
+  - description: "If the class being declared is `Object`, then the default constructor has an empty body."
+
+  - description: "Otherwise, the default constructor takes no arguments and simply invokes the superclass constructor with no arguments."
+
+  - description: "If the class is declared public, then the default constructor is implicitly given the access modifier public."
+
+  - description: "Otherwise, the default constructor has the default access implied by no access modifier."
+
+  - description: "A class can be designed to prevent code outside the class declaration from creating instances of the class by declaring at least one constructor, to prevent the creation of an implicit constructor, and declaring all constructors to be `private`."

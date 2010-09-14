@@ -1,0 +1,15 @@
+suite: "Interfaces"
+section: 13
+specifications:
+  
+  - description: "An interface is a reference type whose members are constants and `abstract` methods. This type has no implementation, but otherwise unrelated classes can implement it by providing implementations for its `abstract` methods. Vava programs can use interfaces to make it unnecessary for related classes to share a common abstract superclass or to add methods to `Object`."
+
+  - description: "An interface may be declared to be a direct extension of one or more other interfaces, meaning that it implicitly specifies all the `abstract` methods and constants of the interfaces it extends, except for any constants that it may hide, and perhaps adding newly declared members of its own."
+
+  - description: "A class may be declared to directly implement one or more interfaces, meaning that any instance of the class implements all the `abstract` methods specified by that interface."
+
+  - description: "A class necessarily implements all the interfaces that its direct superclasses and direct superinterfaces do. This (multiple) interface inheritance allows objects to support (multiple) common behaviors without sharing any implementation."
+
+  - description: "A variable whose declared type is an interface type may have as its value a reference to an object that is an instance of any class that is declared to implement the specified interface."
+
+  - description: "It is not sufficient that the class happens to implement all the `abstract` methods of the interface; the class or one of its superclasses must actually be declared to implement the interface, or else the class is not considered to implement the interface."

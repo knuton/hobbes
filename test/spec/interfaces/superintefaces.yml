@@ -1,0 +1,20 @@
+suite: "Superintefaces"
+section: 2
+specifications:
+  
+  # What happens if there are conflicting return types?
+  - description: "If an `extends` clause is provided, then the interface being declared extends each of the other named interfaces, and therefore inherits the methods and constants of each of the other named interfaces."
+
+  - description: "Any class that `implements` the declared interface is also considered to implement all the interfaces that this interface extends and that are accessible to the class."
+
+  - description: "The `implements` clause in a class declaration lists the names of interfaces that are direct superinterfaces of the class being declared."
+
+  - description: "All interfaces in the current package are accessible."
+
+  - description: "Interfaces in other packages are accessible if the host system permits access to the package and the interface is declared `public`."
+
+  - description: "An interface type K is a superinterface of class type C if K is a direct superinterface of C; or if C has a direct superinterface J that has K as a superinterface; or if K is a superinterface of the direct superclass of C."
+
+  - description: "A class is said to implement all its superinterfaces."
+
+  - description: "There is no analogue of the class `Object` for interfaces; that is, while every class is an extension of class `Object`, there is no single interface of which all interfaces are extensions."

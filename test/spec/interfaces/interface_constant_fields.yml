@@ -1,0 +1,13 @@
+suite: "Interface (Constant) Fields"
+section: 4
+specifications:
+  
+  - description: "Every field declaration in the body of an interface is implicitly `static` and `final`."
+
+  - description: "Interfaces do not have instance variables."
+
+  - description: "Every field declaration in an interface is itself implicitly `public`."
+
+  - description: "Every field in the body of an interface must have an initialization expression, which need not be a constant expression."
+
+  - description: "The variable initializer is evaluated and the assignment performed exactly once, when the interface is initialized."

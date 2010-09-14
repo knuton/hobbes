@@ -1,0 +1,11 @@
+suite: "Interface (Abstract) Methods"
+section: 5
+specifications:
+  
+  - description: "Every method declaration in the body of an interface is implicitly `abstract`."
+
+  - description: "Every method declaration in the body of an interface is implicitly `public`."
+
+  - description: "A method declared in an interface must not be declared `static`, because in Vava `static` methods cannot be `abstract`."
+
+  - description: "A method declared in the body of an interface must not be declared `final`; however, one may be implemented by a method that is declared `final` in a class that implements the interface."

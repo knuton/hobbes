@@ -1,0 +1,11 @@
+suite: "Interface Modifiers"
+section: 1
+specifications:
+  
+  - description: "An interface declaration may be preceded by the interface modifiers `public` and `abstract`."
+
+  - description: "Every interface is implicitly `abstract`."
+
+  - description: "All members of interfaces are implicitly `public`."
+
+  - description: "An interface cannot be `final`, because the implementation of such a class could never be completed."
