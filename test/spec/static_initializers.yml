@@ -1,0 +1,9 @@
+suite: "Static Initializers"
+section: 11
+specifications:
+  
+  - description: "Any static initializers declared in a class are executed when the class is initialized and, together with any field initializers for class variables, may be used to initialize the class variables of the class."
+
+  - description: "The static initializers and class variable initializers are executed in textual order."
+
+  - description: "They may not refer to class variables declared in the class whose declarations appear textually after the use, even though these class variables are in scope. This restriction is designed to catch, at compile time, most circular or otherwise malformed initializations."

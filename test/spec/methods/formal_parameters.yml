@@ -1,0 +1,9 @@
+suite: "Formal Parameters"
+section: 1
+specifications:
+  
+  - description: "The formal parameters of a method, if any, are specified by a list of comma-separated parameter specifiers."
+
+  - description: "Each parameter specifier consists of a type and an identifier that specifies the name of the parameter."
+
+  - description: "When the method is invoked, the values of the actual argument expressions initialize newly created parameter variables, each of the declared type, before execution of the body of the method."

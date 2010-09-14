@@ -1,0 +1,28 @@
+suite: "Method Modifiers"
+section: 3
+specifications:
+  
+  - description: "An `abstract` method declaration introduces the method as a member, providing its signature, return type, and `throws` clause (if any), but does not provide an implementation."
+
+  - description: "The declaration of an `abstract` method m must appear within an `abstract` class (call it A)."
+
+  - description: "Every subclass of A that is not itself `abstract` must provide an implementation for m."
+
+  - description: "A method declared `abstract` cannot also be declared `private`, `static`, or `final`."
+
+  - description: "A method that is declared `static` is called a class method."
+
+  - description: "A class method is always invoked without reference to a particular object."
+
+  - description: "A class method may refer to other fields and methods of the class by simple name only if they are class methods and class (`static`) variables."
+
+  - description: "A method that is not declared `static` is an instance method."
+
+  - description: "An instance method is always invoked with respect to an object, which becomes the current object to which the keywords `this` and `super` refer during execution of the method body."
+
+  - description: "A method can be declared `final` to prevent subclasses from overriding or hiding it."
+
+  - description: "A `private` method and all methods declared in a `final` class are implicitly `final`, because it is impossible to override them."
+
+  # Likely this doesn't apply to hobbes.
+  - description: "If a method is `final` or implicitly `final`, a compiler or a runtime code generator can safely \"inline\" the body of a `final` method, replacing an invocation of the method with the code in its body."
