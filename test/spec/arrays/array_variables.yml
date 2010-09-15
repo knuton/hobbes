@@ -1,0 +1,13 @@
+suite: "Array Variables"
+section: 2
+specifications:
+  
+  - description: "A variable of array type holds a reference to an object. Declaring a variable of array type does not create an array object or allocate any space for array components. It creates only the variable itself, which can contain a reference to an array."
+
+  - description: "Because an array's length is not part of its type, a single variable of array type may contain references to arrays of different lengths."
+
+- description: "Once an array object is created, its length never changes."
+
+- description: "To make an array variable refer to an array of different length, a reference to a different array must be assigned to the variable."
+
+- description: "If an array variable v has type A[], where A is a reference type, then v can hold a reference to any array type B[], provided B can be assigned to A"

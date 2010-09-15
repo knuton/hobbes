@@ -1,0 +1,13 @@
+suite: "Array Access"
+section: 4
+specifications:
+  
+  - description: "A component of an array is accessed using an array access expression."
+
+  - description: "Arrays may be indexed by `int` values; `short`, `byte`, or `char` values may also be used as they are subjected to unary numeric promotion and become `int` values."
+
+  - description: "All arrays are 0-origin."
+
+  - description: "An array with length n can be indexed by the integers 0 through n - 1."
+
+  - description: "All array accesses are checked at run time; an attempt to use an index that is less than zero or greater than or equal to the length of the array causes an `ArrayIndexOutOf-Bounds---Exception` to be thrown."

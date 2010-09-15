@@ -1,0 +1,13 @@
+suite: "Arrays"
+section: 14
+specifications:
+  
+  - description: "Vava arrays are objects, are dynamically created, and may be assigned to variables of type `Object`."
+
+  - description: "All methods of class `Object` may be invoked on an array."
+
+  - description: "An array object contains a number of variables. That number may be zero, in which case the array is said to be empty."
+
+  - description: "The variables contained in an array have no names; instead they are referenced by array access expressions that use non-negative integer index values. These variables are called the components of the array. If an array has n components, we say n is the length of the array."
+
+  - description: "An array of zero components is not the same as the null reference."

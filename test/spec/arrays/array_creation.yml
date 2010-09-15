@@ -1,0 +1,5 @@
+suite: "Array Creation"
+section: 3
+specifications:
+  
+  - description: "An array is created by an array creation expression or an array initializer."

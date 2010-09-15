@@ -1,0 +1,19 @@
+suite: "Array Types"
+section: 1
+specifications:
+  
+  - description: "All the components of an array have the same type, called the component type of the array. If the component type of an array is T, then the type of the array itself is written T[]."
+
+  - description: "The component type of an array may itself be an array type."
+
+  - description: "The components of such an array may contain references to subarrays."
+
+  - description: "If, starting from any array type, one considers its component type, and then (if that is also an array type) the component type of that type, and so on, eventually one must reach a component type that is not an array type; this is called the element type of the original array, and the components at this level of the data structure are called the elements of the original array."
+
+  - description: "There is one situation in which an element of an array can be an array: if the element type is `Object`, then some or all of the elements may be arrays, because every array object can be assigned to a variable of type `Object`."
+
+  - description: "The element type of an array may be any type, whether primitive or reference."
+
+  - description: "In particular, arrays with an interface type as the component type are supported; the elements of such an array may have as their value a null reference or instances of any class type that implements the interface."
+
+  - description: "Arrays with an `abstract` class type as the component type are supported; the elements of such an array may have as their value a null reference or instances of any subclass of this `abstract` class that is not itself `abstract`."
