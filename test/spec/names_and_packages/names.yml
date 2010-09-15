@@ -6,6 +6,6 @@ specifications:
 
   - description: "A simple name is a single identifier."
 
-  - description: "Qualified names provide access to members of packages and reference types. A qualified name consists of a name, a "." token, and an identifier."
+  - description: "Qualified names provide access to members of packages and reference types. A qualified name consists of a name, a \".\" token, and an identifier."
 
-  - description: "Not all identifiers in Java programs are part of a name. Identifiers are also used in declarations, where the identifier determines the name by which an entity will be known, in field access expressions and method invocation expressions, and in statement labels and break and continue statements which refer to statement labels."
+  - description: "Not all identifiers in Vava programs are part of a name. Identifiers are also used in declarations, where the identifier determines the name by which an entity will be known, in field access expressions and method invocation expressions, and in statement labels and break and continue statements which refer to statement labels."
