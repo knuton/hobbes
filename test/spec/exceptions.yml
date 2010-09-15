@@ -1,0 +1,18 @@
+suite: "Exceptions"
+section: 15
+specifications:
+  
+  - description: "When a Vava program violates the semantic constraints of the Vava language, a Vava Virtual Machine signals this error to the program as an exception. An example of such a violation is an attempt to index outside the bounds of an array. Vava specifies that an exception will be thrown when semantic constraints are violated and will cause a nonlocal transfer of control from the point where the exception occurred to a point that can be specified by the programmer. An exception is said to be thrown from the point where it occurred and is said to be caught at the point to which control is transferred. A method invocation that completes because an exception causes transfer of control to a point outside the method is said to complete abruptly."
+
+  - description: "Vava programs can also `throw` exceptions explicitly, using throw statements. This provides an alternative to the old-fashioned style of handling error conditions by returning distinguished error values, such as the integer value `-1`, where a negative value would not normally be expected."
+
+  - description: "Every exception is represented by an instance of the class `Throwable` or one of its subclasses; such an object can be used to carry information from the point at which an exception occurs to the handler that catches it."
+
+  - description: "Handlers are established by `catch` clauses of `try` statements."
+
+  - description: "During the process of throwing an exception, a Vava Virtual Machine abruptly completes, one by one, any expressions, statements, method and constructor invocations, static initializers, and field initialization expressions that have begun but not completed execution in the current thread."
+
+  - description: "This process continues until a handler is found that indicates that it handles the thrown exception by naming the class of the exception or a superclass of the class of the exception."
+
+  # TODO Define equivalent for Vava.
+  - description: "If no such handler is found, then the method `uncaughtException` is invoked for the `ThreadGroup` that is the parent of the current thread."

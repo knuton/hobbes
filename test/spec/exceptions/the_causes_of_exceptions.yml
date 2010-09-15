@@ -1,0 +1,13 @@
+suite: "The Causes of Exceptions"
+section: 1
+specifications:
+  
+  - description: "An exception is thrown for reasons such as:"
+
+  - description: "An operation that violates the normal semantics of the Vava language, such as indexing outside the bounds of an array."
+
+  - description: "An error in loading or linking part of the Vava program."
+
+  - description: "Exceeding some limit on a resource, such as using too much memory."
+
+  - description: "A `throw` statement was executed in Vava code."

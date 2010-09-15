@@ -1,0 +1,39 @@
+suite: "The Classes `Exception` and `RuntimeException`"
+section: 4
+specifications:
+  
+  - description: "The class `Exception` is the superclass of all the standard exceptions that ordinary programs may wish to recover from."
+
+  - description: "The subclasses of `RuntimeException` are unchecked exception classes. Package `java.lang` defines the following standard unchecked runtime exceptions:"
+
+  - description: "`ArithmeticException`: An exceptional arithmetic situation has arisen, such as an integer division or remainder operation with a zero divisor."
+
+  - description: "`ArrayStoreException`: An attempt has been made to store into an array component a value whose class is not assignment compatible with the component type of the array."
+
+  - description: "`ClassCastException`: An attempt has been made to cast a reference to an object to an inappropriate type."
+
+  - description: "`IllegalMonitorStateException`: A thread has attempted to wait on or notify other threads waiting on an object that it has not locked."
+
+  - description: "`IndexOutOfBoundsException`: Either an index of some sort (such as to an array, a string, or a vector) or a subrange, specified either by two index values or by an index and a length, was out of range."
+
+  - description: "`NegativeArraySizeException`: An attempt was made to create an array with a negative length."
+
+  - description: "`NullPointerException`: An attempt was made to use a null reference in a case where an object reference was required."
+
+  - description: "`SecurityException`: A security violation was detected."
+
+  - description: "The class `Error` and its standard subclasses are exceptions from which ordinary programs are not ordinarily expected to recover. The class `Error` is a separate subclass of `Throwable`, distinct from `Exception` in the class hierarchy, to allow programs to use the idiom `} catch (Exception e) {` to catch all exceptions from which recovery may be possible without catching errors from which recovery is typically not possible. Package `java.lang` defines all the error classes described here."
+
+  - description: "A Vava Virtual Machine throws an object that is an instance of a subclass of `LinkageError` when a loading, linking, or initialization error occurs."
+
+  - description: "A virtual machine will throw the error `ExceptionInInitializerError` if execution of a static initializer or of an initializer for a `static` field results in an exception that is not an `Error` or a subclass of `Error`."
+
+  - description: "A Vava Virtual Machine throws an object that is an instance of a subclass of the class `VirtualMachineError` when an internal error or resource limitation prevents it from implementing the semantics of the Vava Language. This specification defines the following virtual machine errors:"
+
+  - description: "`InternalError`: An internal error has occurred in a Vava Virtual Machine, because of a fault in the software implementing the virtual machine, a fault in the underlying host system software, or a fault in the hardware. This error is delivered asynchronously when it is detected and may occur at any point in a Vava program."
+
+  - description: "`OutOfMemoryError`: A Vava Virtual Machine has run out of either virtual or physical memory, and the automatic storage manager was unable to reclaim enough memory to satisfy an object creation request."
+
+  - description: "`StackOverflowError`: A Vava Virtual Machine has run out of stack space for a thread, typically because the thread is doing an unbounded number of recursive invocations as a result of a fault in the executing program."
+
+  - description: "`UnknownError`: An exception or error has occurred but, for some reason, a Vava Virtual Machine is unable to report the actual exception or error."

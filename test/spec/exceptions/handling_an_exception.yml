@@ -1,0 +1,38 @@
+suite: "Handling an Exception"
+section: 2
+specifications:
+  
+  - description: "When an exception is thrown, control is transferred from the code that caused the exception to the nearest dynamically enclosing `catch` clause of a `try` statement that handles the exception."
+
+  - description: "A statement or expression is dynamically enclosed by a catch clause if it appears within the try block of the try statement of which the `catch` clause is a part, or if the caller of the statement or expression is dynamically enclosed by the `catch` clause."
+
+  - description: "The caller of a statement or expression depends on where it occurs:"
+
+  - description: "If within a method, then the caller is the method invocation expression that was executed to cause the method to be invoked."
+
+  - description: "If within a constructor or the initializer for an instance variable, then the caller is the class instance creation expression or the method invocation of `newInstance` that was executed to cause an object to be created."
+
+  - description: "If within a static initializer or an initializer for a `static` variable, then the caller is the expression that used the class or interface so as to cause it to be initialized."
+
+  - description: "Whether a particular `catch` clause handles an exception is determined by comparing the class of the object that was thrown to the declared type of the parameter of the `catch` clause."
+
+  - description: "The `catch` clause handles the exception if the type of its parameter is the class of the exception or a superclass of the class of the exception. Equivalently, a `catch` clause will catch any exception object that is an `instanceof` the declared parameter type."
+
+  - description: "The control transfer that occurs when an exception is thrown causes abrupt completion of expressions and statements until a `catch` clause is encountered that can handle the exception; execution then continues by executing the block of that `catch` clause."
+  
+  - description: "The code that caused the exception is never resumed."
+
+  # TODO Adjust to Vava.
+  - description: "If no `catch` clause handling an exception can be found, then the current thread (the thread that encountered the exception) is terminated, but only after all `finally` clauses have been executed and the method `uncaughtException` has been invoked for the `ThreadGroup` that is the parent of the current thread."
+
+  - description: "In situations where it is desirable to ensure that one block of code is always executed after another, even if that other block of code completes abruptly, a `try` statement with a `finally` clause may be used."
+
+  - description: "If a `try` or `catch` block in a `try`-`finally` or `try`-`catch`-`finally` statement completes abruptly, then the `finally` clause is executed during propagation of the exception, even if no matching `catch` clause is ultimately found."
+
+  - description: "If a `finally` clause is executed because of abrupt completion of a `try` block and the `finally` clause itself completes abruptly, then the reason for the abrupt completion of the `try` block is discarded and the new reason for abrupt completion is propagated from there."
+
+  - description: "As Vava is not multi-threaded, exceptions in Vava occur synchronously as a result of an action in the main thread in which they occur, and at a point in the Vava program that is specified to possibly result in such an exception."
+
+  - description: "All exceptions in Vava are precise: when the transfer of control takes place, all effects of the statements executed and expressions evaluated before the point from which the exception is thrown must appear to have taken place."
+
+  - description: "No expressions, statements, or parts thereof that occur after the point from which the exception is thrown may appear to have been evaluated."

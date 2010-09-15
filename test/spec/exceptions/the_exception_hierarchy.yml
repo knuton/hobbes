@@ -1,0 +1,13 @@
+suite: "The Exception Hierarchy"
+section: 3
+specifications:
+  
+  - description: "The possible exceptions in a Vava program are organized in a hierarchy of classes, rooted at class `Throwable`, a direct subclass of `Object`."
+
+  - description: "The classes `Exception` and `Error` are direct subclasses of `Throwable`."
+
+  - description: "The class `RuntimeException` is a direct subclass of `Exception`."
+
+  - description: "Vava programs can use the preexisting exception classes in `throw` statements, or define additional exception classes, as subclasses of `Throwable` or of any of its subclasses, as appropriate."
+
+  - description: "To take advantage of Vava's compile-time checking for exception handlers, it is typical to define most new exception classes as checked exception classes, specifically as subclasses of `Exception` that are not subclasses of `RuntimeException`."
