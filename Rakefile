@@ -6,8 +6,8 @@ task :default => :spec
 
 namespace :spec do
 
-  desc 'Create a new Vava test suite'
   directory 'test/spec'
+  desc 'Create a new Vava test suite'
   task :new, :suite_name, :subsuite_name do |t, args|
     abort "Suite title is missing." unless args[:suite_name]
 
