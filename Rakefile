@@ -53,17 +53,27 @@ YML
 <html>
   <head>
     <title>Vava Language Specification</title>
+    <style type="text/css">
+    *.test-successful { color: green; }
+    *.test-failed { color: red; }
+    *.test-missing { color: yellow; }
+    </style>
   </head>
   <body>
     <h1>Vava Language Specification</h1>
 HTML
-      yamls_to_suites(SPEC_PATH).each { |suite| html << suite_to_html(suite) }
+      yamls_to_suites(SPEC_PATH).each { |suite| html << suite_to_html(suite, !!args[:colored]) }
       html << <<-HTML
   </body>
 </html>
 HTML
       
       File.open("#{DOC_PATH}/index.html", 'w') {|f| f.write(html) }
+    end
+
+    desc 'Create a colored HTML version of the Vava spec'
+    task :colored do
+      Rake::Task['spec:html:create'].invoke(:colored)
     end
 
     def yamls_to_suites(dir_path)
@@ -86,7 +96,11 @@ HTML
       numbering = "#{parent_section ? parent_section + '.' : ''}#{suite_hash['section']}"
       html = "<h#{depth+1}>#{numbering}. #{section_title}</h#{depth+1}>\n"
       suite_hash['specifications'].each do |specification|
-        html << "#{RDiscount.new(specification['description']).to_html}\n"
+        paragraph = "#{RDiscount.new(specification['description']).to_html}\n"
+        
+        paragraph.insert(2, ' class="test-missing"') if colored
+
+        html << paragraph
       end rescue true
 
       if suite_hash['subsuites']
