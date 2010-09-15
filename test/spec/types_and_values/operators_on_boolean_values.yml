@@ -1,10 +1,10 @@
-suite: "Operators on boolean Values"
+suite: "Operators on `boolean` Values"
 section: 4
 specifications:
   
   - description: "The boolean operators include relational operators and logical operators."
 
-  - description: "Only boolean expressions can be used in Java's control flow statements and as the first operand of the conditional operator ?:."
+  - description: "Only `boolean` expressions can be used in Vava's control flow statements and as the first operand of the conditional operator ?:."
 
   - description: "An integral value x can be converted to a value of type `boolean`, following the C language convention that any nonzero value is `true`, by the expression `x!=0`."
 

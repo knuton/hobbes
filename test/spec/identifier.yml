@@ -14,4 +14,4 @@ specifications:
 
   - description: "Two identifiers are the same only if they have the same Unicode character for each letter or digit; identifiers that have the same external appearance may still be different."
 
-  - description: "An identifier must not be the same as a boolean literal, the null literal, or a keyword in the Java programming language."
+  - description: "An identifier must not be the same as a boolean literal, the null literal, or a keyword in the Vava programming language."

@@ -81,15 +81,18 @@ HTML
       }
     end
 
-    def suite_to_html(suite_hash, colored = false, depth = 1)
-      section_title = RDiscount.new(suite_hash['suite']).to_html
-      html = "<h#{depth+1}>#{suite_hash['section']}. #{section_title}</h#{depth+1}>\n"
+    def suite_to_html(suite_hash, colored = false, depth = 1, parent_section = nil)
+      section_title = RDiscount.new(suite_hash['suite']).to_html[3..-6]
+      numbering = "#{parent_section ? parent_section + '.' : ''}#{suite_hash['section']}"
+      html = "<h#{depth+1}>#{numbering}. #{section_title}</h#{depth+1}>\n"
       suite_hash['specifications'].each do |specification|
         html << "#{RDiscount.new(specification['description']).to_html}\n"
       end rescue true
 
       if suite_hash['subsuites']
-        suite_hash['subsuites'].each { |subsuite| html << suite_to_html(subsuite, colored, depth + 1) }
+        suite_hash['subsuites'].each { |subsuite|
+          html << suite_to_html(subsuite, colored, depth + 1, numbering)
+        }
       end
 
       html

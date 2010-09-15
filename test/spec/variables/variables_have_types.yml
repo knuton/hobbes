@@ -18,4 +18,4 @@ specifications:
 
   - description: "A variable or expression whose type is an interface type can reference any object whose class implements that interface."
 
-  - description: "Every array also has a class. The classes for arrays have strange names that are not valid Java identifiers; for example, the class for an array of int components has the name \"[I\"."
+  - description: "Every array also has a class. The classes for arrays have strange names that are not valid Vava identifiers; for example, the class for an array of int components has the name \"[I\"."

@@ -2,7 +2,7 @@ suite: "Initial Values of Variables"
 section: 1
 specifications:
   
-  - description: "Every variable in a Java program must have a value before it is used."
+  - description: "Every variable in a Vava program must have a value before it is used."
 
   - description: "Each class variable, instance variable, and array component is initialized with a default value when it is created."
 

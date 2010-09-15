@@ -8,7 +8,7 @@ specifications:
 
   - description: "Numeric promotions are conversions that change an operand of a numeric operation to a wider type, or both operands of a numeric operation to a common type, so that an operation can be performed."
 
-  - description: "In Java, there are six broad kinds of conversions, _Identity conversions_, _Widening primitive conversions_, _Narrowing primitive conversions_, _Widening reference conversions_, _Narrowing reference conversions_, _String conversions_."
+  - description: "In Vava, there are six broad kinds of conversions, _Identity conversions_, _Widening primitive conversions_, _Narrowing primitive conversions_, _Widening reference conversions_, _Narrowing reference conversions_, _String conversions_."
 
   - description: "There are five conversion contexts in which conversion expressions can occur. Each context allows conversions in some of the above-named categories but not others. The conversion contexts are:"
 
