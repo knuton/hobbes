@@ -16,14 +16,40 @@ class SpecSuite
       return 0 if test_files.empty?
 
       test_files.each do |test_file|
-        return -1 unless run_test_file(test_file, verbose)
+        return -1 unless run_test_file(test_file, base_path, verbose)
       end
 
       1
     end
 
-    def run_test_file(test_file, verbose = false)
-      false
+    def run_test_file(test_file, base_path, verbose = false)
+      file_path = "#{base_path}/#{test_file}"
+      unless File.exists?(file_path)
+        puts "Didn't find test file '#{file_path}'."
+        return false 
+      end
+
+      javac = `javac -d #{base_path} #{file_path}`
+      java = `java -classpath #{base_path} #{class_name(file_path)}`
+
+      hobbes = "Xylon\n"
+
+      passed = java == hobbes
+
+      unless passed
+        underlined "Expected"
+        puts java
+        newline
+        underlined "Got"
+        puts hobbes
+      end
+
+      passed
+    end
+
+    private
+    def class_name(file_path)
+      file_path.split('/')[-1][0..-6]
     end
 
   end
