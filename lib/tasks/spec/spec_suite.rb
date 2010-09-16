@@ -29,19 +29,22 @@ class SpecSuite
         return false 
       end
 
-      javac = `javac -d #{base_path} #{file_path}`
-      java = `java -classpath #{base_path} #{class_name(file_path)}`
+      expected = `javac -d #{base_path} #{file_path} 2>&1`
+      if $?.exitstatus == 0
+        expected = `java -classpath #{base_path} #{class_name(file_path)} 2>&1`
+      end
 
       hobbes = "Xylon\n"
 
-      passed = java == hobbes
+      passed = hobbes == expected
 
       unless passed
         underlined "Expected"
-        puts java
+        puts expected
         newline
         underlined "Got"
         puts hobbes
+        newline
       end
 
       passed
