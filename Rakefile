@@ -22,7 +22,7 @@ namespace :spec do
 
     suite_file_name = args[:suite_name].parameterize('_')
     subsuite_file_name = (ssn = args[:subsuite_name]) ? ssn.parameterize('_') : nil
-    suite_file_path = SPEC_PATH + suite_file_name << (subsuite_file_name ? '/' << subsuite_file_name : '') << '.yml'
+    suite_file_path = "#{SPEC_PATH}/#{suite_file_name}#{subsuite_file_name ? '/' << subsuite_file_name : ''}.yml"
     
     unless File.exists?(suite_file_path)
       yaml = <<-YML
@@ -32,7 +32,7 @@ specifications:
   
   - description: ""
 YML
-      if subsuite_file_name && !File.directory?(dirname = SPEC_PATH + suite_file_name)
+      if subsuite_file_name && !File.directory?(dirname = "#{SPEC_PATH}/#{suite_file_name}")
         mkdir dirname
       end
       File.open(suite_file_path, 'w') {|f| f.write(yaml) }
