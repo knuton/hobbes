@@ -1,12 +1,19 @@
 require 'active_support/all'
 $KCODE = 'UTF8'
 require 'lib/tasks/spec/spec_suite'
+require 'lib/pretty_print'
+
+include PrettyPrint
 
 SPEC_PATH = 'test/spec'
 DOC_PATH = 'doc/spec'
 
+desc 'Run recent spec tests'
+task 'spec' => 'spec:run:recent'
 desc 'Generate uncolored HTML spec'
 task 'spec:html' => 'spec:html:create'
+desc 'Run all spec tests'
+task 'spec:run'  => 'spec:run:all'
 
 directory SPEC_PATH
 directory DOC_PATH
@@ -39,6 +46,36 @@ YML
     end
 
     Kernel::exec("mvim", suite_file_path)
+  end
+
+  namespace :run do
+    
+    task :all do
+      run_suites(SpecSuite.from_yml_dir(SPEC_PATH))
+    end
+
+    task :recent do
+      since = Time.now - 900
+      suite_ymls = FileList['test/spec/**/*.yml'].select { |path| File.mtime(path) > since }
+      run_suites(suite_ymls.map {|yml| SpecSuite.from_yml(yml) })
+    end
+
+    task :suite, :which do |t, args|
+      suite_path = "#{SPEC_PATH}/#{args[:which]}.yml"
+      abort "Didn't find suite: #{suite_path}" unless File.exists?(suite_path)
+      run_suites([SpecSuite.from_yml(suite_path)])
+    end
+
+    def run_suites(suites)
+      failed = 0
+      suites.each do |suite|
+        failed += suite.run
+      newline
+      end
+
+      underlined "Ran #{suites.size}. Total failures: #{failed}"
+    end
+
   end
   
   namespace :html do

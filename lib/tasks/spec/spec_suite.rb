@@ -1,7 +1,10 @@
 require 'yaml'
 require 'rdiscount'
+require 'lib/pretty_print'
 
 class SpecSuite
+  include PrettyPrint
+
   class Specification < Struct.new(:description, :test_files)
 
     def initialize(description, test_files)
@@ -9,18 +12,18 @@ class SpecSuite
       self.test_files ||= []
     end
     
-    def test(base_path)
+    def test(base_path, verbose = false)
       return 0 if test_files.empty?
 
       test_files.each do |test_file|
-        return -1 unless run_test_file(test_file)
+        return -1 unless run_test_file(test_file, verbose)
       end
 
       1
     end
 
-    def run_test_file(test_file)
-      true 
+    def run_test_file(test_file, verbose = false)
+      false
     end
 
   end
@@ -75,6 +78,22 @@ class SpecSuite
 
   def home_dir
     file_path[0..-5]
+  end
+
+  def run(recursive = true)
+    failed = 0
+    return failed if specifications.empty?
+
+    boxed "Running suite '#{suite}'"
+    specifications.each do |specification|
+      test_result = specification.test(test_case_dir, true)
+      failed += 1 if test_result == -1
+    end
+    underlined "Ran #{specifications.size} tests, #{failed} failed."
+
+    subsuites.each {|subsuite| failed += subsuite.run }
+
+    failed
   end
 
   def to_html(colored = false, depth = 1, parent_section = nil)
