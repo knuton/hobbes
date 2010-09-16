@@ -62,13 +62,15 @@ YML
   <body>
     <h1>Vava Language Specification</h1>
 HTML
-      yamls_to_suites(SPEC_PATH).each { |suite| html << suite_to_html(suite, !!args[:colored]) }
+      suites = yamls_to_suites(SPEC_PATH)
+      suites.each { |suite| html << suite_to_html(suite, !!args[:colored]) }
       html << <<-HTML
   </body>
 </html>
 HTML
       
       File.open("#{DOC_PATH}/index.html", 'w') {|f| f.write(html) }
+      puts "Created HTML doc for #{suites.size} (main) suites."
     end
 
     desc 'Create a colored HTML version of the Vava spec'
