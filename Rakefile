@@ -1,8 +1,8 @@
 require 'rubygems'
 require 'active_support/all'
 $KCODE = 'UTF8'
-require 'yaml'
-require 'rdiscount'
+require 'lib/tasks/source_annotation_extractor'
+require 'lib/tasks/spec_suite'
 
 SPEC_PATH = 'test/spec'
 DOC_PATH = 'doc/spec'
@@ -54,16 +54,20 @@ YML
   <head>
     <title>Vava Language Specification</title>
     <style type="text/css">
-    *.test-successful { color: green; }
-    *.test-failed { color: red; }
-    *.test-missing { color: yellow; }
+    p.test-successful, p.test-failed, p.test-missing { padding: 0.5em; }
+    h2.test-successful, h3.test-successful { border-bottom: 5px solid #74D668; }
+    p.test-successful { background-color: #74D668; }
+    h2.test-failed, h3.test-failed { border-bottom: 5px solid #E87F7D; }
+    p.test-failed { background-color: #E87F7D; }
+    h2.test-missing, h3.test-missing { border-bottom: 5px solid #E8D47D; }
+    p.test-missing { background-color: #E8D47D; }
     </style>
   </head>
   <body>
     <h1>Vava Language Specification</h1>
 HTML
-      suites = yamls_to_suites(SPEC_PATH)
-      suites.each { |suite| html << suite_to_html(suite, !!args[:colored]) }
+      suites = SpecSuite.from_yml_dir(SPEC_PATH)
+      suites.each { |suite| html << suite.to_html(!!args[:colored]) }
       html << <<-HTML
   </body>
 </html>
@@ -78,42 +82,12 @@ HTML
       Rake::Task['spec:html:create'].invoke(:colored)
     end
 
-    def yamls_to_suites(dir_path)
-      yaml_files = Dir.entries(dir_path).select { |entry| entry[-4,4] == '.yml' }
-      suites = yaml_files.map { |file_name|
-        suite_hash = YAML.load_file("#{dir_path}/#{file_name}")
-        suite_hash['file_name'] = file_name
-        if File.directory?(subpath = "#{dir_path}/#{file_name[0..-5]}")
-          suite_hash['subsuites'] = yamls_to_suites(subpath)
-        end
+  end
 
-        suite_hash
-      }.sort { |a,b|
-        a['section'] <=> b['section']
-      }
-    end
-
-    def suite_to_html(suite_hash, colored = false, depth = 1, parent_section = nil)
-      section_title = RDiscount.new(suite_hash['suite']).to_html[3..-6]
-      numbering = "#{parent_section ? parent_section + '.' : ''}#{suite_hash['section']}"
-      html = "<h#{depth+1}>#{numbering}. #{section_title}</h#{depth+1}>\n"
-      suite_hash['specifications'].each do |specification|
-        paragraph = "#{RDiscount.new(specification['description']).to_html}\n"
-        
-        paragraph.insert(2, ' class="test-missing"') if colored
-
-        html << paragraph
-      end rescue true
-
-      if suite_hash['subsuites']
-        suite_hash['subsuites'].each { |subsuite|
-          html << suite_to_html(subsuite, colored, depth + 1, numbering)
-        }
-      end
-
-      html
-    end
-    
+  task :notes do
+    ["OPTIMIZE", "FIXME", "TODO"].each do |annotation|
+      SourceAnnotationExtractor.enumerate(annotation, ['test/spec'])
+    end    
   end
 
 end
