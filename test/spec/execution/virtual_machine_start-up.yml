@@ -7,3 +7,27 @@ specifications:
   - description: "This causes the specified class to be loaded, linked to other types that it uses, and initialized."
 
   - description: "The method `main` must be declared `public`, `static`, and `void`."
+
+  - description: "It is typical, in host environments that use command lines, for the fully qualified name of the class to be specified as a command-line argument and for subsequent command-line arguments to be used as strings to be provided as the argument to the method `main`."
+
+  - description: "The initial attempt to invoke the method `main` of a class that is to be executed discovers that the class is not loaded-that is, the virtual machine does not currently contain a compiled representation for this class. The virtual machine then uses a `ClassLoader` to attempt to find such a compiled representation."
+
+  - description: "After the class is loaded, it must be initialized before `main` can be invoked, and a type (class or interface) must always be linked before it is initialized. Linking involves verification, preparation, and (optionally) resolution."
+
+  - description: "Verification checks that the loaded representation is well formed, with a proper symbol table."
+
+  - description: "Verification also checks that the code that implements the class obeys the semantic requirements of the Vava Virtual Machine. If a problem is detected during verification, an error is thrown."
+
+  - description: "Preparation involves allocation of static storage and any data structures that are used internally by the virtual machine, such as method tables. If a problem is detected during preparation, an error is thrown."
+
+  - description: "Resolution is the process of checking symbolic references from the loaded class to other classes and interfaces, by loading the other classes and interfaces that are mentioned and checking that the references are correct."
+
+  - description: "The Vava Virtual Machine resolves a symbolic reference from a class or interface that is being linked very early, even to the point of resolving all symbolic references from the classes and interfaces that are further referenced, recursively."
+
+  - description: "Loading and linking errors occur before the program is executed if they involve a class or interface mentioned in the class invoked class or any of the further, recursively referenced classes and interfaces."
+
+  - description: "Before active use of a class, such as invoking one of its methods (`main`), the class needs to have been initialized"
+
+  - description: "Initialization consists of execution of any class variable initializers and static initializers of the class, in textual order."
+
+  - description: "Before initializtation of a class, its direct superclass must be initialized, as well as the direct superclass of its direct superclass, and so on, recursively."

@@ -1,5 +1,0 @@
-suite: "Excecution"
-section: 16
-specifications:
-  
-  - description: "This section specifies activities that occur during execution of a Vava program. It is organized around the life cycle of a Vava Virtual Machine and of the classes, interfaces, and objects that form a Vava program. It specifies the detailed procedures used in starting up the virtual machine, class and interface type loading, linking, and initialization. It then specifies the procedures for creation of new class instances. It concludes by describing the unloading of classes and the procedure followed when a virtual machine exits."

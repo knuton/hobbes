@@ -1,0 +1,18 @@
+suite: "Loading"
+section: 2
+specifications:
+  
+  - description: "Loading refers to the process of finding the compiled form of a class or interface type with a particular name, perhaps by computing it on the fly, but more typically by retrieving a compiled representation previously computed from source code by a compiler and constructing, from that compiled form, a `Class` object to represent the class or interface."
+
+  - description: "The loading process is implemented by the class `ClassLoader` and its subclasses. Different subclasses of `ClassLoader` may implement different loading policies."
+
+  - description: "In particular, a class loader may cache compiled representations of classes and interfaces, prefetch them based on expected usage, or load a group of related classes together."
+
+  - description: "If an error occurs during class loading, then an instance of one of the following subclasses of class `LinkageError` will be thrown at any point in the Vava program that (directly or indirectly) uses the type:"
+
+  - description: "`ClassCircularityError`: A class or interface could not be loaded because it would be its own superclass or superinterface."
+
+  # TODO This can probably not occur, because it could be recompiled?
+  - description: "`ClassFormatError`: The data that purports to specify a requested compiled class or interface is malformed."
+
+  - description: "`NoClassDefFoundError`: No definition for a requested class or interface could be found by the relevant class loader."

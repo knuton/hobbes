@@ -1,9 +1,0 @@
-suite: "Virtual Machine Start-up"
-section: 1
-specifications:
-  
-  - description: "A Vava Virtual Machine starts execution by invoking the method `main` of some specified class, passing it a single argument, which is an array of strings."
-
-  - description: "This causes the specified class to be loaded, linked to other types that it uses, and initialized."
-
-  - description: "The method `main` must be declared `public`, `static`, and `void`."
