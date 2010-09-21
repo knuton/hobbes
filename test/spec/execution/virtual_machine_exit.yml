@@ -1,0 +1,13 @@
+suite: "Virtual Machine Exit"
+section: 9
+specifications:
+  
+  - description: "A Vava Virtual Machine terminates all its activity and exits when one of two things happens:"
+
+  - description: "The main threads terminates."
+
+  - description: "The exit method of class `Runtime` or class `System` is being invoked."
+
+  - description: "A Vava program can specify that the finalizers of all objects that have finalizers that have not been automatically invoked are to be run before the virtual machine exits. This is done by invoking the method `runFinalizersOnExit` of the class `System` with the argument `true`."
+
+  - description: "The default is to not run finalizers on exit, and this behavior may be restored by invoking `runFinalizersOnExit` with the argument false."

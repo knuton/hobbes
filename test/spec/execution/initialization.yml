@@ -1,0 +1,29 @@
+suite: "Initialization"
+section: 4
+specifications:
+  
+  - description: "Initialization of a class consists of executing its static initializers and the initializers for static fields declared in the class."
+
+  - description: "Initialization of an interface consists of executing the initializers for fields declared in the interface."
+
+  - description: "Before a class is initialized, its superclass must be initialized, but interfaces implemented by the class need not be initialized."
+
+  - description: "Similarly, the superinterfaces of an interface need not be initialized before the interface is initialized."
+
+  # Details in the original Java spec
+  - description: "A class or interface type T will be initialized at its first active use, which occurs if:"
+
+  - description: "T is a class and a method actually declared in T (rather than inherited from a superclass) is invoked."
+
+  - description: "T is a class and a constructor for class T is invoked."
+
+  - description: "A nonconstant field declared in T (rather than inherited from a superclass or superinterface) is used or assigned. A constant field is one that is (explicitly or implicitly) both final and static, and that is initialized with the value of a compile-time constant expression. Java specifies that a reference to such a field must be resolved at compile time to a copy of the compile-time constant value, so uses of such field are never active uses."
+
+  - description: "All other uses of a type are passive uses."
+
+  - description: "Before a class is initialized its superclasses are initialized, if they have not previously been initialized."
+
+  - description: "A reference to a field is an active use of only the class or interface that actually declares it, even though it might be referred to through the name of a subclass, a subinterface, or a class that implements an interface."
+
+  # Because there is no inheritance of fields in interfaces?
+  - description: "Initialization of an interface does not, of itself, require initialization of any of its superinterfaces."

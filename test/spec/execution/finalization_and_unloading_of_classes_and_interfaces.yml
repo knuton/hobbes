@@ -1,0 +1,9 @@
+suite: "Finalization and Unloading of Classes and Interfaces"
+section: 8
+specifications:
+  
+  - description: "A class may not be unloaded while any instance of it is still reachable."
+
+  - description: "A class or interface may not be unloaded while the `Class` object that represents it is still reachable."
+
+  - description: "If a class declares a class method `classFinalize` that takes no arguments, and returns no result, then this method will be invoked before the class is unloaded. Like the `finalize` method for objects, this method will be automatically invoked only once. This method may optionally be declared `private`, `protected`, or `public`."

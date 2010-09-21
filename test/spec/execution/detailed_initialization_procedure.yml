@@ -1,0 +1,34 @@
+suite: "Detailed Initialization Procedure"
+section: 5
+specifications:
+  
+  - description: "Because there is no threading in Vava, synchronization is not an issue. The Vava Virtual Machine assumes that the `Class` object has already been verified and prepared, and that the `Class` object contains state that can indicates one of four situations:"
+
+  - description: "This `Class` object is verified and prepared but not initialized."
+
+  - description: "This `Class` object is being initialized."
+
+  - description: "This `Class` object is fully initialized and ready for use."
+
+  - description: "This `Class` object is in an erroneous state, perhaps because the verification or preparation step failed, or because initialization was attempted and failed."
+
+  - description: "The procedure for initializing a class or interface is then as follows:"
+
+  # TODO: Circle detection
+  - description: "If initialization is in progress for the class or interface, then this must be a recursive request for initialization. If there is no circle, complete normally."
+
+  - description: "If the class or interface has already been initialized, then no further action is required."
+
+  - description: "If the `Class` object is in an erroneous state, then initialization is not possible. Throw a `NoClassDefFoundError`."
+
+  - description: "Otherwise, record the fact that initialization of the `Class` object is now in progress."
+
+  - description: "Next, if the `Class` object represents a class rather than an interface, and the superclass of this class has not yet been initialized, then recursively perform this entire procedure for the superclass. If necessary, verify and prepare the superclass first. If the initialization of the superclass completes abruptly because of a thrown exception, label it erroneous, and complete abruptly, throwing the same exception that resulted from initializing the superclass."
+
+  - description: "Next, execute either the class variable initializers and static initializers of the class, or the field initializers of the interface, in textual order, as though they were a single block, except that `final` `static` variables and fields of interfaces whose values are compile-time constants are initialized first."
+
+  - description: "If the execution of the initializers completes normally, label the `Class` object fully initialized, and complete this procedure normally."
+
+  - description: "Otherwise, the initializers must have completed abruptly by throwing some exception E. If the class of E is not `Error` or one of its subclasses, then create a new instance of the class `ExceptionInInitializerError`, with E as the argument, and use this object in place of E in the following step. But if a new instance of `ExceptionInInitializerError` cannot be created because an `OutOfMemoryError` occurs, then instead use an `OutOfMemoryError` object in place of E in the following step."
+
+  - description: "Label the `Class` object erroneous, and complete this procedure abruptly with reason E or its replacement as determined in the previous step."

@@ -1,0 +1,19 @@
+suite: "Finalization of Class Instances"
+section: 7
+specifications:
+  
+  - description: "The class `Object` has a protected method called `finalize`; this method can be overridden by other classes."
+
+  - description: "The particular definition of `finalize` that can be invoked for an object is called the finalizer of that object. Before the storage for an object is reclaimed by the garbage collector, the Vava Virtual Machine will invoke the finalizer of that object."
+
+  - description: "The Vava language does not specify how soon a finalizer will be invoked, except to say that it will happen before the storage for the object is reused."
+
+  - description: "If an uncaught exception is thrown during the finalization, the exception is ignored and finalization of that object terminates."
+
+  - description: "The `finalize` method declared in class `Object` takes no action."
+
+  - description: "However, the fact that class `Object` declares a `finalize` method means that the `finalize` method for any class can always invoke the `finalize` method for its superclass, which is usually good practice."
+
+  - description: "The `finalize` method may be invoked explicitly, just like any other method."
+
+  - description: "Doing so does not have any effect on the object's eventual automatic finalization."

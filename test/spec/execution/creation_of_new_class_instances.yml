@@ -1,0 +1,35 @@
+suite: "Creation of New Class Instances"
+section: 6
+specifications:
+  
+  - description: "A new class instance is explicitly created when one of the following situations occurs:"
+
+  - description: "Evaluation of a class instance creation expression creates a new instance of the class whose name appears in the expression."
+
+  - description: "Invocation of the `newInstance` method of class `Class` creates a new instance of the class represented by the `Class` object for which the method was invoked."
+
+  - description: "A new class instance may be implicitly created in the following situations:"
+
+  - description: "Loading of a class or interface that contains a `String` literal may create a new `String` object to represent that literal. This may not occur if the same `String` has previously been interned."
+
+  - description: "Execution of a string concatenation operator that is not part of a constant expression sometimes creates a new `String` object to represent the result. String concatenation operators may also create temporary wrapper objects for a value of a primitive type."
+
+  - description: "Whenever a new class instance is created, memory space is allocated for it with room for all the instance variables declared in the class type and all the instance variables declared in each superclass of the class type, including all the instance variables that may be hidden."
+
+  - description: "If there is not sufficient space available to allocate memory for the object, then creation of the class instance completes abruptly with an `OutOfMemoryError`."
+
+  - description: "Otherwise, all the instance variables in the new object, including those declared in superclasses, are initialized to their default values."
+
+  - description: "Just before a reference to the newly created object is returned as the result, the indicated constructor is processed to initialize the new object using the following procedure:"
+
+  - description: "Assign the arguments for the constructor to newly created parameter variables for this constructor invocation."
+
+  - description: "If this constructor begins with an explicit constructor invocation of another constructor in the same class (using `this`), then evaluate the arguments and process that constructor invocation recursively using these same five steps. If that constructor invocation completes abruptly, then this procedure completes abruptly for the same reason. Otherwise, continue with the second to next step."
+
+  - description: "This constructor does not begin with an explicit constructor invocation of another constructor in the same class (using `this`). If this constructor is for a class other than `Object`, then this constructor will begin with a explicit or implicit invocation of a superclass constructor (using `super`). Evaluate the arguments and process that superclass constructor invocation recursively using these same five steps. If that constructor invocation completes abruptly, then this procedure completes abruptly for the same reason. Otherwise, continue with the next step."
+
+  - description: "Execute the instance variable initializers for this class, assigning their values to the corresponding instance variables, in the left-to-right order in which they appear textually in the source code for the class. If execution of any of these initializers results in an exception, then no further initializers are processed and this procedure completes abruptly with that same exception. Otherwise, continue with the next step."
+
+  - description: "Execute the rest of the body of this constructor. If that execution completes abruptly, then this procedure completes abruptly for the same reason. Otherwise, this procedure completes normally."
+
+  - description: "If methods are invoked that are overridden in subclasses in the object being initialized, then these overriding methods are used, even before the new object is completely created."

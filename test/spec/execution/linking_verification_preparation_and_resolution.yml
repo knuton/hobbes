@@ -1,0 +1,42 @@
+suite: "Linking: Verification, Preparation, and Resolution"
+section: 3
+specifications:
+  
+  - description: "Linking is the process of taking a binary form of a class or interface type and combining it into the runtime state of the Vava Virtual Machine, so that it can be executed."
+
+  - description: "A class or interface type is always loaded before it is linked."
+
+  - description: "Three different activities are involved in linking: verification, preparation, and resolution of symbolic references."
+
+  - description: "A class or interface is completely verified and prepared before it is initialized."
+
+  - description: "Errors detected during linkage are thrown at a point in the program where some action is taken by the program that might require linkage to the class or interface involved in the error."
+
+  - description: "Verification ensures that the binary representation of a class or interface is structurally correct. For example, it checks that every instruction has a valid operation code; that every branch instruction branches to the start of some other instruction, rather than into the middle of an instruction; that every method is provided with a structurally correct signature; and that every instruction obeys the type discipline of the Vava language."
+
+  - description: "If an error occurs during verification, then an instance of the following subclass of class `LinkageError` will be thrown at the point in the Vava program that caused the class to be verified:"
+
+  - description: "`VerifyError`: The binary definition for a class or interface failed to pass a set of required checks to verify that it obeys the semantics of the Vava language and that it cannot violate the integrity of the Vava Virtual Machine."
+
+  - description: "Preparation involves creating the static fields for a class or interface and initializing such fields to the standard default values. This does not require the execution of any Vava code; explicit initializers for static fields are executed as part of initialization, not preparation."
+
+  - description: "Vava implementations must detect the following error during preparation:"
+
+  - description: "`AbstractMethodError`: A class that is not declared to be `abstract` has an `abstract` method. This can occur, for example, if a method that is originally not `abstract` is changed to be `abstract` after another class that inherits the now-`abstract` method declaration has been compiled."
+
+  - description: "A compiled Vava file references other classes and interfaces and their fields, methods, and constructors symbolically, using the fully qualified names of the other classes and interfaces."
+
+  - description: "For fields and methods these symbolic references include the name of the class or interface type which declares the field or method, as well as the name of the field or method itself, together with appropriate type information."
+  
+  # A direct reference?
+  - description: "Before a symbolic reference can be used it must undergo _resolution_, wherein a symbolic reference is checked to be correct and, typically, replaced with a direct reference that can be more efficiently processed if the reference is used repeatedly."
+
+  - description: "If an error occurs during resolution, then an instance of one of the following subclasses of class `IncompatibleClassChangeError`, or of some other subclass, or of `IncompatibleClassChangeError` itself (which is a subclass of the class `LinkageError`) may be thrown at any point in the Vava program that uses a symbolic reference to the type:"
+
+  - description: "`IllegalAccessError`: A symbolic reference has been encountered that specifies a use or assignment of a field, or invocation of a method, or creation of an instance of a class, to which the code containing the reference does not have access because the field or method was declared `private`, `protected`, or default access (not `public`), or because the class was not declared `public`. This can occur, for example, if a field that is originally declared `public` is changed to be `private` after another class that refers to the field has been compiled."
+
+  - description: "`InstantiationError`: A symbolic reference has been encountered that is used in a class instance creation expression, but an instance cannot be created because the reference turns out to refer to an interface or to an `abstract` class. This can occur, for example, if a class that is originally not `abstract` is changed to be `abstract` after another class that refers to the class in question has been compiled."
+
+  - description: "`NoSuchFieldError`: A symbolic reference has been encountered that refers to a specific field of a specific class or interface, but the class or interface does not declare a field of that name (it is specifically not sufficient for it simply to be an inherited field of that class or interface). This can occur, for example, if a field declaration was deleted from a class after another class that refers to the field was compiled."
+
+  - description: "`NoSuchMethodError`: A symbolic reference has been encountered that refers to a specific method of a specific class or interface, but the class or interface does not declare a method of that name and signature (it is specifically not sufficient for it simply to be an inherited method of that class or interface). This can occur, for example, if a method declaration was deleted from a class after another class that refers to the method was compiled."
