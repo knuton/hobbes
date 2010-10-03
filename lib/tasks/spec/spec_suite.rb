@@ -61,9 +61,12 @@ class SpecSuite
       java_src = File.open(test_file_path, 'rb') { |f| f.read }.gsub('"', '\"').gsub("\n", '\n')
 
       js = <<-JS
+        load('hobbes/parser.js');
         load('hobbes.js');
         var javaSrc = "#{java_src}";
-        print(javaSrc);
+        (function executionScope (System) {
+          hobbes.parser.exec(java_src);
+        })({out: {println: print}});
       JS
       File.open('tmp/hobbes-cli.js', 'w') { |f| f << js }
     end
