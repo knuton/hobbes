@@ -7,5 +7,4 @@ var hobbes = function () {
   };
 }();
 
-// Add parser
-parser.generate({moduleName: "hobbes.parser"});
+require('hobbes/parser');

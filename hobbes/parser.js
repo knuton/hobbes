@@ -1,5 +1,5 @@
 /* Jison generated parser */
-var parser = (function(){
+hobbes.parser = (function(){
 var parser = {trace: function trace() { },
 yy: {},
 symbols_: {"error":2,"class":3,"class_expression":4,"EOF":5,"KEYWORD_CLASS":6,"IDENTIFIER":7,"{":8,"class_body":9,"}":10,"main_method":11,"MODIFIER_PUBLIC":12,"MODIFIER_STATIC":13,"MODIFIER_VOID":14,"(":15,")":16,"expression_statements":17,"e":18,";":19,"+":20,"-":21,"*":22,"/":23,"NUMBER":24,"$accept":0,"$end":1},
@@ -77,7 +77,7 @@ parse: function parse(input) {
         token = self.lexer.lex() || 1; // $end = 1
         // if token isn't its numeric value, convert
         if (typeof token !== 'number') {
-            token = self.symbols_[token];
+            token = self.symbols_[token] || token;
         }
         return token;
     };
@@ -110,7 +110,7 @@ parse: function parse(input) {
                     parseError.call(this, 'Parse error on line '+(yylineno+1)+":\n"+this.lexer.showPosition()+'\nExpecting '+expected.join(', '),
                         {text: this.lexer.match, token: this.terminals_[symbol] || symbol, line: this.lexer.yylineno, expected: expected});
                 } else {
-                    parseError.call(this, 'Parse error on line '+(yylineno+1)+": Unexpected '"+this.terminals_[symbol]+"'",
+                    parseError.call(this, 'Parse error on line '+(yylineno+1)+": Unexpected '"+(this.terminals_[symbol] || symbol)+"'",
                         {text: this.lexer.match, token: this.terminals_[symbol] || symbol, line: this.lexer.yylineno, expected: expected});
                 }
             }
@@ -359,18 +359,21 @@ lexer.rules = [/^\s+/,/^public\b/,/^private\b/,/^protected\b/,/^static\b/,/^void
 parser.lexer = lexer;
 return parser;
 })();
-if (typeof require !== 'undefined') {
-exports.parser = parser;
-exports.parse = function () { return parser.parse.apply(parser, arguments); }
+if ('undefined' !== 'undefined') {
+exports.parser = vava;
+exports.parse = function () { return vava.parse.apply(vava, arguments); }
 exports.main = function commonjsMain(args) {
-    var cwd = require("file").path(require("file").cwd());
     if (!args[1])
         throw new Error('Usage: '+args[0]+' FILE');
-    var source = cwd.join(args[1]).read({charset: "utf-8"});
-    exports.parser.parse(source);
+    if (typeof process !== 'undefined') {
+        var source = require('fs').readFileSync(require('path').join(process.cwd(), args[1]), "utf8");
+    } else {
+        var cwd = require("file").path(require("file").cwd());
+        var source = cwd.join(args[1]).read({charset: "utf-8"});
+    }
+    return exports.parser.parse(source);
 }
 if (require.main === module) {
-	exports.main(require("system").args);
+  exports.main(typeof process !== 'undefined' ? process.argv.slice(1) : require("system").args);
 }
 }
-
