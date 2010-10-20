@@ -1,0 +1,46 @@
+<html>
+  <head>
+    <title>hobbes</title>
+    <style type="text/css">
+      #source {
+        text-align: center;
+      }
+      #source textarea {
+        width: 90%;
+        height: 40%;
+      }
+      #result {
+        width: 90%;
+        margin: 0 5%;
+        height: 40%;
+        background-color: #ccc
+      }
+    </style>
+    <script type="text/javascript" src="require-browser.js"></script>
+    <script type="text/javascript" src="hobbes.js"></script>
+    <script type="text/javascript">
+      window.onload = function () {
+        var sourceForm = document.getElementById('source');
+        var sourceTextarea = sourceForm.getElementsByTagName('textarea')[0];
+        var execButton = sourceForm.getElementsByTagName('input')[0];
+        var outputDIV = 
+
+        execButton.onclick = function () {
+          // Function creates execution scope
+          (function executionScope (System) {
+            // parses code
+            hobbes.parser.parse(sourceTextarea.value);
+          })({out: {println: function (text) { outputDIV.innerHTML += text + "\n"; }}});
+        };
+      };
+    </script>
+  </head>
+  <body>
+    <form action="" id="source">
+      <div><textarea>Source</textarea></div>
+      <input type="submit" value="Execute">
+    </form>
+    <div id="result">
+    </div>
+  </body>
+</html>
