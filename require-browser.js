@@ -5,5 +5,5 @@
  *
  */
 function require(moduleName) {
-  document.writeln('<script src="../' + moduleName + '.js"></script>');
+  document.writeln('<script src="' + moduleName + '.js"></script>');
 }

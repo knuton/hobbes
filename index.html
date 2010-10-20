@@ -23,14 +23,16 @@
         var sourceForm = document.getElementById('source');
         var sourceTextarea = sourceForm.getElementsByTagName('textarea')[0];
         var execButton = sourceForm.getElementsByTagName('input')[0];
-        var outputDIV = 
+        var outputDIV = document.getElementById('result');
 
         execButton.onclick = function () {
           // Function creates execution scope
-          (function executionScope (System) {
+          (function executionScope (namespace) {
             // parses code
+            hobbes.parser.yy = namespace;
             hobbes.parser.parse(sourceTextarea.value);
-          })({out: {println: function (text) { outputDIV.innerHTML += text + "\n"; }}});
+          })({System: {out: {println: function (text) { outputDIV.innerHTML += text + "\n"; }}}});
+          return false;
         };
       };
     </script>
