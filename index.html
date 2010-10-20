@@ -28,8 +28,9 @@
         execButton.onclick = function () {
           // Function creates execution scope
           (function executionScope (namespace) {
-            // parses code
+            // Set scope for execution
             hobbes.parser.yy = namespace;
+            // Execute
             hobbes.parser.parse(sourceTextarea.value);
           })({System: {out: {println: function (text) { outputDIV.innerHTML += text + "\n"; }}}});
           return false;
