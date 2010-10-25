@@ -1,15 +1,17 @@
+/**
+ * hobbes.js -- a Java subset interpreter in JavaScript
+ * (c) 2010 Johannes Emerich (jemerich@uos.de)
+ * v0.1
+ */
+
 // TODO
 //  - HTML- und CLI-Umgebungen
 //  - Vernuenftige Grammatik
 //  - Anschliessend Laufzeit-Umgebung nachfuegen
 
-var hobbes = function () {
-  // About hobbes
-  var version = '0.1';
-  
-  return {
-    version: version
-  };
-}();
+exports.version = '0.1';
 
-require('hobbes/parser');
+
+exports.parser = require('./hobbes/parser');
+exports.browser = require('./hobbes/browser');
+

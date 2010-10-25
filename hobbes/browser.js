@@ -1,5 +1,5 @@
-hobbes.browser = function () {
-  
+(function (exports) {
+
   /**
    * Given an HTML element wraps it to provide a runtime environment.
    *
@@ -52,7 +52,7 @@ hobbes.browser = function () {
    * @throws Error If ID has been given, but no such element was found
    * @returns Scope object bound to referenced element
    */
-  var outputScope = function (elemOrID) {
+  var outputScope = exports.outputScope = function (elemOrID) {
     if (!elemOrID) throw new TypeError('Expected element reference but none given');
     if (typeof elemOrID === 'string') elemOrID = document.getElementById(elemOrID);
     if (!elemOrID) throw new Error('ID was given, but no such element found');
@@ -61,8 +61,4 @@ hobbes.browser = function () {
     return new ElementEnv(elemOrID);
   };
 
-  return {
-    outputScope : outputScope
-  };
-
-}();
+})(typeof exports !== "undefined" ? exports : {});
