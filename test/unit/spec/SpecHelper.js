@@ -9,14 +9,27 @@ var helper = {
 // exports for node.js
 if (typeof exports === 'object') {
   var fs = require('fs');
+
+  global.helper = helper;
+  
+  mockBrowser();
+
+  global.hobbes = require('hobbes');
+}
+
+function mockBrowser () {
+  global.navigator = {};
   global.window = {};
-  // provide some mocks for DOM-stuff
+
+  // DOM
   global.document = {
     createElement : function (tag) {
       return {innerHTML : ''};
     },
     getElementById : function (id) {
+      // For behavior on missing element
       if (id === 'missing') return null;
+      // Save mock element so that changes can be tracked
       return global.document[id] = global.document[id] || {
         children : [],
         appendChild : function (elem) {this.children.push(elem);},
@@ -24,11 +37,6 @@ if (typeof exports === 'object') {
       };
     }
   }
-  global.navigator = {};
-
-  global.hobbes = require('hobbes');
-
-  global.helper = helper;
 }
 
 // beforeEach(function() {
