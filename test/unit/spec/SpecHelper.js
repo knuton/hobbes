@@ -7,6 +7,7 @@ var helper = {
 };
 
 // exports for node.js
+// http://github.com/benrady/jasmine-nodejs-example
 if (typeof exports === 'object') {
   var fs = require('fs');
 
