@@ -29,7 +29,7 @@ describe('Browser', function() {
     it('should return wrapped element on receiving element ID', function () {
       var nakedElem = document.createElement('div');
       nakedElem.id = 'findme';
-      fillFixtureContainer(nakedElem);
+      helper.fillFixtureContainer(nakedElem);
       var wrappedElem = hobbes.browser.outputScope('findme');
       expect(wrappedElem).toBeDefined();
     });
