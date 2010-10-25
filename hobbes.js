@@ -11,7 +11,7 @@
 
 exports.version = '0.1';
 
-
+require('./hobbes/extensions');
 exports.parser = require('./hobbes/parser');
 exports.browser = require('./hobbes/browser');
 
