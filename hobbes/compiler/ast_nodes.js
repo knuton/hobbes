@@ -50,7 +50,14 @@ ASTNode.prototype.getType = function () {
 /**
  * Returns a string signature containing information about the node.
  */
-ASTNode.prototype.getSignature = ASTNode.prototype.getType;
+ASTNode.prototype.assembleSignature = function () {
+  var sigStr = '<' + this.getType();
+  var signature = this.getSignature && this.getSignature() || {};
+  for (prop in signature) {
+    sigStr += ' ' + prop + ': ' + signature[prop];
+  }
+  return sigStr + '>';
+};
 
 /**
  * Returns a string representation of the form
@@ -64,7 +71,7 @@ ASTNode.prototype.toString = function (indent) {
   // default indentation is none
   indent = indent || 0
   // add indentation and own type
-  var str = utils.indent(indent) + '- ' + this.getSignature() + '\n';
+  var str = utils.indent(indent) + '- ' + this.assembleSignature() + '\n';
   // append toString results of children
   this.children.forEach(function (child) {
     str += child.toString(indent + 2);
@@ -78,6 +85,28 @@ ASTNode.prototype.toString = function (indent) {
  */
 var CompilationUnit = exports.CompilationUnit = function CompilationUnit () {
   this.type = 'CompilationUnit';
+  this.vavaPackage = null;
+  this.vavaImports = [];
 };
 
 CompilationUnit.inherits(ASTNode);
+
+/**
+ * Compiles the unit, with recursive calls to child nodes and attention to
+ *   - the `package` property,
+ *   - the list of `imports`.
+ */
+CompilationUnit.prototype.compileNode = function () {
+  var indent = 0;
+  var jsSource = 'function () {';
+  indent += 2;
+  jsSource += 'return "' + this.vavaPackage +  '";'
+  indent -= 2;
+  jsSource += '}';
+  
+  return jsSource;
+};
+
+CompilationUnit.prototype.getSignature = function () {
+  return {vavaPackage : this.vavaPackage};
+};

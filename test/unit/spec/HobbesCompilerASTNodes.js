@@ -22,12 +22,12 @@ describe('Compiler', function () {
       });
       
       it('should turn itself into a string', function () {
-        expect(simpleNode.toString()).toBe('- ASTNode\n');
+        expect(simpleNode.toString()).toBe('- <ASTNode>\n');
       });
       
       it('should include its children in string representation', function () {
         simpleNode.appendChild(new astNodes.ASTNode());
-        expect(simpleNode.toString()).toBe('- ASTNode\n  - ASTNode\n');
+        expect(simpleNode.toString()).toBe('- <ASTNode>\n  - <ASTNode>\n');
       });
       
     }); // end ASTNode spec
@@ -46,6 +46,11 @@ describe('Compiler', function () {
       
       it('should be of type `CompilationUnit`', function () {
         expect(cUNode.getType()).toBe('CompilationUnit');
+      });
+      
+      it('should turn itself into a string', function () {
+        cUNode.vavaPackage = 'java.util';
+        expect(cUNode.toString()).toBe('- <CompilationUnit vavaPackage: java.util>\n');
       });
       
     }); // end CompilationUnit spec
