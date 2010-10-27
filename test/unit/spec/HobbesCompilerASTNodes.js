@@ -1,3 +1,4 @@
+require('../../../hobbes/extensions');
 var astNodes = require('../../../hobbes/compiler/ast_nodes');
 
 describe('Compiler', function () {
@@ -29,8 +30,26 @@ describe('Compiler', function () {
         expect(simpleNode.toString()).toBe('- ASTNode\n  - ASTNode\n');
       });
       
-    });
+    }); // end ASTNode spec
     
-  });
+    describe('CompilationUnit', function () {
+      
+      var cUNode = null;
+      
+      beforeEach(function () {
+        cUNode = new astNodes.CompilationUnit();
+      });
+      
+      it('should implement ASTNodeInterface', function () {
+        expect(astNodes.ASTNodeInterface.check(cUNode)).not.toBeDefined();
+      });
+      
+      it('should be of type `CompilationUnit`', function () {
+        expect(cUNode.getType()).toBe('CompilationUnit');
+      });
+      
+    }); // end CompilationUnit spec
+    
+  }); // end AST nodes spec
   
-});
+}); // end Compiler spec
