@@ -1,3 +1,17 @@
+/**
+ * Contains a collection of utils to use all around hobbes.
+ *
+ * Johannes Emerich <johannes@emerich.de>
+ * MIT Licensed
+ */
+
+/**
+ * @constructor
+ * Creates an interface to check objects for its implementation.
+ *
+ * @param {string} name The interface's name
+ * @param {string} *methods The names of the methods required to be implemented
+ */
 var Interface = exports.Interface = function(name) {
   if (arguments.length < 2) {
     throw new Error('Interface constructor expected at least 2 arguments, but got ' + arguments.length + '.');
@@ -16,6 +30,11 @@ var Interface = exports.Interface = function(name) {
   }
 };
 
+/**
+ * Checks whether the passed object implements this interface.
+ *
+ * @param object Object to check
+ */
 Interface.prototype.check = function (object) {
   if (!object) {
     throw new Error("Expected an object to check.");
@@ -29,6 +48,12 @@ Interface.prototype.check = function (object) {
   }
 };
 
+/**
+ * Checks whether the passed object implements all the interfaces
+ *
+ * @param object Object to check
+ * @param {Interface} *interfaces Zero or more Interface objects
+ */
 Interface.check = function (object) {
   if (!object) {
     throw new Error("Expected an object to check.");
@@ -39,6 +64,11 @@ Interface.check = function (object) {
   }
 };
 
+/**
+ * Returns a string containing number-many spaces.
+ *
+ * @param {number} number Number of spaces
+ */
 var indent = exports.indent = function (number) {
   if (typeof number !== 'number' || number < 0) {
     throw new TypeError('indent expected a positive number.');
