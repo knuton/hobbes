@@ -6,7 +6,7 @@
  * MIT Licensed
  */
 
-var utils = require('../utils');
+var utils = (typeof hobbes !== 'undefined' && hobbes.utils) || require('../utils');
 
 var ASTNodeInterface = exports.ASTNodeInterface = new utils.Interface('ASTNode', 'appendChild', 'compile', 'getType', 'toString');
 
