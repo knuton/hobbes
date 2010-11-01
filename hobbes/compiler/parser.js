@@ -2,23 +2,23 @@
 var vava_proper = (function(){
 var parser = {trace: function trace() { },
 yy: {},
-symbols_: {"error":2,"compilation_unit":3,"EOF":4,"package_declaration":5,"KEYWORD_PACKAGE":6,"IDENTIFIER":7,"$accept":0,"$end":1},
-terminals_: {"2":"error","4":"EOF","6":"KEYWORD_PACKAGE","7":"IDENTIFIER"},
-productions_: [0,[3,1],[3,2],[5,2]],
+symbols_: {"error":2,"compilation_unit":3,"EOF":4,"package_declaration":5,"KEYWORD_PACKAGE":6,"IDENTIFIER":7,"LINE_TERMINATOR":8,"$accept":0,"$end":1},
+terminals_: {"2":"error","4":"EOF","6":"KEYWORD_PACKAGE","7":"IDENTIFIER","8":"LINE_TERMINATOR"},
+productions_: [0,[3,1],[3,2],[5,3]],
 performAction: function anonymous(yytext,yyleng,yylineno,yy) {
 
 var $$ = arguments[5],$0=arguments[5].length;
 switch(arguments[4]) {
-case 1: return new CompilationUnit(); 
+case 1: return new yy.CompilationUnit(); 
 break;
-case 2: var cu = new CompilationUnit(); cu.vavaPackage = $$[$0-2+1-1]; return cu; 
+case 2: var cu = new yy.CompilationUnit(); cu.vavaPackage = $$[$0-2+1-1]; return cu; 
 break;
-case 3: $$[$0-2+2-1] 
+case 3: this.$ = $$[$0-3+2-1]; 
 break;
 }
 },
-table: [{"3":1,"4":[1,2],"5":3,"6":[1,4]},{"1":[3]},{"1":[2,1]},{"4":[1,5]},{"7":[1,6]},{"1":[2,2]},{"4":[2,3]}],
-defaultActions: {"2":[2,1],"5":[2,2],"6":[2,3]},
+table: [{"3":1,"4":[1,2],"5":3,"6":[1,4]},{"1":[3]},{"1":[2,1]},{"4":[1,5]},{"7":[1,6]},{"1":[2,2]},{"8":[1,7]},{"4":[2,3]}],
+defaultActions: {"2":[2,1],"5":[2,2],"7":[2,3]},
 parseError: function parseError(str, hash) {
     throw new Error(str);
 },
@@ -313,13 +313,15 @@ case 8:return 'KEYWORD_CLASS';
 break;
 case 9:return 7;
 break;
-case 10:return 4;
+case 10:return 8;
 break;
-case 11:return 'INVALID';
+case 11:return 4;
+break;
+case 12:return 'INVALID';
 break;
 }
 };
-lexer.rules = [/^\s+/,/^public\b/,/^private\b/,/^protected\b/,/^package\b/,/^static\b/,/^void\b/,/^final\b/,/^class\b/,/^[a-zA-Z][a-zA-Z0-9_]*/,/^$/,/^./];return lexer;})()
+lexer.rules = [/^\s+/,/^public\b/,/^private\b/,/^protected\b/,/^package\b/,/^static\b/,/^void\b/,/^final\b/,/^class\b/,/^[a-zA-Z][a-zA-Z0-9_]*/,/^;/,/^$/,/^./];return lexer;})()
 parser.lexer = lexer;
 return parser;
 })();

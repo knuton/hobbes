@@ -98,11 +98,8 @@ CompilationUnit.inherits(ASTNode);
  */
 CompilationUnit.prototype.compileNode = function () {
   var indent = 0;
-  var jsSource = 'function () {';
-  indent += 2;
+  var jsSource = '';
   jsSource += 'return "' + this.vavaPackage +  '";'
-  indent -= 2;
-  jsSource += '}';
   
   return jsSource;
 };

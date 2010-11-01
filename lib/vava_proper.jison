@@ -20,6 +20,7 @@
 
 [a-zA-Z][a-zA-Z0-9_]* {return 'IDENTIFIER';}
 
+";"                   {return 'LINE_TERMINATOR';}
 <<EOF>>               {return 'EOF';}
 .                     {return 'INVALID';}
 
@@ -29,12 +30,12 @@
 
 compilation_unit
   : EOF
-    { return new CompilationUnit(); }
+    { return new yy.CompilationUnit(); }
   | package_declaration EOF
-    { var cu = new CompilationUnit(); cu.vavaPackage = $1; return cu; }
+    { var cu = new yy.CompilationUnit(); cu.vavaPackage = $1; return cu; }
   ;
 
 package_declaration
-  : KEYWORD_PACKAGE IDENTIFIER
-    { $2 }
+  : KEYWORD_PACKAGE IDENTIFIER LINE_TERMINATOR
+    { $$ = $2; }
   ;
