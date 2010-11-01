@@ -1,5 +1,5 @@
 /* Jison generated parser */
-var parser = (function(){
+var vava_proper = (function(){
 var parser = {trace: function trace() { },
 yy: {},
 symbols_: {"error":2,"compilation_unit":3,"EOF":4,"package_declaration":5,"KEYWORD_PACKAGE":6,"IDENTIFIER":7,"$accept":0,"$end":1},
@@ -59,7 +59,7 @@ parse: function parse(input) {
         token = self.lexer.lex() || 1; // $end = 1
         // if token isn't its numeric value, convert
         if (typeof token !== 'number') {
-            token = self.symbols_[token];
+            token = self.symbols_[token] || token;
         }
         return token;
     };
@@ -92,7 +92,7 @@ parse: function parse(input) {
                     parseError.call(this, 'Parse error on line '+(yylineno+1)+":\n"+this.lexer.showPosition()+'\nExpecting '+expected.join(', '),
                         {text: this.lexer.match, token: this.terminals_[symbol] || symbol, line: this.lexer.yylineno, expected: expected});
                 } else {
-                    parseError.call(this, 'Parse error on line '+(yylineno+1)+": Unexpected '"+this.terminals_[symbol]+"'",
+                    parseError.call(this, 'Parse error on line '+(yylineno+1)+": Unexpected '"+(this.terminals_[symbol] || symbol)+"'",
                         {text: this.lexer.match, token: this.terminals_[symbol] || symbol, line: this.lexer.yylineno, expected: expected});
                 }
             }
@@ -324,16 +324,20 @@ parser.lexer = lexer;
 return parser;
 })();
 if (typeof require !== 'undefined') {
-exports.parser = parser;
-exports.parse = function () { return parser.parse.apply(parser, arguments); }
+exports.parser = vava_proper;
+exports.parse = function () { return vava_proper.parse.apply(vava_proper, arguments); }
 exports.main = function commonjsMain(args) {
-    var cwd = require("file").path(require("file").cwd());
     if (!args[1])
         throw new Error('Usage: '+args[0]+' FILE');
-    var source = cwd.join(args[1]).read({charset: "utf-8"});
-    exports.parser.parse(source);
+    if (typeof process !== 'undefined') {
+        var source = require('fs').readFileSync(require('path').join(process.cwd(), args[1]), "utf8");
+    } else {
+        var cwd = require("file").path(require("file").cwd());
+        var source = cwd.join(args[1]).read({charset: "utf-8"});
+    }
+    return exports.parser.parse(source);
 }
 if (require.main === module) {
-	exports.main(require("system").args);
+  exports.main(typeof process !== 'undefined' ? process.argv.slice(1) : require("system").args);
 }
 }
