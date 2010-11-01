@@ -11,6 +11,7 @@
 "protected"           {return 'MODIFIER_PROTECTED';}
 
 "package"             {return 'KEYWORD_PACKAGE';}
+"import"              {return 'KEYWORD_IMPORT';}
 
 "static"              {return 'MODIFIER_STATIC';}
 "void"                {return 'MODIFIER_VOID';}
@@ -33,6 +34,30 @@ compilation_unit
     { return new yy.CompilationUnit(); }
   | package_declaration EOF
     { var cu = new yy.CompilationUnit(); cu.vavaPackage = $1; return cu; }
+  | import_declarations EOF
+    { var cu = new yy.CompilationUnit(); cu.vavaImports = $1; return cu; }
+  | type_declarations EOF
+    { var cu = new yy.CompilationUnit(); cu.vavaType = $1; return cu; }
+  | package_declaration import_declarations EOF
+    { var cu = new yy.CompilationUnit(); cu.vavaPackage = $1; cu.vavaImports = $2; return cu; }
+  | package_declaration type_declarations EOF
+    { var cu = new yy.CompilationUnit(); cu.vavaPackage = $1; cu.vavaType = $2; return cu; }
+  | import_declarations type_declarations EOF
+    { var cu = new yy.CompilationUnit(); cu.vavaImports = $1; cu.vavaType = $2; return cu; }
+  | package_declaration import_declarations type_declarations EOF
+    { var cu = new yy.CompilationUnit(); cu.vavaPackage = $1; cu.vavaImports = $2; cu.vavaType = $3; return cu; }
+  ;
+
+import_declarations
+  : import_declaration
+    { $$ = [$1]; }
+  | import_declarations import_declaration
+    { $1.push($2); $$ = $1; }
+  ;
+
+import_declaration
+  : KEYWORD_IMPORT IDENTIFIER LINE_TERMINATOR
+    { $$ = $2; }
   ;
 
 package_declaration

@@ -2,9 +2,9 @@
 var vava_proper = (function(){
 var parser = {trace: function trace() { },
 yy: {},
-symbols_: {"error":2,"compilation_unit":3,"EOF":4,"package_declaration":5,"KEYWORD_PACKAGE":6,"IDENTIFIER":7,"LINE_TERMINATOR":8,"$accept":0,"$end":1},
-terminals_: {"2":"error","4":"EOF","6":"KEYWORD_PACKAGE","7":"IDENTIFIER","8":"LINE_TERMINATOR"},
-productions_: [0,[3,1],[3,2],[5,3]],
+symbols_: {"error":2,"compilation_unit":3,"EOF":4,"package_declaration":5,"import_declarations":6,"type_declarations":7,"import_declaration":8,"KEYWORD_IMPORT":9,"IDENTIFIER":10,"LINE_TERMINATOR":11,"KEYWORD_PACKAGE":12,"$accept":0,"$end":1},
+terminals_: {"2":"error","4":"EOF","7":"type_declarations","9":"KEYWORD_IMPORT","10":"IDENTIFIER","11":"LINE_TERMINATOR","12":"KEYWORD_PACKAGE"},
+productions_: [0,[3,1],[3,2],[3,2],[3,2],[3,3],[3,3],[3,3],[3,4],[6,1],[6,2],[8,3],[5,3]],
 performAction: function anonymous(yytext,yyleng,yylineno,yy) {
 
 var $$ = arguments[5],$0=arguments[5].length;
@@ -13,12 +13,30 @@ case 1: return new yy.CompilationUnit();
 break;
 case 2: var cu = new yy.CompilationUnit(); cu.vavaPackage = $$[$0-2+1-1]; return cu; 
 break;
-case 3: this.$ = $$[$0-3+2-1]; 
+case 3: var cu = new yy.CompilationUnit(); cu.vavaImports = $$[$0-2+1-1]; return cu; 
+break;
+case 4: var cu = new yy.CompilationUnit(); cu.vavaType = $$[$0-2+1-1]; return cu; 
+break;
+case 5: var cu = new yy.CompilationUnit(); cu.vavaPackage = $$[$0-3+1-1]; cu.vavaImports = $$[$0-3+2-1]; return cu; 
+break;
+case 6: var cu = new yy.CompilationUnit(); cu.vavaPackage = $$[$0-3+1-1]; cu.vavaType = $$[$0-3+2-1]; return cu; 
+break;
+case 7: var cu = new yy.CompilationUnit(); cu.vavaImports = $$[$0-3+1-1]; cu.vavaType = $$[$0-3+2-1]; return cu; 
+break;
+case 8: var cu = new yy.CompilationUnit(); cu.vavaPackage = $$[$0-4+1-1]; cu.vavaImports = $$[$0-4+2-1]; cu.vavaType = $$[$0-4+3-1]; return cu; 
+break;
+case 9: this.$ = [$$[$0-1+1-1]]; 
+break;
+case 10: $$[$0-2+1-1].push($$[$0-2+2-1]); this.$ = $$[$0-2+1-1]; 
+break;
+case 11: this.$ = $$[$0-3+2-1]; 
+break;
+case 12: this.$ = $$[$0-3+2-1]; 
 break;
 }
 },
-table: [{"3":1,"4":[1,2],"5":3,"6":[1,4]},{"1":[3]},{"1":[2,1]},{"4":[1,5]},{"7":[1,6]},{"1":[2,2]},{"8":[1,7]},{"4":[2,3]}],
-defaultActions: {"2":[2,1],"5":[2,2],"7":[2,3]},
+table: [{"3":1,"4":[1,2],"5":3,"6":4,"7":[1,5],"8":7,"9":[1,8],"12":[1,6]},{"1":[3]},{"1":[2,1]},{"4":[1,9],"6":10,"7":[1,11],"8":7,"9":[1,8]},{"4":[1,12],"7":[1,13],"8":14,"9":[1,8]},{"4":[1,15]},{"10":[1,16]},{"4":[2,9],"7":[2,9],"9":[2,9]},{"10":[1,17]},{"1":[2,2]},{"4":[1,18],"7":[1,19],"8":14,"9":[1,8]},{"4":[1,20]},{"1":[2,3]},{"4":[1,21]},{"4":[2,10],"7":[2,10],"9":[2,10]},{"1":[2,4]},{"11":[1,22]},{"11":[1,23]},{"1":[2,5]},{"4":[1,24]},{"1":[2,6]},{"1":[2,7]},{"4":[2,12],"7":[2,12],"9":[2,12]},{"4":[2,11],"7":[2,11],"9":[2,11]},{"1":[2,8]}],
+defaultActions: {"2":[2,1],"9":[2,2],"12":[2,3],"15":[2,4],"18":[2,5],"20":[2,6],"21":[2,7],"24":[2,8]},
 parseError: function parseError(str, hash) {
     throw new Error(str);
 },
@@ -301,27 +319,29 @@ case 2:return 'MODIFIER_PRIVATE';
 break;
 case 3:return 'MODIFIER_PROTECTED';
 break;
-case 4:return 6;
+case 4:return 12;
 break;
-case 5:return 'MODIFIER_STATIC';
+case 5:return 9;
 break;
-case 6:return 'MODIFIER_VOID';
+case 6:return 'MODIFIER_STATIC';
 break;
-case 7:return 'MODIFIER_FINAL';
+case 7:return 'MODIFIER_VOID';
 break;
-case 8:return 'KEYWORD_CLASS';
+case 8:return 'MODIFIER_FINAL';
 break;
-case 9:return 7;
+case 9:return 'KEYWORD_CLASS';
 break;
-case 10:return 8;
+case 10:return 10;
 break;
-case 11:return 4;
+case 11:return 11;
 break;
-case 12:return 'INVALID';
+case 12:return 4;
+break;
+case 13:return 'INVALID';
 break;
 }
 };
-lexer.rules = [/^\s+/,/^public\b/,/^private\b/,/^protected\b/,/^package\b/,/^static\b/,/^void\b/,/^final\b/,/^class\b/,/^[a-zA-Z][a-zA-Z0-9_]*/,/^;/,/^$/,/^./];return lexer;})()
+lexer.rules = [/^\s+/,/^public\b/,/^private\b/,/^protected\b/,/^package\b/,/^import\b/,/^static\b/,/^void\b/,/^final\b/,/^class\b/,/^[a-zA-Z][a-zA-Z0-9_]*/,/^;/,/^$/,/^./];return lexer;})()
 parser.lexer = lexer;
 return parser;
 })();
