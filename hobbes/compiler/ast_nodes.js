@@ -87,6 +87,7 @@ var CompilationUnit = exports.CompilationUnit = function CompilationUnit () {
   this.type = 'CompilationUnit';
   this.vavaPackage = null;
   this.vavaImports = [];
+  this.vavaType = null;
 };
 
 CompilationUnit.inherits(ASTNode);
@@ -105,5 +106,24 @@ CompilationUnit.prototype.compileNode = function () {
 };
 
 CompilationUnit.prototype.getSignature = function () {
-  return {vavaPackage : this.vavaPackage};
+  return {vavaPackage : this.vavaPackage, vavaType: this.vavaType.toString()};
+};
+
+/**
+ * Creates a node for a ClassDeclaration, containing one Vava class.
+ */
+var ClassDeclaration = exports.ClassDeclaration = function (name) {
+  this.type = 'ClassDeclaration';
+  this.vavaClassName = name;
+  this.vavaBody = [];
+}
+
+ClassDeclaration.inherits(ASTNode);
+
+ClassDeclaration.prototype.getSignature = function () {
+  return {vavaClassName : this.vavaClassName};
+};
+
+ClassDeclaration.prototype.toString = function () {
+  return this.vavaClassName;
 };
