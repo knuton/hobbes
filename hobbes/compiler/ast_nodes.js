@@ -106,7 +106,11 @@ CompilationUnit.prototype.compileNode = function () {
 };
 
 CompilationUnit.prototype.getSignature = function () {
-  return {vavaPackage : this.vavaPackage, vavaType: this.vavaType.toString()};
+  return {
+    vavaPackage : this.vavaPackage,
+    vavaImports : this.vavaImports,
+    vavaType: this.vavaType ? this.vavaType.vavaClassName : this.vavaType
+  };
 };
 
 /**
@@ -120,10 +124,14 @@ var ClassDeclaration = exports.ClassDeclaration = function (name) {
 
 ClassDeclaration.inherits(ASTNode);
 
-ClassDeclaration.prototype.getSignature = function () {
-  return {vavaClassName : this.vavaClassName};
+ClassDeclaration.prototype.compileNode = function () {
+  var indent = 0;
+  
+  return "";
 };
 
-ClassDeclaration.prototype.toString = function () {
-  return this.vavaClassName;
+ClassDeclaration.prototype.getSignature = function () {
+  return {
+    vavaClassName : this.vavaClassName
+  };
 };

@@ -50,10 +50,34 @@ describe('Compiler', function () {
       
       it('should turn itself into a string', function () {
         cUNode.vavaPackage = 'java.util';
-        expect(cUNode.toString()).toBe('- <CompilationUnit vavaPackage: java.util>\n');
+        cUNode.vavaImports = ['java.foo'];
+        cUNode.vavaType = {vavaClassName: "Test" };
+        expect(cUNode.toString()).toBe('- <CompilationUnit vavaPackage: java.util vavaImports: java.foo vavaType: Test>\n');
       });
       
     }); // end CompilationUnit spec
+    
+    describe('ClassDeclaration', function () {
+      
+      var cDNode = null;
+      
+      beforeEach(function () {
+        cDNode = new astNodes.ClassDeclaration('Test');
+      });
+      
+      it('should implement ASTNodeInterface', function () {
+        expect(astNodes.ASTNodeInterface.check(cDNode)).not.toBeDefined();
+      });
+      
+      it('should be of type `ClassDeclaration`', function () {
+        expect(cDNode.getType()).toBe('ClassDeclaration');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(cDNode.toString()).toBe('- <ClassDeclaration vavaClassName: Test>\n');
+      });
+      
+    }); // end ClassDeclaration spec
     
   }); // end AST nodes spec
   
