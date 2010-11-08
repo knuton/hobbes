@@ -99,7 +99,7 @@ type_declaration
 /* Modifiers_{opt} class Identifier Super_{opt} Interfaces_{opt} ClassBody */
 class_declaration
   : KEYWORD_CLASS IDENTIFIER class_body
-    { $$ = new yy.ClassDeclaration($2); $$.vavaBody = $3; }
+    { $$ = new yy.ClassDeclaration($2, $3); }
   ;
 
 /*** CLASS ***/
