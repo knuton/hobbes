@@ -62,7 +62,7 @@ describe('Compiler', function () {
       var cDNode = null;
       
       beforeEach(function () {
-        cDNode = new astNodes.ClassDeclaration('Test');
+        cDNode = new astNodes.ClassDeclaration('Test', []);
       });
       
       it('should implement ASTNodeInterface', function () {

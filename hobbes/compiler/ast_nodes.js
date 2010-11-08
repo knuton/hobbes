@@ -115,11 +115,17 @@ CompilationUnit.prototype.getSignature = function () {
 
 /**
  * Creates a node for a ClassDeclaration, containing one Vava class.
+ *
+ * @param name Name of the class
+ * @param classBody Array of body declarations
  */
-var ClassDeclaration = exports.ClassDeclaration = function (name) {
+var ClassDeclaration = exports.ClassDeclaration = function (name, classBody) {
+  if (!utils.isArray(classBody)) {
+    throw new TypeError('Expected array for class body.');
+  }
   this.type = 'ClassDeclaration';
   this.vavaClassName = name;
-  this.vavaBody = [];
+  this.vavaBody = classBody;
 }
 
 ClassDeclaration.inherits(ASTNode);
