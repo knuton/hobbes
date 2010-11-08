@@ -65,7 +65,9 @@ Interface.check = function (object) {
 };
 
 /**
- * Tests a given argument for its array-ish-ness
+ * Tests a given argument for its array-ish-ness.
+ *
+ * Based on Crockford's typeOf fn.
  *
  * @param value Value to test
  * @returns `true` if is array, `false` otherwise
