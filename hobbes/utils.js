@@ -65,9 +65,23 @@ Interface.check = function (object) {
 };
 
 /**
+ * Tests a given argument for its array-ish-ness
+ *
+ * @param value Value to test
+ * @returns `true` if is array, `false` otherwise
+ */
+var isArray = exports.isArray = function (value) {
+  return typeof value === 'object' &&
+    typeof value.length === 'number' &&
+    !(value.propertyIsEnumerable('length')) &&
+    typeof value.splice === 'function';
+};
+
+/**
  * Returns a string containing number-many spaces.
  *
  * @param {number} number Number of spaces
+ * @returns ' '*number
  */
 var indent = exports.indent = function (number) {
   if (typeof number !== 'number' || number < 0) {

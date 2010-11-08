@@ -37,4 +37,16 @@ describe('Utils', function () {
     });
   });
   
+  describe('Array test', function () {
+    
+    it('should recognize array', function () {
+      expect(utils.isArray([])).toBe(true);
+    });
+    
+    it('should reject pseudo-array', function () {
+      expect(utils.isArray({length:0})).toBe(false);
+    });
+    
+  });
+  
 });
