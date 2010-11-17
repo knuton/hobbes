@@ -56,15 +56,15 @@ compilation_unit
   | import_declarations EOF
     { var cu = new yy.CompilationUnit(); cu.vavaImports = $1; return cu; }
   | type_declarations EOF
-    { var cu = new yy.CompilationUnit(); cu.vavaType = $1; return cu; }
+    { var cu = new yy.CompilationUnit(); cu.children.push($1); return cu; }
   | package_declaration import_declarations EOF
     { var cu = new yy.CompilationUnit(); cu.vavaPackage = $1; cu.vavaImports = $2; return cu; }
   | package_declaration type_declarations EOF
-    { var cu = new yy.CompilationUnit(); cu.vavaPackage = $1; cu.vavaType = $2; return cu; }
+    { var cu = new yy.CompilationUnit(); cu.vavaPackage = $1; cu.children.push($2); return cu; }
   | import_declarations type_declarations EOF
-    { var cu = new yy.CompilationUnit(); cu.vavaImports = $1; cu.vavaType = $2; return cu; }
+    { var cu = new yy.CompilationUnit(); cu.vavaImports = $1; cu.children.push($2); return cu; }
   | package_declaration import_declarations type_declarations EOF
-    { var cu = new yy.CompilationUnit(); cu.vavaPackage = $1; cu.vavaImports = $2; cu.vavaType = $3; return cu; }
+    { var cu = new yy.CompilationUnit(); cu.vavaPackage = $1; cu.vavaImports = $2; cu.children.push($3); return cu; }
   ;
 
 /*** COMPILATION UNIT ***/
@@ -96,7 +96,7 @@ type_declaration
     { $$ = $1; }
   ;
 
-/* Modifiers_{opt} class Identifier Super_{opt} Interfaces_{opt} ClassBody */
+/* TODO Modifiers_{opt} class Identifier Super_{opt} Interfaces_{opt} ClassBody */
 class_declaration
   : KEYWORD_CLASS IDENTIFIER class_body
     { $$ = new yy.ClassDeclaration($2, $3); }
@@ -136,6 +136,7 @@ class_member_declaration
 
 field_declaration
   : type variable_declarators LINE_TERMINATOR
+    // ???
     { $2.vavaType = $1; $$ = $2; }
   | INTEGER_EXPRESSION LINE_TERMINATOR
     { $$ = $1; }

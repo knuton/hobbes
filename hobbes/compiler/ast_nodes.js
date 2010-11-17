@@ -87,7 +87,6 @@ var CompilationUnit = exports.CompilationUnit = function CompilationUnit () {
   this.type = 'CompilationUnit';
   this.vavaPackage = null;
   this.vavaImports = [];
-  this.vavaType = null;
 };
 
 CompilationUnit.inherits(ASTNode);
@@ -108,8 +107,7 @@ CompilationUnit.prototype.compileNode = function () {
 CompilationUnit.prototype.getSignature = function () {
   return {
     vavaPackage : this.vavaPackage,
-    vavaImports : this.vavaImports,
-    vavaType: this.vavaType ? this.vavaType.vavaClassName : this.vavaType
+    vavaImports : this.vavaImports
   };
 };
 
@@ -126,7 +124,7 @@ var ClassDeclaration = exports.ClassDeclaration = function (name, classBody) {
   }
   this.type = 'ClassDeclaration';
   this.vavaClassName = name;
-  this.vavaBody = classBody;
+  this.children = classBody;
 }
 
 ClassDeclaration.inherits(ASTNode);
