@@ -13,6 +13,8 @@ var ASTNodeInterface = exports.ASTNodeInterface = new utils.Interface('ASTNode',
 /**
  * @constructor
  * Creates an ASTNode.
+ *
+ * Inheritants need to make sure they have children of their own!
  */
 var ASTNode = exports.ASTNode = function ASTNode () {
   // Lists the node's child nodes
@@ -85,6 +87,7 @@ ASTNode.prototype.toString = function (indent) {
  */
 var CompilationUnit = exports.CompilationUnit = function CompilationUnit () {
   this.type = 'CompilationUnit';
+  this.children = [];
   this.vavaPackage = null;
   this.vavaImports = [];
 };
@@ -147,21 +150,22 @@ ClassDeclaration.prototype.getSignature = function () {
  * @param vavaType The Vava type of the declared fields
  * @param variableDeclarations Array of VariableDeclaration objects
  */
-var FieldDeclaration = exports.FieldDeclaration = function (vavaType, variableDeclarations) {
+var FieldDeclaration = exports.FieldDeclaration = function (vavaType, variableDeclarators) {
   if (typeof vavaType !== 'string') {
     throw new TypeError('Expected Vava type to be string.');
   }
-  if (!utils.isArray(variableDeclarations) || variableDeclarations.length === 0) {
-    throw new TypeError('Expected variable declarations to come as non-empty array.');
+  if (!utils.isArray(variableDeclarators) || variableDeclarators.length === 0) {
+    throw new TypeError('Expected variable declarators to come as non-empty array.');
   }
   this.type  = 'FieldDeclaration';
+  this.children = [];
   this.vavaType = vavaType;
-  for (var i = 0; i < variableDeclarations.length; i++) {
-    var declaration = variableDeclarations[i];
-    if (declaration.getType() !== 'VariableDeclaration') {
-      throw new TypeError('Expected variable declaration to be of type `VariableDeclaration`.');
+  for (var i = 0; i < variableDeclarators.length; i++) {
+    var declarator = variableDeclarators[i];
+    if (!declarator || declarator.getType() !== 'VariableDeclarator') {
+      throw new TypeError('Expected variable declarator to be of type `VariableDeclarator`.');
     }
-    this.children.push(declaration);
+    this.appendChild(declarator);
   }
 };
 
@@ -174,13 +178,13 @@ FieldDeclaration.prototype.getSignature = function () {
 }
 
 /**
- * Creates a node for a VariableDeclaration, containing one variable identifier
+ * Creates a node for a VariableDeclarator, containing one variable identifier
  * and optionally its initializer expression.
  *
  * @param vavaIdentifier The identifier of the variable
  * @param vavaExpression The expression to initialize the variable with (optional)
  */
-var VariableDeclaration = exports.VariableDeclaration = function (vavaIdentifier, vavaExpression) {
+var VariableDeclarator = exports.VariableDeclarator = function (vavaIdentifier, vavaExpression) {
   if (typeof vavaIdentifier !== 'string') {
     throw new TypeError('Expected Vava identifier to be a string.');
   }
@@ -188,14 +192,14 @@ var VariableDeclaration = exports.VariableDeclaration = function (vavaIdentifier
   // if (vavaExpression && vavaExpression.getType() !== 'Expression') {
   //   throw new TypeError('Expected Vava expression to be of type `Expression`.');
   // }
-  this.type = 'VariableDeclaration';
+  this.type = 'VariableDeclarator';
   this.vavaIdentifier = vavaIdentifier;
   this.vavaInitializer = vavaExpression;
 };
 
-VariableDeclaration.inherits(ASTNode);
+VariableDeclarator.inherits(ASTNode);
 
-VariableDeclaration.prototype.getSignature = function () {
+VariableDeclarator.prototype.getSignature = function () {
   return {
     vavaIdentifier : this.vavaIdentifier
   };

@@ -27,17 +27,15 @@
 
 "class"               {return 'KEYWORD_CLASS';}
 
-
-[a-zA-Z][a-zA-Z0-9_]* {return 'IDENTIFIER'; /* Varying form */}
-[0-9]+                {return 'INTEGER_EXPRESSION';}
-[0-9]+\.[0-9]*        {return 'FLOAT_EXPRESSION';}
-
-
 "boolean"             {return 'PRIMITIVE_BOOLEAN'; /* Primitive Types */}
 "int"                 {return 'PRIMITIVE_INTEGER';}
 "float"               {return 'PRIMITIVE_FLOAT';}
 
-"="                   {return 'OPERATOR_ASSIGNMENT';}
+"="                   {return 'OPERATOR_ASSIGNMENT'; /* OPERATORS */}
+
+[a-zA-Z][a-zA-Z0-9_]* {return 'IDENTIFIER'; /* Varying form */}
+[0-9]+                {return 'INTEGER_EXPRESSION';}
+[0-9]+\.[0-9]*        {return 'FLOAT_EXPRESSION';}
 
 <<EOF>>               {return 'EOF';}
 .                     {return 'INVALID';}
@@ -56,15 +54,15 @@ compilation_unit
   | import_declarations EOF
     { var cu = new yy.CompilationUnit(); cu.vavaImports = $1; return cu; }
   | type_declarations EOF
-    { var cu = new yy.CompilationUnit(); cu.children.push($1); return cu; }
+    { var cu = new yy.CompilationUnit(); cu.appendChild($1); return cu; }
   | package_declaration import_declarations EOF
     { var cu = new yy.CompilationUnit(); cu.vavaPackage = $1; cu.vavaImports = $2; return cu; }
   | package_declaration type_declarations EOF
-    { var cu = new yy.CompilationUnit(); cu.vavaPackage = $1; cu.children.push($2); return cu; }
+    { var cu = new yy.CompilationUnit(); cu.vavaPackage = $1; cu.appendChild($2); return cu; }
   | import_declarations type_declarations EOF
-    { var cu = new yy.CompilationUnit(); cu.vavaImports = $1; cu.children.push($2); return cu; }
+    { var cu = new yy.CompilationUnit(); cu.vavaImports = $1; cu.appendChild($2); return cu; }
   | package_declaration import_declarations type_declarations EOF
-    { var cu = new yy.CompilationUnit(); cu.vavaPackage = $1; cu.vavaImports = $2; cu.children.push($3); return cu; }
+    { var cu = new yy.CompilationUnit(); cu.vavaPackage = $1; cu.vavaImports = $2; cu.appendChild($3); return cu; }
   ;
 
 /*** COMPILATION UNIT ***/
@@ -119,10 +117,10 @@ class_body_declarations
 class_body_declaration
   : class_member_declaration
     { $$ = $1 }
-  | static_initializer
+/*  | static_initializer
     { $$ = $1; }
   | constructor_declaration
-    { $$ = $1; }
+    { $$ = $1; }*/
   ;
 
 class_member_declaration
@@ -132,26 +130,27 @@ class_member_declaration
     { $$ = $1; }
   ;
 
-/*** FIELD DECLARATION ***/
+/*** CLASS MEMBER DECLARATIONS ***/
 
 field_declaration
   : type variable_declarators LINE_TERMINATOR
-    // ???
-    { $$ = yy.FieldDeclaration($1, $2); }
+    { $$ = new yy.FieldDeclaration($1, $2); }
   ;
+
+/*** VARIABLE DECLARATORS ***/
 
 variable_declarators
   : variable_declarator
     { $$ = [$1]; }
-  | variable_declarators variable_declarator
-    { $1.push($2); $$ = $1; }
+  | variable_declarators COMMA variable_declarator
+    { $1.push($3); $$ = $1; }
   ;
 
 variable_declarator
   : variable_declarator_id
-    { $$ = yy.VariableDeclarator($1); }
+    { $$ = new yy.VariableDeclarator($1); }
   | variable_declarator_id OPERATOR_ASSIGNMENT variable_initializer
-    { $$ = yy.VariableDeclarator($1, $3); }
+    { $$ = new yy.VariableDeclarator($1, $3); }
   ;
 
 variable_declarator_id

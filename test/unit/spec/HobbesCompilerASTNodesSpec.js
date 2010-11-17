@@ -117,24 +117,24 @@ describe('Compiler', function () {
       
     }); // end FieldDeclaration spec
     
-    describe('VariableDeclaration', function () {
+    describe('VariableDeclarator', function () {
       
       var vDNode = null;
       
       beforeEach(function () {
-        vDNode = new astNodes.VariableDeclaration('foo', 5);
+        vDNode = new astNodes.VariableDeclarator('foo', 5);
       });
       
       it('should implement ASTNodeInterface', function () {
         expect(astNodes.ASTNodeInterface.check(vDNode)).not.toBeDefined();
       });
       
-      it('should be of type `VariableDeclaration`', function () {
-        expect(vDNode.getType()).toBe('VariableDeclaration');
+      it('should be of type `VariableDeclarator`', function () {
+        expect(vDNode.getType()).toBe('VariableDeclarator');
       });
       
       it('should turn itself into a string', function () {
-        expect(vDNode.toString()).toBe('- <VariableDeclaration vavaIdentifier: foo>\n');
+        expect(vDNode.toString()).toBe('- <VariableDeclarator vavaIdentifier: foo>\n');
       });
       
     }); // end VariableDeclaration spec
