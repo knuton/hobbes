@@ -52,7 +52,7 @@ describe('Compiler', function () {
         cUNode.vavaPackage = 'java.util';
         cUNode.vavaImports = ['java.foo'];
         cUNode.vavaType = {vavaClassName: "Test" };
-        expect(cUNode.toString()).toBe('- <CompilationUnit vavaPackage: java.util vavaImports: java.foo vavaType: Test>\n');
+        expect(cUNode.toString()).toBe('- <CompilationUnit vavaPackage: java.util vavaImports: java.foo>\n');
       });
       
     }); // end CompilationUnit spec
@@ -62,7 +62,7 @@ describe('Compiler', function () {
       var cDNode = null;
       
       beforeEach(function () {
-        cDNode = new astNodes.ClassDeclaration('Test', []);
+        cDNode = new astNodes.ClassDeclaration('Test');
       });
       
       it('should implement ASTNodeInterface', function () {
@@ -78,6 +78,66 @@ describe('Compiler', function () {
       });
       
     }); // end ClassDeclaration spec
+    
+    describe('FieldDeclaration', function () {
+      
+      var fDNode = null;
+      
+      beforeEach(function () {
+        var mockVariableDeclaration = {
+          id: 'foo',
+          getType: function () { return 'VariableDeclaration'; },
+          // mock object is 'secret' child
+          toString: function () { return ''; }
+        };
+        fDNode = new astNodes.FieldDeclaration('int', [mockVariableDeclaration]);
+      });
+      
+      it('should implement ASTNodeInterface', function () {
+        expect(astNodes.ASTNodeInterface.check(fDNode)).not.toBeDefined();
+      });
+      
+      it('should be of type `FieldDeclaration`', function () {
+        expect(fDNode.getType()).toBe('FieldDeclaration');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(fDNode.toString()).toBe('- <FieldDeclaration vavaType: int>\n');
+      });
+      
+      it('should list its children', function () {
+        var mockVariableDeclaration = {
+          id: 'foo',
+          getType: function () { return 'VariableDeclaration'; },
+          toString: function () { return '  - Kiddo\n'; }
+        };
+        fDNode = new astNodes.FieldDeclaration('int', [mockVariableDeclaration]);
+        expect(fDNode.toString()).toBe('- <FieldDeclaration vavaType: int>\n  - Kiddo\n');
+      });
+      
+    }); // end FieldDeclaration spec
+    
+    describe('VariableDeclaration', function () {
+      
+      var vDNode = null;
+      
+      beforeEach(function () {
+        vDNode = new astNodes.VariableDeclaration('foo', 5);
+      });
+      
+      it('should implement ASTNodeInterface', function () {
+        expect(astNodes.ASTNodeInterface.check(vDNode)).not.toBeDefined();
+      });
+      
+      it('should be of type `VariableDeclaration`', function () {
+        expect(vDNode.getType()).toBe('VariableDeclaration');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(vDNode.toString()).toBe('- <VariableDeclaration vavaIdentifier: foo>\n');
+      });
+      
+    }); // end VariableDeclaration spec
     
   }); // end AST nodes spec
   

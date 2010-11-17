@@ -137,9 +137,7 @@ class_member_declaration
 field_declaration
   : type variable_declarators LINE_TERMINATOR
     // ???
-    { $2.vavaType = $1; $$ = $2; }
-  | INTEGER_EXPRESSION LINE_TERMINATOR
-    { $$ = $1; }
+    { $$ = yy.FieldDeclaration($1, $2); }
   ;
 
 variable_declarators
@@ -150,8 +148,10 @@ variable_declarators
   ;
 
 variable_declarator
-  : variable_declarator_id OPERATOR_ASSIGNMENT variable_initializer
-    %{ $$ = {id: $1, initializer: $2}; %}
+  : variable_declarator_id
+    { $$ = yy.VariableDeclarator($1); }
+  | variable_declarator_id OPERATOR_ASSIGNMENT variable_initializer
+    { $$ = yy.VariableDeclarator($1, $3); }
   ;
 
 variable_declarator_id

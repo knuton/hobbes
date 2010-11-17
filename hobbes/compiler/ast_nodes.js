@@ -140,3 +140,63 @@ ClassDeclaration.prototype.getSignature = function () {
     vavaClassName : this.vavaClassName
   };
 };
+
+/**
+ * Creates a node for a FieldDeclaration, containing one or several VariableDeclarators.
+ *
+ * @param vavaType The Vava type of the declared fields
+ * @param variableDeclarations Array of VariableDeclaration objects
+ */
+var FieldDeclaration = exports.FieldDeclaration = function (vavaType, variableDeclarations) {
+  if (typeof vavaType !== 'string') {
+    throw new TypeError('Expected Vava type to be string.');
+  }
+  if (!utils.isArray(variableDeclarations) || variableDeclarations.length === 0) {
+    throw new TypeError('Expected variable declarations to come as non-empty array.');
+  }
+  this.type  = 'FieldDeclaration';
+  this.vavaType = vavaType;
+  for (var i = 0; i < variableDeclarations.length; i++) {
+    var declaration = variableDeclarations[i];
+    if (declaration.getType() !== 'VariableDeclaration') {
+      throw new TypeError('Expected variable declaration to be of type `VariableDeclaration`.');
+    }
+    this.children.push(declaration);
+  }
+};
+
+FieldDeclaration.inherits(ASTNode);
+
+FieldDeclaration.prototype.getSignature = function () {
+  return {
+    vavaType : this.vavaType
+  };
+}
+
+/**
+ * Creates a node for a VariableDeclaration, containing one variable identifier
+ * and optionally its initializer expression.
+ *
+ * @param vavaIdentifier The identifier of the variable
+ * @param vavaExpression The expression to initialize the variable with (optional)
+ */
+var VariableDeclaration = exports.VariableDeclaration = function (vavaIdentifier, vavaExpression) {
+  if (typeof vavaIdentifier !== 'string') {
+    throw new TypeError('Expected Vava identifier to be a string.');
+  }
+  // TODO Bring this back later
+  // if (vavaExpression && vavaExpression.getType() !== 'Expression') {
+  //   throw new TypeError('Expected Vava expression to be of type `Expression`.');
+  // }
+  this.type = 'VariableDeclaration';
+  this.vavaIdentifier = vavaIdentifier;
+  this.vavaInitializer = vavaExpression;
+};
+
+VariableDeclaration.inherits(ASTNode);
+
+VariableDeclaration.prototype.getSignature = function () {
+  return {
+    vavaIdentifier : this.vavaIdentifier
+  };
+};
