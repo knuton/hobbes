@@ -120,6 +120,7 @@ CompilationUnit.prototype.getSignature = function () {
  * @param classBody Array of body declarations
  */
 var ClassDeclaration = exports.ClassDeclaration = function (name, classBody) {
+  classBody = classBody || [];
   if (!utils.isArray(classBody)) {
     throw new TypeError('Expected array for class body.');
   }
