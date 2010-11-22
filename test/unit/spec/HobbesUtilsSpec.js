@@ -49,4 +49,20 @@ describe('Utils', function () {
     
   });
   
+  describe('Object merge', function () {
+    
+    it('should return empty object if none passed', function () {
+      expect(utils.merge()).toEqual({});
+    });
+    
+    it('should return equal object if one passed', function () {
+      expect(utils.merge({foo: 1, bar: 2})).toEqual({foo: 1, bar: 2});
+    });
+    
+    it('should return merged object if several passed', function () {
+      expect(utils.merge({foo: 1}, {bar: 2})).toEqual({foo: 1, bar: 2});
+    });
+    
+  });
+  
 });

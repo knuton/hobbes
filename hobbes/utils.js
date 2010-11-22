@@ -96,3 +96,22 @@ var indent = exports.indent = function (number) {
   }
   return spaces;
 };
+
+/**
+ * Merges a number of objects.
+ */
+var merge = exports.merge = function () {
+  var result = {},
+      length = arguments.length,
+      object = null,
+      key    = null;
+  
+  for (var i = 0; i < length; i++) {
+    object = arguments[i];
+    for (var key in object) {
+      if (!object.hasOwnProperty(key)) { continue; }
+      result[key] = object[key];
+    }
+  }
+  return result;
+};

@@ -5,6 +5,14 @@ describe('Compiler', function () {
   
   describe('AST nodes', function () {
     
+    function mockASTNode(properties) {
+      var mockNode = new astNodes.ASTNode();
+      for (key in properties) {
+        mockNode[key] = properties[key];
+      }
+      return mockNode;
+    }
+    
     describe('ASTNode', function () {
       
       var simpleNode = null;
@@ -84,13 +92,11 @@ describe('Compiler', function () {
       var fDNode = null;
       
       beforeEach(function () {
-        var mockVariableDeclaration = {
-          id: 'foo',
-          getType: function () { return 'VariableDeclaration'; },
-          // mock object is 'secret' child
+        var mockVariableDeclarator = mockASTNode({
+          id: 'foo', type: 'VariableDeclarator',
           toString: function () { return ''; }
-        };
-        fDNode = new astNodes.FieldDeclaration('int', [mockVariableDeclaration]);
+        });
+        fDNode = new astNodes.FieldDeclaration('int', [mockVariableDeclarator]);
       });
       
       it('should implement ASTNodeInterface', function () {
@@ -106,12 +112,11 @@ describe('Compiler', function () {
       });
       
       it('should list its children', function () {
-        var mockVariableDeclaration = {
-          id: 'foo',
-          getType: function () { return 'VariableDeclaration'; },
+        var mockVariableDeclarator = mockASTNode({
+          id: 'foo', type: 'VariableDeclarator',
           toString: function () { return '  - Kiddo\n'; }
-        };
-        fDNode = new astNodes.FieldDeclaration('int', [mockVariableDeclaration]);
+        });
+        fDNode = new astNodes.FieldDeclaration('int', [mockVariableDeclarator]);
         expect(fDNode.toString()).toBe('- <FieldDeclaration vavaType: int>\n  - Kiddo\n');
       });
       
