@@ -2,9 +2,9 @@
 var vava_proper = (function(){
 var parser = {trace: function trace() { },
 yy: {},
-symbols_: {"error":2,"compilation_unit":3,"EOF":4,"package_declaration":5,"import_declarations":6,"type_declarations":7,"KEYWORD_PACKAGE":8,"IDENTIFIER":9,"LINE_TERMINATOR":10,"import_declaration":11,"KEYWORD_IMPORT":12,"type_declaration":13,"class_declaration":14,"KEYWORD_CLASS":15,"class_body":16,"EMBRACE":17,"class_body_declarations":18,"UNBRACE":19,"class_body_declaration":20,"class_member_declaration":21,"field_declaration":22,"type":23,"variable_declarators":24,"variable_declarator":25,"COMMA":26,"variable_declarator_id":27,"OPERATOR_ASSIGNMENT":28,"variable_initializer":29,"expression":30,"primitive_type":31,"numeric_type":32,"PRIMITIVE_BOOLEAN":33,"integral_type":34,"floating_point_type":35,"PRIMITIVE_INTEGER":36,"PRIMITIVE_FLOAT":37,"INTEGER_EXPRESSION":38,"FLOAT_EXPRESSION":39,"$accept":0,"$end":1},
-terminals_: {"2":"error","4":"EOF","8":"KEYWORD_PACKAGE","9":"IDENTIFIER","10":"LINE_TERMINATOR","12":"KEYWORD_IMPORT","15":"KEYWORD_CLASS","17":"EMBRACE","19":"UNBRACE","26":"COMMA","28":"OPERATOR_ASSIGNMENT","33":"PRIMITIVE_BOOLEAN","36":"PRIMITIVE_INTEGER","37":"PRIMITIVE_FLOAT","38":"INTEGER_EXPRESSION","39":"FLOAT_EXPRESSION"},
-productions_: [0,[3,1],[3,2],[3,2],[3,2],[3,3],[3,3],[3,3],[3,4],[5,3],[6,1],[6,2],[11,3],[7,1],[13,1],[14,3],[16,3],[18,1],[18,2],[20,1],[21,1],[22,3],[24,1],[24,3],[25,1],[25,3],[27,1],[29,1],[23,1],[31,1],[31,1],[32,1],[32,1],[34,1],[35,1],[30,1],[30,1]],
+symbols_: {"error":2,"compilation_unit":3,"EOF":4,"package_declaration":5,"import_declarations":6,"type_declarations":7,"KEYWORD_PACKAGE":8,"IDENTIFIER":9,"LINE_TERMINATOR":10,"import_declaration":11,"KEYWORD_IMPORT":12,"type_declaration":13,"class_declaration":14,"KEYWORD_CLASS":15,"class_body":16,"EMBRACE":17,"class_body_declarations":18,"UNBRACE":19,"class_body_declaration":20,"class_member_declaration":21,"field_declaration":22,"method_declaration":23,"type":24,"variable_declarators":25,"method_header":26,"method_body":27,"method_declarator":28,"KEYWORD_VOID":29,"LEFT_PAREN":30,"formal_parameter_list":31,"RIGHT_PAREN":32,"formal_parameter":33,"formal_parameters":34,"COMMA":35,"variable_declarator_id":36,"block":37,"variable_declarator":38,"OPERATOR_ASSIGNMENT":39,"variable_initializer":40,"expression":41,"primitive_type":42,"numeric_type":43,"PRIMITIVE_BOOLEAN":44,"integral_type":45,"floating_point_type":46,"PRIMITIVE_INTEGER":47,"PRIMITIVE_FLOAT":48,"block_statements":49,"INTEGER_EXPRESSION":50,"FLOAT_EXPRESSION":51,"$accept":0,"$end":1},
+terminals_: {"2":"error","4":"EOF","8":"KEYWORD_PACKAGE","9":"IDENTIFIER","10":"LINE_TERMINATOR","12":"KEYWORD_IMPORT","15":"KEYWORD_CLASS","17":"EMBRACE","19":"UNBRACE","29":"KEYWORD_VOID","30":"LEFT_PAREN","32":"RIGHT_PAREN","34":"formal_parameters","35":"COMMA","39":"OPERATOR_ASSIGNMENT","44":"PRIMITIVE_BOOLEAN","47":"PRIMITIVE_INTEGER","48":"PRIMITIVE_FLOAT","49":"block_statements","50":"INTEGER_EXPRESSION","51":"FLOAT_EXPRESSION"},
+productions_: [0,[3,1],[3,2],[3,2],[3,2],[3,3],[3,3],[3,3],[3,4],[5,3],[6,1],[6,2],[11,3],[7,1],[13,1],[14,3],[16,3],[18,1],[18,2],[20,1],[21,1],[21,1],[22,3],[23,2],[26,2],[26,2],[28,4],[31,1],[31,3],[33,2],[27,1],[25,1],[25,3],[38,1],[38,3],[36,1],[40,1],[24,1],[42,1],[42,1],[43,1],[43,1],[45,1],[46,1],[37,2],[37,3],[41,1],[41,1]],
 performAction: function anonymous(yytext,yyleng,yylineno,yy) {
 
 var $$ = arguments[5],$0=arguments[5].length;
@@ -15,15 +15,15 @@ case 2: var cu = new yy.CompilationUnit(); cu.vavaPackage = $$[$0-2+1-1]; return
 break;
 case 3: var cu = new yy.CompilationUnit(); cu.vavaImports = $$[$0-2+1-1]; return cu; 
 break;
-case 4: var cu = new yy.CompilationUnit(); cu.children.push($$[$0-2+1-1]); return cu; 
+case 4: var cu = new yy.CompilationUnit(); cu.appendChild($$[$0-2+1-1]); return cu; 
 break;
 case 5: var cu = new yy.CompilationUnit(); cu.vavaPackage = $$[$0-3+1-1]; cu.vavaImports = $$[$0-3+2-1]; return cu; 
 break;
-case 6: var cu = new yy.CompilationUnit(); cu.vavaPackage = $$[$0-3+1-1]; cu.children.push($$[$0-3+2-1]); return cu; 
+case 6: var cu = new yy.CompilationUnit(); cu.vavaPackage = $$[$0-3+1-1]; cu.appendChild($$[$0-3+2-1]); return cu; 
 break;
-case 7: var cu = new yy.CompilationUnit(); cu.vavaImports = $$[$0-3+1-1]; cu.children.push($$[$0-3+2-1]); return cu; 
+case 7: var cu = new yy.CompilationUnit(); cu.vavaImports = $$[$0-3+1-1]; cu.appendChild($$[$0-3+2-1]); return cu; 
 break;
-case 8: var cu = new yy.CompilationUnit(); cu.vavaPackage = $$[$0-4+1-1]; cu.vavaImports = $$[$0-4+2-1]; cu.children.push($$[$0-4+3-1]); return cu; 
+case 8: var cu = new yy.CompilationUnit(); cu.vavaPackage = $$[$0-4+1-1]; cu.vavaImports = $$[$0-4+2-1]; cu.appendChild($$[$0-4+3-1]); return cu; 
 break;
 case 9: this.$ = $$[$0-3+2-1]; 
 break;
@@ -49,42 +49,64 @@ case 19: this.$ = $$[$0-1+1-1]
 break;
 case 20: this.$ = $$[$0-1+1-1]; 
 break;
-case 21: this.$ = new yy.FieldDeclaration($$[$0-3+1-1], $$[$0-3+2-1]); 
+case 21: this.$ = $$[$0-1+1-1]; 
 break;
-case 22: this.$ = [$$[$0-1+1-1]]; 
+case 22: this.$ = new yy.FieldDeclaration($$[$0-3+1-1], $$[$0-3+2-1]); 
 break;
-case 23: $$[$0-3+1-1].push($$[$0-3+3-1]); this.$ = $$[$0-3+1-1]; 
+case 23: this.$ = new yy.MethodDeclaration($$[$0-2+1-1], $$[$0-2+2-1]); 
 break;
-case 24: this.$ = new yy.VariableDeclarator($$[$0-1+1-1]); 
+case 24: this.$ = yy.utils.merge({vavaType: $$[$0-2+1-1]}, $$[$0-2+2-1]); 
 break;
-case 25: this.$ = new yy.VariableDeclarator($$[$0-3+1-1], $$[$0-3+3-1]); 
+case 25: this.$ = yy.utils.merge({vavaType: $$[$0-2+1-1]}, $$[$0-2+2-1]); 
 break;
-case 26: this.$ = $$[$0-1+1-1]; 
+case 26: this.$ = {vavaIdentifier: $$[$0-4+1-1], vavaFormalParameters: $$[$0-4+3-1]}; 
 break;
-case 27: this.$ = $$[$0-1+1-1]; 
+case 27: this.$ = [$$[$0-1+1-1]]; 
 break;
-case 28: this.$ = $$[$0-1+1-1]; 
+case 28: this.$ = $$[$0-3+1-1]; this.$.push($$[$0-3+3-1]); 
 break;
-case 29: this.$ = $$[$0-1+1-1]; 
+case 29: this.$ = new yy.FormalParameter($$[$0-2+1-1], $$[$0-2+2-1]); 
 break;
 case 30: this.$ = $$[$0-1+1-1]; 
 break;
-case 31: this.$ = $$[$0-1+1-1]; 
+case 31: this.$ = [$$[$0-1+1-1]]; 
 break;
-case 32: this.$ = $$[$0-1+1-1]; 
+case 32: $$[$0-3+1-1].push($$[$0-3+3-1]); this.$ = $$[$0-3+1-1]; 
 break;
-case 33: this.$ = $$[$0-1+1-1]; 
+case 33: this.$ = new yy.VariableDeclarator($$[$0-1+1-1]); 
 break;
-case 34: this.$ = $$[$0-1+1-1]; 
+case 34: this.$ = new yy.VariableDeclarator($$[$0-3+1-1], $$[$0-3+3-1]); 
 break;
-case 35: this.$ = Number(yytext); 
+case 35: this.$ = $$[$0-1+1-1]; 
 break;
-case 36: this.$ = Number(yytext); 
+case 36: this.$ = $$[$0-1+1-1]; 
+break;
+case 37: this.$ = $$[$0-1+1-1]; 
+break;
+case 38: this.$ = $$[$0-1+1-1]; 
+break;
+case 39: this.$ = $$[$0-1+1-1]; 
+break;
+case 40: this.$ = $$[$0-1+1-1]; 
+break;
+case 41: this.$ = $$[$0-1+1-1]; 
+break;
+case 42: this.$ = $$[$0-1+1-1]; 
+break;
+case 43: this.$ = $$[$0-1+1-1]; 
+break;
+case 44: this.$ = new yy.Block(); 
+break;
+case 45: this.$ = new yy.Block($$[$0-3+2-1]); 
+break;
+case 46: this.$ = Number(yytext); 
+break;
+case 47: this.$ = Number(yytext); 
 break;
 }
 },
-table: [{"3":1,"4":[1,2],"5":3,"6":4,"7":5,"8":[1,6],"11":7,"12":[1,9],"13":8,"14":10,"15":[1,11]},{"1":[3]},{"1":[2,1]},{"4":[1,12],"6":13,"7":14,"11":7,"12":[1,9],"13":8,"14":10,"15":[1,11]},{"4":[1,15],"7":16,"11":17,"12":[1,9],"13":8,"14":10,"15":[1,11]},{"4":[1,18]},{"9":[1,19]},{"4":[2,10],"12":[2,10],"15":[2,10]},{"4":[2,13]},{"9":[1,20]},{"4":[2,14]},{"9":[1,21]},{"1":[2,2]},{"4":[1,22],"7":23,"11":17,"12":[1,9],"13":8,"14":10,"15":[1,11]},{"4":[1,24]},{"1":[2,3]},{"4":[1,25]},{"4":[2,11],"12":[2,11],"15":[2,11]},{"1":[2,4]},{"10":[1,26]},{"10":[1,27]},{"16":28,"17":[1,29]},{"1":[2,5]},{"4":[1,30]},{"1":[2,6]},{"1":[2,7]},{"4":[2,9],"12":[2,9],"15":[2,9]},{"4":[2,12],"12":[2,12],"15":[2,12]},{"4":[2,15]},{"18":31,"20":32,"21":33,"22":34,"23":35,"31":36,"32":37,"33":[1,38],"34":39,"35":40,"36":[1,41],"37":[1,42]},{"1":[2,8]},{"19":[1,43],"20":44,"21":33,"22":34,"23":35,"31":36,"32":37,"33":[1,38],"34":39,"35":40,"36":[1,41],"37":[1,42]},{"19":[2,17],"33":[2,17],"36":[2,17],"37":[2,17]},{"19":[2,19],"33":[2,19],"36":[2,19],"37":[2,19]},{"19":[2,20],"33":[2,20],"36":[2,20],"37":[2,20]},{"9":[1,48],"24":45,"25":46,"27":47},{"9":[2,28]},{"9":[2,29]},{"9":[2,30]},{"9":[2,31]},{"9":[2,32]},{"9":[2,33]},{"9":[2,34]},{"4":[2,16]},{"19":[2,18],"33":[2,18],"36":[2,18],"37":[2,18]},{"10":[1,49],"26":[1,50]},{"10":[2,22],"26":[2,22]},{"10":[2,24],"26":[2,24],"28":[1,51]},{"10":[2,26],"26":[2,26],"28":[2,26]},{"19":[2,21],"33":[2,21],"36":[2,21],"37":[2,21]},{"9":[1,48],"25":52,"27":47},{"29":53,"30":54,"38":[1,55],"39":[1,56]},{"10":[2,23],"26":[2,23]},{"10":[2,25],"26":[2,25]},{"10":[2,27],"26":[2,27]},{"10":[2,35],"26":[2,35]},{"10":[2,36],"26":[2,36]}],
-defaultActions: {"2":[2,1],"8":[2,13],"10":[2,14],"12":[2,2],"15":[2,3],"18":[2,4],"22":[2,5],"24":[2,6],"25":[2,7],"28":[2,15],"30":[2,8],"36":[2,28],"37":[2,29],"38":[2,30],"39":[2,31],"40":[2,32],"41":[2,33],"42":[2,34],"43":[2,16]},
+table: [{"3":1,"4":[1,2],"5":3,"6":4,"7":5,"8":[1,6],"11":7,"12":[1,9],"13":8,"14":10,"15":[1,11]},{"1":[3]},{"1":[2,1]},{"4":[1,12],"6":13,"7":14,"11":7,"12":[1,9],"13":8,"14":10,"15":[1,11]},{"4":[1,15],"7":16,"11":17,"12":[1,9],"13":8,"14":10,"15":[1,11]},{"4":[1,18]},{"9":[1,19]},{"4":[2,10],"12":[2,10],"15":[2,10]},{"4":[2,13]},{"9":[1,20]},{"4":[2,14]},{"9":[1,21]},{"1":[2,2]},{"4":[1,22],"7":23,"11":17,"12":[1,9],"13":8,"14":10,"15":[1,11]},{"4":[1,24]},{"1":[2,3]},{"4":[1,25]},{"4":[2,11],"12":[2,11],"15":[2,11]},{"1":[2,4]},{"10":[1,26]},{"10":[1,27]},{"16":28,"17":[1,29]},{"1":[2,5]},{"4":[1,30]},{"1":[2,6]},{"1":[2,7]},{"4":[2,9],"12":[2,9],"15":[2,9]},{"4":[2,12],"12":[2,12],"15":[2,12]},{"4":[2,15]},{"18":31,"20":32,"21":33,"22":34,"23":35,"24":36,"26":37,"29":[1,39],"42":38,"43":40,"44":[1,41],"45":42,"46":43,"47":[1,44],"48":[1,45]},{"1":[2,8]},{"19":[1,46],"20":47,"21":33,"22":34,"23":35,"24":36,"26":37,"29":[1,39],"42":38,"43":40,"44":[1,41],"45":42,"46":43,"47":[1,44],"48":[1,45]},{"19":[2,17],"29":[2,17],"44":[2,17],"47":[2,17],"48":[2,17]},{"19":[2,19],"29":[2,19],"44":[2,19],"47":[2,19],"48":[2,19]},{"19":[2,20],"29":[2,20],"44":[2,20],"47":[2,20],"48":[2,20]},{"19":[2,21],"29":[2,21],"44":[2,21],"47":[2,21],"48":[2,21]},{"9":[1,51],"25":48,"28":49,"36":52,"38":50},{"17":[1,55],"27":53,"37":54},{"9":[2,37]},{"9":[1,57],"28":56},{"9":[2,38]},{"9":[2,39]},{"9":[2,40]},{"9":[2,41]},{"9":[2,42]},{"9":[2,43]},{"4":[2,16]},{"19":[2,18],"29":[2,18],"44":[2,18],"47":[2,18],"48":[2,18]},{"10":[1,58],"35":[1,59]},{"17":[2,24]},{"10":[2,31],"35":[2,31]},{"10":[2,35],"30":[1,60],"35":[2,35],"39":[2,35]},{"10":[2,33],"35":[2,33],"39":[1,61]},{"19":[2,23],"29":[2,23],"44":[2,23],"47":[2,23],"48":[2,23]},{"19":[2,30],"29":[2,30],"44":[2,30],"47":[2,30],"48":[2,30]},{"19":[1,62],"49":[1,63]},{"17":[2,25]},{"30":[1,60]},{"19":[2,22],"29":[2,22],"44":[2,22],"47":[2,22],"48":[2,22]},{"9":[1,65],"36":52,"38":64},{"24":69,"31":66,"33":67,"34":[1,68],"42":38,"43":40,"44":[1,41],"45":42,"46":43,"47":[1,44],"48":[1,45]},{"40":70,"41":71,"50":[1,72],"51":[1,73]},{"19":[2,44],"29":[2,44],"44":[2,44],"47":[2,44],"48":[2,44]},{"19":[1,74]},{"10":[2,32],"35":[2,32]},{"10":[2,35],"32":[2,35],"35":[2,35],"39":[2,35]},{"32":[1,75]},{"32":[2,27]},{"35":[1,76]},{"9":[1,65],"36":77},{"10":[2,34],"35":[2,34]},{"10":[2,36],"35":[2,36]},{"10":[2,46],"35":[2,46]},{"10":[2,47],"35":[2,47]},{"19":[2,45],"29":[2,45],"44":[2,45],"47":[2,45],"48":[2,45]},{"17":[2,26]},{"24":69,"33":78,"42":38,"43":40,"44":[1,41],"45":42,"46":43,"47":[1,44],"48":[1,45]},{"32":[2,29]},{"32":[2,28]}],
+defaultActions: {"2":[2,1],"8":[2,13],"10":[2,14],"12":[2,2],"15":[2,3],"18":[2,4],"22":[2,5],"24":[2,6],"25":[2,7],"28":[2,15],"30":[2,8],"38":[2,37],"40":[2,38],"41":[2,39],"42":[2,40],"43":[2,41],"44":[2,42],"45":[2,43],"46":[2,16],"49":[2,24],"56":[2,25],"67":[2,27],"75":[2,26],"77":[2,29],"78":[2,28]},
 parseError: function parseError(str, hash) {
     throw new Error(str);
 },
@@ -365,49 +387,55 @@ case 1:return 17; /* Basic Syntax */
 break;
 case 2:return 19;
 break;
-case 3:return 26;
+case 3:return 30;
 break;
-case 4:return 10;
+case 4:return 32;
 break;
-case 5:return 'MODIFIER_PUBLIC'; /* Modifier */
+case 5:return 35;
 break;
-case 6:return 'MODIFIER_PRIVATE';
+case 6:return 10;
 break;
-case 7:return 'MODIFIER_PROTECTED';
+case 7:return 'MODIFIER_PUBLIC'; /* Modifier */
 break;
-case 8:return 'MODIFIER_STATIC';
+case 8:return 'MODIFIER_PRIVATE';
 break;
-case 9:return 'MODIFIER_VOID';
+case 9:return 'MODIFIER_PROTECTED';
 break;
-case 10:return 'MODIFIER_FINAL';
+case 10:return 'MODIFIER_STATIC';
 break;
-case 11:return 8; /* Keywords */
+case 11:return 'MODIFIER_VOID';
 break;
-case 12:return 12;
+case 12:return 'MODIFIER_FINAL';
 break;
-case 13:return 15;
+case 13:return 8; /* Keywords */
 break;
-case 14:return 33; /* Primitive Types */
+case 14:return 12;
 break;
-case 15:return 36;
+case 15:return 15;
 break;
-case 16:return 37;
+case 16:return 29;
 break;
-case 17:return 28; /* OPERATORS */
+case 17:return 44; /* Primitive Types */
 break;
-case 18:return 9; /* Varying form */
+case 18:return 47;
 break;
-case 19:return 38;
+case 19:return 48;
 break;
-case 20:return 39;
+case 20:return 39; /* Operators */
 break;
-case 21:return 4;
+case 21:return 9; /* Varying form */
 break;
-case 22:return 'INVALID';
+case 22:return 50;
+break;
+case 23:return 51;
+break;
+case 24:return 4;
+break;
+case 25:return 'INVALID';
 break;
 }
 };
-lexer.rules = [/^\s+/,/^\{/,/^\}/,/^,/,/^;/,/^public\b/,/^private\b/,/^protected\b/,/^static\b/,/^void\b/,/^final\b/,/^package\b/,/^import\b/,/^class\b/,/^boolean\b/,/^int\b/,/^float\b/,/^=/,/^[a-zA-Z][a-zA-Z0-9_]*/,/^[0-9]+/,/^[0-9]+.[0-9]*/,/^$/,/^./];return lexer;})()
+lexer.rules = [/^\s+/,/^\{/,/^\}/,/^\(/,/^\)/,/^,/,/^;/,/^public\b/,/^private\b/,/^protected\b/,/^static\b/,/^void\b/,/^final\b/,/^package\b/,/^import\b/,/^class\b/,/^void\b/,/^boolean\b/,/^int\b/,/^float\b/,/^=/,/^[a-zA-Z][a-zA-Z0-9_]*/,/^[0-9]+/,/^[0-9]+.[0-9]*/,/^$/,/^./];return lexer;})()
 parser.lexer = lexer;
 return parser;
 })();

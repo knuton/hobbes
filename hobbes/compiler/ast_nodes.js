@@ -193,6 +193,7 @@ var VariableDeclarator = exports.VariableDeclarator = function (vavaIdentifier, 
   //   throw new TypeError('Expected Vava expression to be of type `Expression`.');
   // }
   this.type = 'VariableDeclarator';
+  this.children = [];
   this.vavaIdentifier = vavaIdentifier;
   this.vavaInitializer = vavaExpression;
 };
@@ -204,3 +205,76 @@ VariableDeclarator.prototype.getSignature = function () {
     vavaIdentifier : this.vavaIdentifier
   };
 };
+
+/**
+ * Creates a node for a MethodDeclaration.
+ *
+ * @param vavaHeader An object containing header information
+ * @param vavaBlock A block of Vava expressions
+ */
+var MethodDeclaration = exports.MethodDeclaration = function (vavaHeader, vavaBlock) {
+  this.type = 'MethodDeclaration';
+  this.children = [];
+  if (typeof vavaHeader.vavaType !== 'string') {
+    throw new TypeError('Expected Vava type to be string.');
+  }
+  this.vavaType = vavaHeader.vavaType;
+  if (typeof vavaHeader.vavaIdentifier !== 'string') {
+    throw new TypeError('Expected Vava type to be string.');
+  }
+  this.vavaIdentifier = vavaHeader.vavaIdentifier;
+}
+
+MethodDeclaration.inherits(ASTNode);
+
+MethodDeclaration.prototype.getSignature = function () {
+  return {
+    vavaType: this.vavaType,
+    vavaIdentifier: this.vavaIdentifier
+  };
+}
+
+/**
+ * Creates a node for a FormalParameter, containing type and identifier.
+ *
+ * @param vavaType The formal parameter's type
+ * @param vavaIdentifier The formal parameter's identifier
+ */
+var FormalParameter = exports.FormalParameter = function (vavaType, vavaIdentifier) {
+  // TODO Type should be ASTNode later, I suppose
+  if (typeof vavaIdentifier !== 'string') {
+    throw new TypeError('Expected Vava identifier to be a string.');
+  }
+  this.type = 'FormalParameter';
+  this.children = [];
+  this.vavaType = vavaType;
+  this.vavaIdentifier = vavaIdentifier;
+};
+
+FormalParameter.inherits(ASTNode);
+
+FormalParameter.prototype.getSignature = function () {
+  return {
+    vavaType: this.vavaType,
+    vavaIdentifier: this.vavaIdentifier
+  };
+}
+
+/**
+ * Creates a node for a Block.
+ * 
+ * @param vavaStatements A list of statements
+ */
+var Block = exports.Block = function (vavaStatements) {
+  this.type = 'Block';
+  this.children = [];
+  if (typeof vavaStatements !== 'undefined' && !utils.isArray(vavaStatements)) {
+    throw new TypeError('Expected Vava statements to be undefined or array.');
+  }
+  vavaStatements = vavaStatements || [];
+  for (var i = 0; i < vavaStatements.length; i++) {
+    this.appendChild(vavaStatements[i]);
+  }
+}
+
+Block.inherits(ASTNode);

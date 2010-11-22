@@ -6,9 +6,10 @@
 
 \s+                   {/* skip whitespace */}
 
-
 "{"                   {return 'EMBRACE'; /* Basic Syntax */}
 "}"                   {return 'UNBRACE';}
+"("                   {return 'LEFT_PAREN';}
+")"                   {return 'RIGHT_PAREN';}
 ","                   {return 'COMMA';}
 ";"                   {return 'LINE_TERMINATOR';}
 
@@ -27,11 +28,15 @@
 
 "class"               {return 'KEYWORD_CLASS';}
 
+"void"                {return 'KEYWORD_VOID';}
+
 "boolean"             {return 'PRIMITIVE_BOOLEAN'; /* Primitive Types */}
 "int"                 {return 'PRIMITIVE_INTEGER';}
 "float"               {return 'PRIMITIVE_FLOAT';}
 
-"="                   {return 'OPERATOR_ASSIGNMENT'; /* OPERATORS */}
+
+"="                   {return 'OPERATOR_ASSIGNMENT'; /* Operators */}
+
 
 [a-zA-Z][a-zA-Z0-9_]* {return 'IDENTIFIER'; /* Varying form */}
 [0-9]+                {return 'INTEGER_EXPRESSION';}
@@ -137,6 +142,45 @@ field_declaration
     { $$ = new yy.FieldDeclaration($1, $2); }
   ;
 
+method_declaration
+  : method_header method_body
+    { $$ = new yy.MethodDeclaration($1, $2); }
+  ;
+
+/*** METHOD DECLARATIONS ***/
+
+/* TODO Modifiers_{opt} Type MethodDeclarator Throws_{opt}
+        Modifiers_{opt} void MethodDeclarator Throws_{opt}
+*/
+method_header
+  : type method_declarator
+    %{ $$ = yy.utils.merge({vavaType: $1}, $2); %}
+  | KEYWORD_VOID method_declarator
+    %{ $$ = yy.utils.merge({vavaType: $1}, $2); %}
+  ;
+
+method_declarator
+  : IDENTIFIER LEFT_PAREN formal_parameter_list RIGHT_PAREN
+    %{ $$ = {vavaIdentifier: $1, vavaFormalParameters: $3}; %}
+  ;
+
+formal_parameter_list
+  : formal_parameter
+    { $$ = [$1]; }
+  | formal_parameters COMMA formal_parameter
+    { $$ = $1; $$.push($3); }
+  ;
+
+formal_parameter
+  : type variable_declarator_id
+    { $$ = new yy.FormalParameter($1, $2); }
+  ;
+
+method_body
+  : block
+    { $$ = $1; }
+  ;
+
 /*** VARIABLE DECLARATORS ***/
 
 variable_declarators
@@ -192,6 +236,15 @@ integral_type
 floating_point_type
   : PRIMITIVE_FLOAT
     { $$ = $1; }
+  ;
+
+/*** BLOCK ***/
+
+block
+  : EMBRACE UNBRACE
+    { $$ = new yy.Block(); }
+  | EMBRACE block_statements UNBRACE
+    { $$ = new yy.Block($2); }
   ;
 
 /*** EXPRESSIONS ***/

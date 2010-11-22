@@ -115,3 +115,7 @@ var merge = exports.merge = function () {
   }
   return result;
 };
+
+exports.yyUtils = {
+  merge: merge
+};
