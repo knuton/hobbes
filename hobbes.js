@@ -13,5 +13,6 @@ exports.version = '0.1';
 
 require('./hobbes/extensions');
 exports.compiler = require('./hobbes/compiler');
-exports.browser = require('./hobbes/browser');
+exports.vava     = require('./hobbes/vava');
+exports.browser  = require('./hobbes/browser');
 

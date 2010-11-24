@@ -247,6 +247,40 @@ block
     { $$ = new yy.Block($2); }
   ;
 
+block_statements
+  : block_statement
+    { $$ = [$1]; }
+  | block_statements block_statement
+    { $$ = $1; $$.push($2); }
+  ;
+
+block_statement
+  : type variable_declarators LINE_TERMINATOR
+    // TODO In the Java grammar they use a separate LocalVariableDeclarationStatement
+    { $$ = new yy.FieldDeclaration($1, $2); }
+  | statement
+    { $$ = $1; }
+  ;
+
+/*** STATEMENTS ***/
+
+statement
+  : statement_without_trailing_substatement
+    { $$ = $1; }
+  ;
+
+statement_without_trailing_substatement
+  : empty_statement
+    { $$ = $1; }
+  ;
+
+/* statement_without_trailing_substatement */
+
+empty_statement
+  : LINE_TERMINATOR
+    { $$ = new yy.ASTNode(); }
+  ;
+
 /*** EXPRESSIONS ***/
 
 expression

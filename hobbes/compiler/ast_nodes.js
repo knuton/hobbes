@@ -38,8 +38,8 @@ ASTNode.prototype.appendChild = function (node) {
 /**
  * Compiles the node with all its children
  */
-ASTNode.prototype.compile = function () {
-  return this.compileNode();
+ASTNode.prototype.compile = function (indent) {
+  return this.compileNode(indent);
 }
 
 /**
@@ -100,9 +100,11 @@ CompilationUnit.inherits(ASTNode);
  *   - the list of `imports`.
  */
 CompilationUnit.prototype.compileNode = function () {
-  var indent = 0;
   var jsSource = '';
-  jsSource += 'return "' + this.vavaPackage + this.vavaImports +  '";'
+  
+  this.children.forEach(function (child) {
+    jsSource += child.compile(0);
+  });
   
   return jsSource;
 };
@@ -142,6 +144,24 @@ ClassDeclaration.prototype.getSignature = function () {
   return {
     vavaClassName : this.vavaClassName
   };
+};
+
+ClassDeclaration.prototype.compileNode = function (indent) {
+  indent = indent || 0;
+  var jsSource = ['var ', this.vavaClassName, ' = new this.env.VavaClass(', this.vavaClassName, ', {\n'].join('');
+  
+  // Field Declarations
+  var fields = this.children.filter(function (child) { child.getType() === 'FieldDeclaration'; });
+  jsSource += 'fields: [' + fields.map(function (field) { field.compile() }) + ']';
+  
+  // Method Declarations
+  var methods = this.children.filter(function (child) { child.getType() === 'MethodDeclaration'; });
+  jsSource += 'methods: [' + methods.map(function (method) { method.compile() }) + ']';
+  
+  // End constructor call
+  jsSource += '});';
+  
+  return jsSource;
 };
 
 /**
@@ -223,6 +243,10 @@ var MethodDeclaration = exports.MethodDeclaration = function (vavaHeader, vavaBl
     throw new TypeError('Expected Vava type to be string.');
   }
   this.vavaIdentifier = vavaHeader.vavaIdentifier;
+  if (vavaBlock.getType() !== 'Block') {
+    throw new TypeError('Expected Vava block to be Block.');
+  }
+  this.appendChild(vavaBlock);
 }
 
 MethodDeclaration.inherits(ASTNode);
