@@ -1,4 +1,5 @@
 require('./extensions/es5');
+require('./extensions/json');
 
 // Based on Crockford's http://javascript.crockford.com/inheritance.html
 if (!Function.prototype.inherits) {
