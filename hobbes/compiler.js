@@ -6,6 +6,9 @@ parser.yy.utils = utils.yyUtils;
 
 // Simple interface for now
 exports.run = function (vavaSrc) {
+  if (typeof vavaSrc !== 'string') {
+    throw new TypeError('Expected Vava source to be provided as string.');
+  }
   var vavaAST = parser.parse(vavaSrc);
   var compilation = vavaAST.compile();
   

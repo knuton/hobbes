@@ -148,20 +148,19 @@ ClassDeclaration.prototype.getSignature = function () {
 
 ClassDeclaration.prototype.compileNode = function (indent) {
   indent = indent || 0;
-  var jsSource = ['var ', this.vavaClassName, ' = new this.env.VavaClass(', this.vavaClassName, ', {\n'].join('');
   
-  // Field Declarations
-  var fields = this.children.filter(function (child) { child.getType() === 'FieldDeclaration'; });
-  jsSource += 'fields: [' + fields.map(function (field) { field.compile() }) + ']';
+  var serializedBody = JSON.stringify({
+    // Field Declarations
+    'fields' : this.children.filter(function (child) {
+      child.getType() === 'FieldDeclaration';
+    }).map(function (field) { field.compile() }),
+    // Method Declarations
+    'methods' : this.children.filter(function (child) {
+      child.getType() === 'MethodDeclaration';
+    }).map(function (method) { method.compile() })
+  });
   
-  // Method Declarations
-  var methods = this.children.filter(function (child) { child.getType() === 'MethodDeclaration'; });
-  jsSource += 'methods: [' + methods.map(function (method) { method.compile() }) + ']';
-  
-  // End constructor call
-  jsSource += '});';
-  
-  return jsSource;
+  return ['var ', this.vavaClassName, ' = new this.env.VavaClass("', this.vavaClassName, '", ', serializedBody, ');'].join('');;
 };
 
 /**
