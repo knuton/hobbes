@@ -65,4 +65,32 @@ describe('Utils', function () {
     
   });
   
+  describe('JS builder helpers', function () {
+    
+    describe('Variable declaration', function () {
+      
+      it('should build code with semicolon', function () {
+        expect(utils.builder.declaration('foo')).toEqual('var foo;');
+      });
+      
+      it('should build code without semicolon', function () {
+        expect(utils.builder.declaration('foo', false)).toEqual('var foo');
+      });
+      
+    }); // end of Variable declaration
+    
+    describe('Variable declaration and assignment', function () {
+      
+      it('should build code with semicolon', function () {
+        expect(utils.builder.declarationAssignment('foo', 'bar')).toEqual('var foo = bar;');
+      });
+      
+      it('should build code without semicolon', function () {
+        expect(utils.builder.declarationAssignment('foo', 'bar', false)).toEqual('var foo = bar');
+      });
+      
+    }); // end of Variable declaration
+    
+  });
+  
 });

@@ -116,6 +116,8 @@ var merge = exports.merge = function () {
   return result;
 };
 
+exports.builder = require('./utils/code_builder');
+
 exports.yyUtils = {
   merge: merge
 };
