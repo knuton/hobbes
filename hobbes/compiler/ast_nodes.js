@@ -148,16 +148,17 @@ ClassDeclaration.prototype.getSignature = function () {
 };
 
 ClassDeclaration.prototype.compileNode = function (indent) {
+  var self = this;
   indent = indent || 0;
   
   var serializedBody = JSON.stringify({
     // Field Declarations
-    'fields' : this.children.filter(function (child) {
-      child.getType() === 'FieldDeclaration';
+    'fields' : self.children.filter(function (child) {
+      return child.getType() === 'FieldDeclaration';
     }).map(function (field) { field.compile() }),
     // Method Declarations
-    'methods' : this.children.filter(function (child) {
-      child.getType() === 'MethodDeclaration';
+    'methods' : self.children.filter(function (child) {
+      return child.getType() === 'MethodDeclaration';
     }).map(function (method) { method.compile() })
   });
   
