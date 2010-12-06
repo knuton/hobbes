@@ -40,6 +40,10 @@ var constructorCall = exports.constructorCall = function (identifierStr, fnArgs,
   return ['new', functionCall(identifierStr, fnArgs, semicolonInsertion)].join(' ');
 };
 
+var string = exports.string = function (string) {
+  return '"' + string + '"';
+}
+
 /* Helpers' helpers */
 var semicolize = function (str, yesOrNo) {
   return typeof yesOrNo === 'undefined' || yesOrNo ? str + ';' : str;

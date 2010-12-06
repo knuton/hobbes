@@ -7,6 +7,7 @@
  */
 
 var utils = (typeof hobbes !== 'undefined' && hobbes.utils) || require('../utils');
+var builder = utils.builder;
 
 var ASTNodeInterface = exports.ASTNodeInterface = new utils.Interface('ASTNode', 'appendChild', 'compile', 'getType', 'toString');
 
@@ -160,7 +161,10 @@ ClassDeclaration.prototype.compileNode = function (indent) {
     }).map(function (method) { method.compile() })
   });
   
-  return ['var ', this.vavaClassName, ' = new this.env.VavaClass("', this.vavaClassName, '", ', serializedBody, ');'].join('');;
+  return builder.declarationAssignment(
+    this.vavaClassName,
+    builder.constructorCall('this.env.VavaClass', [builder.string(this.vavaClassName), serializedBody], false)
+  );
 };
 
 /**

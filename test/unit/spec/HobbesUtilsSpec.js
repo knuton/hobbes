@@ -70,11 +70,11 @@ describe('Utils', function () {
     describe('Variable declaration', function () {
       
       it('should build code with semicolon', function () {
-        expect(utils.builder.declaration('foo')).toEqual('var foo;');
+        expect(utils.builder.declaration('foo')).toBe('var foo;');
       });
       
       it('should build code without semicolon', function () {
-        expect(utils.builder.declaration('foo', false)).toEqual('var foo');
+        expect(utils.builder.declaration('foo', false)).toBe('var foo');
       });
       
     }); // end of Variable declaration
@@ -82,11 +82,11 @@ describe('Utils', function () {
     describe('Variable declaration and assignment', function () {
       
       it('should build code with semicolon', function () {
-        expect(utils.builder.declarationAssignment('foo', 'bar')).toEqual('var foo = bar;');
+        expect(utils.builder.declarationAssignment('foo', 'bar')).toBe('var foo = bar;');
       });
       
       it('should build code without semicolon', function () {
-        expect(utils.builder.declarationAssignment('foo', 'bar', false)).toEqual('var foo = bar');
+        expect(utils.builder.declarationAssignment('foo', 'bar', false)).toBe('var foo = bar');
       });
       
     }); // end of Variable declaration and assignment
@@ -94,15 +94,15 @@ describe('Utils', function () {
     describe('Function call', function () {
       
       it('should build empty call code with semicolon', function () {
-        expect(utils.builder.functionCall('foo')).toEqual('foo();');
+        expect(utils.builder.functionCall('foo')).toBe('foo();');
       });
       
       it('should build call with parameters code with semicolon', function () {
-        expect(utils.builder.functionCall('foo', ['a', 'b'])).toEqual('foo(a, b);');
+        expect(utils.builder.functionCall('foo', ['a', 'b'])).toBe('foo(a, b);');
       });
       
       it('should build code without semicolon', function () {
-        expect(utils.builder.functionCall('foo', ['a', 'b'], false)).toEqual('foo(a, b)');
+        expect(utils.builder.functionCall('foo', ['a', 'b'], false)).toBe('foo(a, b)');
       });
       
     }); // end of Function call
@@ -110,18 +110,26 @@ describe('Utils', function () {
     describe('Constructor call', function () {
       
       it('should build empty call code with semicolon', function () {
-        expect(utils.builder.constructorCall('Foo')).toEqual('new Foo();');
+        expect(utils.builder.constructorCall('Foo')).toBe('new Foo();');
       });
       
       it('should build call with parameters code with semicolon', function () {
-        expect(utils.builder.constructorCall('Foo', ['a', 'b'])).toEqual('new Foo(a, b);');
+        expect(utils.builder.constructorCall('Foo', ['a', 'b'])).toBe('new Foo(a, b);');
       });
       
       it('should build code without semicolon', function () {
-        expect(utils.builder.constructorCall('Foo', ['a', 'b'], false)).toEqual('new Foo(a, b)');
+        expect(utils.builder.constructorCall('Foo', ['a', 'b'], false)).toBe('new Foo(a, b)');
       });
       
-    }); // end of Function call
+    }); // end of Constructor call
+    
+    describe('String wrapper', function () {
+      
+      it('should put doublequotes around a string', function () {
+        expect(utils.builder.string('a')).toBe('"a"');
+      });
+      
+    });
     
   });
   
