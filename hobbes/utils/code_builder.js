@@ -37,7 +37,7 @@ var functionCall = exports.functionCall = function (identifierStr, fnArgs, semic
 };
 
 var constructorCall = exports.constructorCall = function (identifierStr, fnArgs, semicolonInsertion) {
-  return semicolize(['new', functionCall(identifierStr, fnArgs, false)].join(' '));
+  return ['new', functionCall(identifierStr, fnArgs, semicolonInsertion)].join(' ');
 };
 
 /* Helpers' helpers */
