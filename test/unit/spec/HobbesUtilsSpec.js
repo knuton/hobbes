@@ -123,14 +123,22 @@ describe('Utils', function () {
       
     }); // end of Constructor call
     
+    describe('Object literal', function () {
+      
+      it('should return an object literal string', function () {
+        expect(utils.builder.objectLiteral({a: 1, b: 2})).toBe('{"a":1,"b":2}');
+      });
+      
+    });
+    
     describe('String wrapper', function () {
       
       it('should put doublequotes around a string', function () {
         expect(utils.builder.string('a')).toBe('"a"');
       });
       
-    });
+    }); // end of String wrapper
     
-  });
+  }); // end JS builder helpers
   
 });

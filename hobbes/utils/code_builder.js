@@ -40,9 +40,13 @@ var constructorCall = exports.constructorCall = function (identifierStr, fnArgs,
   return ['new', functionCall(identifierStr, fnArgs, semicolonInsertion)].join(' ');
 };
 
+var objectLiteral = exports.objectLiteral = function (object) {
+  return JSON.stringify(object);
+};
+
 var string = exports.string = function (string) {
   return '"' + string + '"';
-}
+};
 
 /* Helpers' helpers */
 var semicolize = function (str, yesOrNo) {
