@@ -66,7 +66,7 @@ class SourceAnnotationExtractor
       elsif item =~ /\.(rb|yml)$/
         results.update(extract_annotations_from(item, /#\s*(#{tag}):?\s*(.*)$/))
       elsif item =~ /\.js$/
-        results.update(extract_annotations_from(item, /\/\/\s*(#{tag}):?\s*(.*?)\s*/))
+        results.update(extract_annotations_from(item, /\/\/\s*(#{tag}):?\s*(.*)$/))
       end
     end
 
