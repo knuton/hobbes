@@ -51,16 +51,22 @@ describe('Utils', function () {
   
   describe('Object merge', function () {
     
-    it('should return empty object if none passed', function () {
-      expect(utils.merge()).toEqual({});
-    });
-    
     it('should return equal object if one passed', function () {
       expect(utils.merge({foo: 1, bar: 2})).toEqual({foo: 1, bar: 2});
     });
     
     it('should return merged object if several passed', function () {
       expect(utils.merge({foo: 1}, {bar: 2})).toEqual({foo: 1, bar: 2});
+    });
+    
+    it('should return merged object for array of objects', function () {
+      expect(utils.merge([{foo: 1}, {bar: 2}])).toEqual({foo: 1, bar: 2});
+    });
+    
+    it('should reject weird input', function () {
+      expect(function () {
+        utils.merge('Marge Simpson');
+      }).toThrow(new TypeError('Expected objects to merge, got string.'));
     });
     
   });
@@ -90,6 +96,18 @@ describe('Utils', function () {
       });
       
     }); // end of Variable declaration and assignment
+    
+    describe('Wrap as function', function () {
+      
+      it('should wrap the code into a function literal', function () {
+        expect(utils.builder.wrapAsFunction('alert("o hai");')).toBe('function () {\nalert("o hai");\n}');
+      });
+      
+      it('should wrap the expressions into a function literal', function () {
+        expect(utils.builder.wrapAsFunction(['alert("o hai");','return false;'])).toBe('function () {\nalert("o hai");\nreturn false;\n}');
+      });
+      
+    });
     
     describe('Function call', function () {
       
@@ -123,13 +141,29 @@ describe('Utils', function () {
       
     }); // end of Constructor call
     
-    describe('Object literal', function () {
+    describe('Array', function () {
       
-      it('should return an object literal string', function () {
-        expect(utils.builder.objectLiteral({a: 1, b: 2})).toBe('{"a":1,"b":2}');
+      it('should return an array literal', function () {
+        expect(utils.builder.array([1,2,3,4,'"5"'])).toBe('[1,2,3,4,"5"]');
       });
       
-    });
+    }); // end of Array
+    
+    describe('Join to object', function () {
+      
+      it('should return an object literal string', function () {
+        expect(utils.builder.joinToObject('a:1','b:2,c:"d"')).toBe('{a:1,b:2,c:"d"}');
+      });
+      
+    }); // end of Join to object
+    
+    describe('Object to literal', function () {
+      
+      it('should return an object literal string', function () {
+        expect(utils.builder.objectToLiteral({a: 1, b: 2})).toBe('{"a":1,"b":2}');
+      });
+      
+    }); // end of Object to literal
     
     describe('String wrapper', function () {
       

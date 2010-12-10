@@ -106,6 +106,15 @@ var merge = exports.merge = function () {
       object = null,
       key    = null;
   
+  // If argument is array, merge contents of array for convenience
+  if (Array.isArray(arguments[0])) {
+    return arguments.callee.apply(null, arguments[0]);
+  }
+  // If first argument is not an object, something is fishy
+  if (typeof arguments[0] !== "object") {
+    throw new TypeError("Expected objects to merge, got " + typeof arguments[0] + ".");
+  }
+  
   for (var i = 0; i < length; i++) {
     object = arguments[i];
     for (var key in object) {

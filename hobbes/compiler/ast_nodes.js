@@ -135,12 +135,6 @@ var ClassDeclaration = exports.ClassDeclaration = function (name, classBody) {
 
 ClassDeclaration.inherits(ASTNode);
 
-ClassDeclaration.prototype.compileNode = function () {
-  var indent = 0;
-  
-  return "";
-};
-
 ClassDeclaration.prototype.getSignature = function () {
   return {
     vavaClassName : this.vavaClassName
@@ -151,21 +145,32 @@ ClassDeclaration.prototype.compileNode = function (indent) {
   var self = this;
   indent = indent || 0;
   
-  var serializedBody = JSON.stringify({
+  var serializedBody = builder.joinToObject(
     // Field Declarations
-    'fields' : self.children.filter(function (child) {
-      return child.getType() === 'FieldDeclaration';
-    }).map(function (field) { field.compile() }),
+    builder.keyValue(
+      'fields',
+      builder.joinToObject(
+        self.children.filter(function (child) {
+          return child.getType() === 'FieldDeclaration';
+        }).map(function (field) { return field.compile() })
+      )
+    ),
     // Method Declarations
-    'methods' : self.children.filter(function (child) {
-      return child.getType() === 'MethodDeclaration';
-    }).map(function (method) { method.compile() })
-  });
+    builder.keyValue(
+      'methods',
+      builder.joinToObject(
+        self.children.filter(function (child) {
+          return child.getType() === 'MethodDeclaration';
+        }).map(function (method) { return method.compile() })
+      )
+    )
+  );
   
   return builder.declarationAssignment(
     this.vavaClassName,
     builder.constructorCall('this.env.VavaClass', [builder.string(this.vavaClassName), serializedBody], false)
-  );
+    // TODO call of main method should be more robust (several classes in CU?)
+  ) + '\n' + builder.functionCall(this.vavaClassName + '.send', ['"main"']);
 };
 
 /**
@@ -194,6 +199,13 @@ var FieldDeclaration = exports.FieldDeclaration = function (vavaType, variableDe
 };
 
 FieldDeclaration.inherits(ASTNode);
+
+FieldDeclaration.prototype.compileNode = function (indent) {
+  var self = this;
+  indent = indent || 0;
+  
+  return [this.children.map(function (child) { return child.compile() })].join(',');
+}
 
 FieldDeclaration.prototype.getSignature = function () {
   return {
@@ -224,6 +236,10 @@ var VariableDeclarator = exports.VariableDeclarator = function (vavaIdentifier, 
 
 VariableDeclarator.inherits(ASTNode);
 
+VariableDeclarator.prototype.compileNode = function () {
+  return '"' + this.vavaIdentifier + '":' + this.vavaInitializer;
+};
+
 VariableDeclarator.prototype.getSignature = function () {
   return {
     vavaIdentifier : this.vavaIdentifier
@@ -247,13 +263,35 @@ var MethodDeclaration = exports.MethodDeclaration = function (vavaHeader, vavaBl
     throw new TypeError('Expected Vava type to be string.');
   }
   this.vavaIdentifier = vavaHeader.vavaIdentifier;
+  if (!Array.isArray(vavaHeader.vavaFormalParameters)) {
+    throw new TypeError('Expected Vava formal parameters to be array.');
+  }
+  this.vavaFormalParameters = vavaHeader.vavaFormalParameters;
   if (vavaBlock.getType() !== 'Block') {
     throw new TypeError('Expected Vava block to be Block.');
   }
-  this.appendChild(vavaBlock);
+  this.vavaBlock = vavaBlock;
 }
 
 MethodDeclaration.inherits(ASTNode);
+
+MethodDeclaration.prototype.compileNode = function () {
+  // TODO This will not roll with method overriding (using vavaIdentifier as hash name)
+  // Better: this.vavaIdentifier + this.vavaFormalParameters.map(vavaType)
+  return builder.keyValue(
+    this.vavaIdentifier,
+    builder.constructorCall(
+      'this.env.VavaMethod',
+      [
+        builder.string(this.vavaIdentifier),
+        builder.string(this.vavaType),
+        builder.array(this.vavaFormalParameters.map(function (fP) { fP.compile(); })),
+        builder.wrapAsFunction(this.vavaBlock.compile())
+      ],
+      false
+    )
+  );
+};
 
 MethodDeclaration.prototype.getSignature = function () {
   return {
@@ -281,6 +319,10 @@ var FormalParameter = exports.FormalParameter = function (vavaType, vavaIdentifi
 
 FormalParameter.inherits(ASTNode);
 
+FormalParameter.prototype.compile = function () {
+  return builder.joinToObject(builder.keyValue('identifier', this.vavaType), builder.keyValue('vavaType', this.vavaType));
+};
+
 FormalParameter.prototype.getSignature = function () {
   return {
     vavaType: this.vavaType,
@@ -306,3 +348,7 @@ var Block = exports.Block = function (vavaStatements) {
 }
 
 Block.inherits(ASTNode);
+
+Block.prototype.compile = function () {
+  return 'console.log("Hello world")';
+};
