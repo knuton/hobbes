@@ -350,5 +350,6 @@ var Block = exports.Block = function (vavaStatements) {
 Block.inherits(ASTNode);
 
 Block.prototype.compile = function () {
+  // TODO :)
   return 'console.log("Hello world")';
 };
