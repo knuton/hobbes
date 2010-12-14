@@ -263,10 +263,10 @@ var MethodDeclaration = exports.MethodDeclaration = function (vavaHeader, vavaBl
     throw new TypeError('Expected Vava type to be string.');
   }
   this.vavaIdentifier = vavaHeader.vavaIdentifier;
-  if (!Array.isArray(vavaHeader.vavaFormalParameters)) {
+  if (vavaHeader.vavaFormalParameters && !Array.isArray(vavaHeader.vavaFormalParameters)) {
     throw new TypeError('Expected Vava formal parameters to be array.');
   }
-  this.vavaFormalParameters = vavaHeader.vavaFormalParameters;
+  this.vavaFormalParameters = vavaHeader.vavaFormalParameters || [];
   if (vavaBlock.getType() !== 'Block') {
     throw new TypeError('Expected Vava block to be Block.');
   }
@@ -353,3 +353,21 @@ Block.prototype.compile = function () {
   // TODO :)
   return 'console.log("Hello world")';
 };
+
+/**
+ * Creates a node for an Integer literal.
+ *
+ * @param num The number
+ */
+var IntegerLiteral = exports.IntegerLiteral = function (num) {
+  this.type = 'IntegerLiteral';
+  this.children = [];
+  // TODO Octal and hexal numbers
+  if ((parseFloat(num) === parseInt(num)) && !isNaN(num)) {
+    this.value = num;
+  } else {
+    throw new TypeError('Expected number to be an integer.');
+  }
+};
+
+IntegerLiteral.inherits(ASTNode);

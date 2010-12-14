@@ -138,7 +138,7 @@ describe('Compiler', function () {
     describe('MethodDeclaration', function () {
       
       beforeEach(function () {
-        testNode = new astNodes.MethodDeclaration({vavaType: 'int', vavaIdentifier: 'foo'}, null);
+        testNode = new astNodes.MethodDeclaration({vavaType: 'int', vavaIdentifier: 'foo'}, mockASTNode({type: 'Block'}));
       });
       
       it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
@@ -188,6 +188,20 @@ describe('Compiler', function () {
       });
       
     }); // end Block spec
+    
+    describe('IntegerLiteral', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.IntegerLiteral(0);
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+      
+      it('should be of type `IntegerLiteral`', function () {
+        expect(testNode.getType()).toBe('IntegerLiteral');
+      });
+      
+    }); // end IntegerLiteral spec
     
     afterEach(function () {
       testNode = null;
