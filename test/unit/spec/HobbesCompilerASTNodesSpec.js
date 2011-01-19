@@ -120,7 +120,8 @@ describe('Compiler', function () {
     describe('VariableDeclarator', function () {
       
       beforeEach(function () {
-        testNode = new astNodes.VariableDeclarator('foo', 5);
+        var intLiteral = mockASTNode({type: 'IntegerLiteral', value: 5});
+        testNode = new astNodes.VariableDeclarator('foo', intLiteral);
       });
       
       it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
@@ -130,7 +131,7 @@ describe('Compiler', function () {
       });
       
       it('should turn itself into a string', function () {
-        expect(testNode.toString()).toBe('- <VariableDeclarator vavaIdentifier: foo>\n');
+        expect(testNode.toString()).toBe('- <VariableDeclarator vavaIdentifier: foo vavaInitializer: IntegerLiteral>\n');
       });
       
     }); // end VariableDeclarator spec
@@ -199,6 +200,10 @@ describe('Compiler', function () {
       
       it('should be of type `IntegerLiteral`', function () {
         expect(testNode.getType()).toBe('IntegerLiteral');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <IntegerLiteral value: 0>\n');
       });
       
     }); // end IntegerLiteral spec

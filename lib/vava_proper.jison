@@ -39,7 +39,7 @@
 
 
 [a-zA-Z][a-zA-Z0-9_]* {return 'IDENTIFIER'; /* Varying form */}
-[0-9]+                {return 'INTEGER_EXPRESSION';}
+[0-9]+                {return 'DECIMAL_INTEGER_LITERAL';}
 [0-9]+\.[0-9]*        {return 'FLOAT_EXPRESSION';}
 
 <<EOF>>               {return 'EOF';}
@@ -272,6 +272,8 @@ statement
 statement_without_trailing_substatement
   : empty_statement
     { $$ = $1; }
+  | expression_statement
+    { $$ = $1; }
   ;
 
 /* statement_without_trailing_substatement */
@@ -281,11 +283,31 @@ empty_statement
     { $$ = new yy.ASTNode(); }
   ;
 
+expression_statement
+  : statement_expression LINE_TERMINATOR
+    { $$ = $1; }
+  ;
+
+/* statement_expression */
+
+statement_expression
+  : literal
+    { $$ = $1;}
+  ;
+
 /*** EXPRESSIONS ***/
 
 expression
-  : INTEGER_EXPRESSION
-    { $$ = Number(yytext); }
-  | FLOAT_EXPRESSION
-    { $$ = Number(yytext); }
+  : literal
+    { $$ = $1; }
   ;
+
+literal
+  : integer_literal
+    { $$ = $1; }
+  ;
+
+integer_literal
+ : DECIMAL_INTEGER_LITERAL
+   { $$ = new yy.IntegerLiteral($1); }
+ ;

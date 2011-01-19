@@ -204,7 +204,7 @@ FieldDeclaration.prototype.compileNode = function (indent) {
   var self = this;
   indent = indent || 0;
   
-  return [this.children.map(function (child) { return child.compile() })].join(',');
+  return [this.children.map(function (child) { return child.compileNode(self.vavaType) })].join(',');
 }
 
 FieldDeclaration.prototype.getSignature = function () {
@@ -236,13 +236,23 @@ var VariableDeclarator = exports.VariableDeclarator = function (vavaIdentifier, 
 
 VariableDeclarator.inherits(ASTNode);
 
-VariableDeclarator.prototype.compileNode = function () {
-  return '"' + this.vavaIdentifier + '":' + this.vavaInitializer;
+VariableDeclarator.prototype.compileNode = function (vavaType) {
+  return builder.keyValue(
+    this.vavaIdentifier,
+    builder.constructorCall(
+      'this.env.TypedVariable',
+      [builder.string(vavaType), builder.string(this.vavaIdentifier), this.vavaInitializer && this.vavaInitializer.compile()].filter(
+        function (value) { return !!value; }
+      ),
+      false
+    )
+  );
 };
 
 VariableDeclarator.prototype.getSignature = function () {
   return {
-    vavaIdentifier : this.vavaIdentifier
+    vavaIdentifier : this.vavaIdentifier,
+    vavaInitializer: this.vavaInitializer && this.vavaInitializer.getType()
   };
 };
 
@@ -319,7 +329,7 @@ var FormalParameter = exports.FormalParameter = function (vavaType, vavaIdentifi
 
 FormalParameter.inherits(ASTNode);
 
-FormalParameter.prototype.compile = function () {
+FormalParameter.prototype.compileNode = function () {
   return builder.joinToObject(builder.keyValue('identifier', this.vavaType), builder.keyValue('vavaType', this.vavaType));
 };
 
@@ -371,3 +381,11 @@ var IntegerLiteral = exports.IntegerLiteral = function (num) {
 };
 
 IntegerLiteral.inherits(ASTNode);
+
+IntegerLiteral.prototype.getSignature = function () {
+  return {value : this.value};
+};
+
+IntegerLiteral.prototype.compileNode = function (indent) {
+  return builder.constructorCall('this.env.IntValue', [this.value], false);
+};
