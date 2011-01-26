@@ -494,7 +494,7 @@ if (isNaN(Date.parse("T00:00"))) {
         Date.prototype.constructor = Date;
 
         // Upgrade Date.parse to handle the ISO dates we use
-        // TODO review specification to ascertain whether it is
+        // review specification to ascertain whether it is
         // necessary to implement partial ISO date strings.
         Date.parse = function(string) {
             var match = isoDateExpression.exec(string);
@@ -638,19 +638,15 @@ if (!Function.prototype.bind) {
         )
         // 16. The length own property of F is given attributes as specified in
         //   15.3.5.1.
-        // TODO
         // 17. Set the [[Extensible]] internal property of F to true.
-        // TODO
         // 18. Call the [[DefineOwnProperty]] internal method of F with
         //   arguments "caller", PropertyDescriptor {[[Value]]: null,
         //   [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]:
         //   false}, and false.
-        // TODO
         // 19. Call the [[DefineOwnProperty]] internal method of F with
         //   arguments "arguments", PropertyDescriptor {[[Value]]: null,
         //   [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]:
         //   false}, and false.
-        // TODO
         // NOTE Function objects created using Function.prototype.bind do not
         // have a prototype property.
         // XXX can't delete it in pure-js.
