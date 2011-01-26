@@ -9,11 +9,11 @@ describe('Vava Types', function () {
     var testVariable = null;
     
     beforeEach(function () {
-      testVariable = new type.TypedVariable('foo', 'bar');
+      testVariable = new type.TypedVariable('Foo', 'bar');
     });
     
     it('should tell its Vava type', function () {
-      expect(testVariable.getVavaType()).toBe('foo');
+      expect(testVariable.getVavaType()).toBe('Foo');
     });
     
     it('should set correct default for int', function () {

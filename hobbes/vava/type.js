@@ -32,8 +32,7 @@ TypedVariable.prototype.getVavaType = function () {
  * Returns the default value for the variable's Vava type.
  */
 TypedVariable.prototype.defaultValue = function () {
-  // TODO Wrapped null for reference types
-  return TypedValue.typeConstructors[this.vavaType] ? new TypedValue.typeConstructors[this.vavaType]() : null;
+  return TypedValue.typeConstructors[this.vavaType] ? new TypedValue.typeConstructors[this.vavaType]() : new NullValue();
 };
 
 /**
@@ -42,13 +41,39 @@ TypedVariable.prototype.defaultValue = function () {
  */
 TypedVariable.prototype.set = function (typedValue) {
   
-  // TODO Wrapped null for reference types
-  if (typedValue !== null && typedValue.getVavaType() !== this.getVavaType())
+  if (this.isAssignmentCompatible(typedValue)) {
+    this.typedValue = typedValue;
+  } else {
     // TODO How to handle Vava errors?
     throw new Error("Vava Type error: Expected " + this.getVavaType() + ", but was " + typedValue.getVavaType() + ".");
+  }
   
-  this.typedValue = typedValue;
-  
+};
+
+/**
+ * Checks if variable is of native type.
+ *
+ * That is, whether it is one of {boolean, byte, short, int, long, char, float, double}.
+ */
+TypedVariable.prototype.isPrimitive = function () {
+  var vT = this.getVavaType();
+  return (vT === "boolean" || vT === "byte" || vT === "short" || vT === "int" || vT === "long" || vT === "char" || vT === "float" || vT === "double");
+}
+
+/**
+ * Checks for compatibility of own and provided type.
+ *
+ * TODO Autocasting for natives
+ * TODO Hierarchical compatibility for reference types
+ */
+TypedVariable.prototype.isAssignmentCompatible = function (typedValue) {
+
+  if (this.isPrimitive()) {
+    return typedValue.getVavaType() === this.getVavaType();
+  } else {
+    var vavaType = typedValue.getVavaType();
+    return (vavaType === "null" || vavaType === this.getVavaType());
+  }
 };
 
 /**
@@ -106,6 +131,14 @@ var IntValue = exports.IntValue = function (rawValue) {
 }
 
 IntValue.inherits(TypedValue);
+
+var NullValue = exports.NullValue = function () {
+  this.vavaType = 'null';
+
+  this.rawValue = null;
+}
+
+NullValue.inherits(TypedValue);
 
 //// NEEDS TO BE AT THE END
 // Lookup table for constructors for simple (?) types
