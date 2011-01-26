@@ -45,7 +45,7 @@ TypedVariable.prototype.set = function (typedValue) {
   // TODO Wrapped null for reference types
   if (typedValue !== null && typedValue.getVavaType() !== this.getVavaType())
     // TODO How to handle Vava errors?
-    throw new Error("Vava Type error.");
+    throw new Error("Vava Type error: Expected " + this.getVavaType() + ", but was " + typedValue.getVavaType() + ".");
   
   this.typedValue = typedValue;
   
