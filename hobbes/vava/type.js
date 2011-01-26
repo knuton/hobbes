@@ -113,7 +113,7 @@ TypedValue.prototype.get = function () {
 };
 
 // TODO how to handle inheritance here?
-var IntValue = exports.IntValue = function (rawValue) {
+var IntegralValue = function (rawValue) {
   
   this.vavaType = 'int';
   
@@ -130,8 +130,57 @@ var IntValue = exports.IntValue = function (rawValue) {
   
 }
 
-IntValue.inherits(TypedValue);
+IntegralValue.inherits(TypedValue);
 
+// ARITHMETIC
+IntegralValue.prototype.inverse = function () {
+  return new IntValue(this.get() * -1);
+};
+
+IntegralValue.prototype.add = function (other) {
+  return new IntValue(this.toInt().get() + other.toInt().get());
+};
+
+IntegralValue.prototype.subtract = function (other) {
+  return this.add(other.inverse());
+};
+
+IntegralValue.prototype.times = function (other) {
+  return new IntValue(this.toInt().get() * other.toInt().get());
+};
+
+IntegralValue.prototype.divide = function (other) {
+  var thisRaw = this.toInt().get(),
+      otherRaw = other.toInt().get();
+  var remainder = thisRaw % otherRaw;
+  return new IntValue((thisRaw - remainder) / otherRaw);
+};
+
+// TODO Overflow of long type
+IntegralValue.prototype.toInt = function () {
+  return new IntValue(this.get());
+};
+
+var IntValue = exports.IntValue = function (rawValue) {
+
+  this.vavaType = 'int';
+
+  if (rawValue) {
+    // TODO More precise testing of value
+    // Next step: Add this to AST -> compile -> test with Java src files
+    if (isNaN(rawValue)) {
+      throw new Error('Not a number!');
+    }
+    this.rawValue = rawValue;
+  } else {
+    this.rawValue = 0;
+  }
+
+}
+
+IntValue.inherits(IntegralValue);
+
+// Reference Types
 var NullValue = exports.NullValue = function () {
   this.vavaType = 'null';
 

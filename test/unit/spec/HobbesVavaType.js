@@ -72,7 +72,31 @@ describe('Vava Types', function () {
         testValue = new type.IntValue(5);
         expect(testValue.get()).toBe(5);
       });
-      
+
+      it('should compute on add message', function () {
+        var aValue = new type.IntValue(5);
+        var bValue = new type.IntValue(3);
+        expect(aValue.add(bValue).get()).toBe(8);
+      });
+
+      it('should compute on subtract message', function () {
+        var aValue = new type.IntValue(5);
+        var bValue = new type.IntValue(3);
+        expect(aValue.subtract(bValue).get()).toBe(2);
+      });
+
+      it('should compute on multiplication message', function () {
+        var aValue = new type.IntValue(5);
+        var bValue = new type.IntValue(3);
+        expect(aValue.times(bValue).get()).toBe(15);
+      });
+
+      it('should compute on integer division message', function () {
+        var aValue = new type.IntValue(5);
+        var bValue = new type.IntValue(3);
+        expect(aValue.divide(bValue).get()).toBe(1);
+      });
+
     }); // end IntValue
     
   }); // end Typed values
