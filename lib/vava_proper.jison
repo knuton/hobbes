@@ -185,9 +185,9 @@ method_body
 
 variable_declarators
   : variable_declarator
-    { $$ = [$1]; }
+    { $$ = new yy.VariableDeclarators($1); }
   | variable_declarators COMMA variable_declarator
-    { $1.push($3); $$ = $1; }
+    { $1.appendChild($3); $$ = $1; }
   ;
 
 variable_declarator
@@ -291,11 +291,23 @@ expression_statement
 /* statement_expression */
 
 statement_expression
+  // : assignment
   : literal
     { $$ = $1;}
   ;
 
 /*** EXPRESSIONS ***/
+
+//assignment
+//  : left_hand_side assignment_operator assignment_expression
+//    { $$ = $1; }
+//  ;
+
+// TODO FieldAccess and ArrayAccess
+//left_hand_side
+//  : name
+//    { $$ = $1; }
+//  ;
 
 expression
   : literal

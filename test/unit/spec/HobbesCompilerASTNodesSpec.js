@@ -89,11 +89,11 @@ describe('Compiler', function () {
     describe('FieldDeclaration', function () {
       
       beforeEach(function () {
-        var mockVariableDeclarator = mockASTNode({
-          id: 'foo', type: 'VariableDeclarator',
+        var mockVariableDeclarators = mockASTNode({
+          length: function () { return 1; }, type: 'VariableDeclarators',
           toString: function () { return ''; }
         });
-        testNode = new astNodes.FieldDeclaration('int', [mockVariableDeclarator]);
+        testNode = new astNodes.FieldDeclaration('int', mockVariableDeclarators);
       });
       
       it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
@@ -107,16 +107,38 @@ describe('Compiler', function () {
       });
       
       it('should list its children', function () {
-        var mockVariableDeclarator = mockASTNode({
-          id: 'foo', type: 'VariableDeclarator',
+        var mockVariableDeclarators = mockASTNode({
+          length: function () { return 1; }, type: 'VariableDeclarators',
           toString: function () { return '  - Kiddo\n'; }
         });
-        testNode = new astNodes.FieldDeclaration('int', [mockVariableDeclarator]);
+        testNode = new astNodes.FieldDeclaration('int', mockVariableDeclarators);
         expect(testNode.toString()).toBe('- <FieldDeclaration vavaType: int>\n  - Kiddo\n');
       });
       
     }); // end FieldDeclaration spec
     
+    describe('VariableDeclarators', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.VariableDeclarators();
+      });
+
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `VariableDeclarators`', function () {
+        expect(testNode.getType()).toBe('VariableDeclarators');
+      });
+
+      it('should tell its length', function () {
+        expect(testNode.length()).toBe(0);
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <VariableDeclarators declarators: 0>\n');
+      });
+      
+    }); // end VariableDeclators spec
+
     describe('VariableDeclarator', function () {
       
       beforeEach(function () {

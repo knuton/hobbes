@@ -31,10 +31,21 @@ var ASTNode = exports.ASTNode = function ASTNode () {
  * @returns The node for chaining
  */
 ASTNode.prototype.appendChild = function (node) {
-  ASTNodeInterface.check(node);
+  this.checkChild(node);
   this.children.push(node);
   return node;
 }
+
+/**
+ * Checks wether child is acceptable.
+ *
+ * Override for more specific checks.
+ *
+ * @param node An ASTNode
+ */
+ASTNode.prototype.checkChild = function (node) {
+  ASTNodeInterface.check(node);
+};
 
 /**
  * Compiles the node with all its children
@@ -183,35 +194,64 @@ var FieldDeclaration = exports.FieldDeclaration = function (vavaType, variableDe
   if (typeof vavaType !== 'string') {
     throw new TypeError('Expected Vava type to be string.');
   }
-  if (!utils.isArray(variableDeclarators) || variableDeclarators.length === 0) {
-    throw new TypeError('Expected variable declarators to come as non-empty array.');
+  if (!variableDeclarators || variableDeclarators.getType() !== "VariableDeclarators" || variableDeclarators.length() < 1) {
+    throw new TypeError('Expected one or more variable declarators.');
   }
   this.type  = 'FieldDeclaration';
   this.children = [];
   this.vavaType = vavaType;
-  for (var i = 0; i < variableDeclarators.length; i++) {
-    var declarator = variableDeclarators[i];
-    if (!declarator || declarator.getType() !== 'VariableDeclarator') {
-      throw new TypeError('Expected variable declarator to be of type `VariableDeclarator`.');
-    }
-    this.appendChild(declarator);
-  }
+
+  this.appendChild(variableDeclarators);
 };
 
 FieldDeclaration.inherits(ASTNode);
 
 FieldDeclaration.prototype.compileNode = function (indent) {
-  var self = this;
   indent = indent || 0;
   
-  return [this.children.map(function (child) { return child.compileNode(self.vavaType) })].join(',');
-}
+  return this.children[0].compileNode(this.vavaType);
+};
 
 FieldDeclaration.prototype.getSignature = function () {
   return {
     vavaType : this.vavaType
   };
-}
+};
+
+/**
+ * Creates a node for VariableDeclarators, a group of comma separated variable
+ * declarations.
+ *
+ * @param variableDeclarator Optional first variable declarator
+ */
+var VariableDeclarators = exports.VariableDeclarators = function (variableDeclarator) {
+  this.type = 'VariableDeclarators';
+  this.children = [];
+
+  if (variableDeclarator) this.appendChild(variableDeclarator);
+};
+
+VariableDeclarators.inherits(ASTNode);
+
+VariableDeclarators.prototype.compileNode = function (vavaType) {
+  return [this.children.map(function (child) { return child.compileNode(vavaType) })].join(',');
+};
+
+VariableDeclarators.prototype.checkChild = function (declarator) {
+  if (!declarator || declarator.getType() !== 'VariableDeclarator') {
+    throw new TypeError('Expected variable declarator to be of type `VariableDeclarator`.');
+  }
+};
+
+VariableDeclarators.prototype.length = function () {
+  return this.children.length;
+};
+  
+VariableDeclarators.prototype.getSignature = function () {
+  return {
+    declarators : this.children.length
+  };
+};
 
 /**
  * Creates a node for a VariableDeclarator, containing one variable identifier
