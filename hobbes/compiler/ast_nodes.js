@@ -177,11 +177,11 @@ ClassDeclaration.prototype.compileNode = function (indent) {
     )
   );
   
-  return builder.declarationAssignment(
+  return builder.addPairToScope(
     this.vavaClassName,
-    builder.constructorCall('this.env.VavaClass', [builder.string(this.vavaClassName), serializedBody], false)
+    builder.constructorCall('this.__env.VavaClass', [builder.string(this.vavaClassName), serializedBody, 'this'], false)
     // TODO call of main method should be more robust (several classes in CU?)
-  ) + '\n' + builder.functionCall(this.vavaClassName + '.send', ['"main"']);
+  ) + '\n' + builder.functionCall('this["' + this.vavaClassName + '"].send', ['"main"']);
 };
 
 /**
@@ -314,7 +314,7 @@ VariableDeclarator.prototype.compileNode = function (vavaType) {
   return builder.keyValue(
     this.vavaIdentifier,
     builder.constructorCall(
-      'this.env.TypedVariable',
+      'this.__env.TypedVariable',
       [builder.string(vavaType), builder.string(this.vavaIdentifier), this.vavaInitializer && this.vavaInitializer.compile()].filter(
         function (value) { return !!value; }
       ),
@@ -365,7 +365,7 @@ MethodDeclaration.prototype.compileNode = function () {
   return builder.keyValue(
     this.vavaIdentifier,
     builder.constructorCall(
-      'this.env.VavaMethod',
+      'this.__env.VavaMethod',
       [
         builder.string(this.vavaIdentifier),
         builder.string(this.vavaType),
@@ -433,13 +433,12 @@ var Block = exports.Block = function (vavaStatements) {
 
 Block.inherits(ASTNode);
 
-Block.prototype.compile = function (indent) {
+Block.prototype.compileNode = function (indent) {
   indent = indent || 0;
   var js = this.children.map(function (child) {
-    console.log(child.compile());
     return child.compile(indent + 2);
   }).join('\n');
-  return js + 'console.log(this);';
+  return js + '\nconsole.log(this);';
 };
 
 /**
@@ -465,5 +464,5 @@ IntegerLiteral.prototype.getSignature = function () {
 };
 
 IntegerLiteral.prototype.compileNode = function (indent) {
-  return builder.constructorCall('this.env.IntValue', [this.value], false);
+  return builder.constructorCall('this.__env.IntValue', [this.value], false);
 };

@@ -13,5 +13,6 @@ exports.run = function (vavaSrc) {
   var compilation = vavaAST.compile();
   
   var runner = new Function (compilation);
-  runner.call(vava);
+  var scope = new vava.scope.Scope({__env : vava.env});
+  runner.call(scope);
 }

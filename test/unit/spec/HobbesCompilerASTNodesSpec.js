@@ -202,7 +202,7 @@ describe('Compiler', function () {
       });
       
       it('should turn itself into a string', function () {
-        expect(testNode.toString()).toBe('- <MethodDeclaration vavaType: int vavaIdentifier: foo>\n');
+        expect(testNode.toString()).toBe('- <MethodDeclaration vavaType: int vavaIdentifier: foo>\n  - <Block>\n');
       });
       
     }); // end MethodDeclaration spec

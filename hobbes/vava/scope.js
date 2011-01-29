@@ -10,10 +10,12 @@ Scope.prototype.__add = function (namesValues) {
     for (key in namesValues)
       this[key] = namesValues[key];
   };
+  return this;
 };
 
-Scope.prototype.__descend = function () {
-  var newScope = {};
-  newScope.prototype = this;
-  return newScope;
+Scope.prototype.__descend = function (namesValues) {
+  var Scoper = function () {};
+  Scoper.prototype = this;
+  var newScope = new Scoper();
+  return newScope.__add(namesValues);
 };

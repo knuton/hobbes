@@ -141,6 +141,17 @@ describe('Utils', function () {
       
     }); // end of Constructor call
     
+    describe('Scope', function () {
+      
+      it('should return scope addition call with semicolon', function () {
+        expect(utils.builder.addPairToScope("foo", "5")).toBe('this.__add({foo:5});');
+      });
+      
+      it('should return scope addition call without semicolon', function () {
+        expect(utils.builder.addPairToScope("foo", "5", false)).toBe('this.__add({foo:5})');
+      });
+    }); // end of Scope 
+    
     describe('Array', function () {
       
       it('should return an array literal', function () {

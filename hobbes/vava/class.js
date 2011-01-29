@@ -1,9 +1,7 @@
-var scope = (typeof hobbes !== 'undefined' && hobbes.vava.scope) || require('./scope');
-
-var VavaClass = exports.VavaClass = function (vavaClassName, vavaClassDefinition) {
+var VavaClass = exports.VavaClass = function (vavaClassName, vavaClassDefinition, scope) {
   
   this.vavaClassName = vavaClassName;
-  this.scope = new scope.Scope(vavaClassDefinition.fields);
+  this.scope = scope.__descend(vavaClassDefinition.fields);
   this.scope.__class = this;
   this.vavaMethods = vavaClassDefinition.methods || [];
   

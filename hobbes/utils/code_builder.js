@@ -60,6 +60,11 @@ var constructorCall = exports.constructorCall = function (identifierStr, fnArgs,
   return ['new', functionCall(identifierStr, fnArgs, semicolonInsertion)].join(' ');
 };
 
+/*** ADDING TO SCOPE ***/
+var addPairToScope = exports.addPairToScope = function (key, value, semicolonInsertion) {
+  return semicolize('this.__add({' + key + ':' + value + '})', semicolonInsertion);
+};
+
 /*** ARRAYS ***/
 
 /**
@@ -105,6 +110,7 @@ var joinToObject = exports.joinToObject = function () {
 var objectToLiteral = exports.objectToLiteral = function (object) {
   return JSON.stringify(object);
 };
+
 
 /*** PRIMITIVES ***/
 
