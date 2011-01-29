@@ -188,7 +188,7 @@ ClassDeclaration.prototype.compileNode = function (indent) {
  * Creates a node for a FieldDeclaration, containing one or several VariableDeclarators.
  *
  * @param vavaType The Vava type of the declared fields
- * @param variableDeclarations Array of VariableDeclaration objects
+ * @param variableDeclarators Array of VariableDeclaration objects
  */
 var FieldDeclaration = exports.FieldDeclaration = function (vavaType, variableDeclarators) {
   if (typeof vavaType !== 'string') {
@@ -213,6 +213,40 @@ FieldDeclaration.prototype.compileNode = function (indent) {
 };
 
 FieldDeclaration.prototype.getSignature = function () {
+  return {
+    vavaType : this.vavaType
+  };
+};
+
+/**
+ * Creates a node for a LocalVariableDeclaration, containing one or several VariableDeclarators.
+ *
+ * @param vavaType The Vava type of the declared fields
+ * @param variableDeclarators Array of VariableDeclaration objects
+ */
+var LocalVariableDeclaration = exports.LocalVariableDeclaration = function (vavaType, variableDeclarators) {
+  if (typeof vavaType !== 'string') {
+    throw new TypeError('Expected Vava type to be string.');
+  }
+  if (!variableDeclarators || variableDeclarators.getType() !== "VariableDeclarators" || variableDeclarators.length() < 1) {
+    throw new TypeError('Expected one or more variable declarators.');
+  }
+  this.type  = 'LocalVariableDeclaration';
+  this.children = [];
+  this.vavaType = vavaType;
+
+  this.appendChild(variableDeclarators);
+};
+
+LocalVariableDeclaration.inherits(ASTNode);
+
+LocalVariableDeclaration.prototype.compileNode = function (indent) {
+  indent = indent || 0;
+  
+  return utils.indent(indent) + 'this.__add({' + this.children[0].compileNode(this.vavaType) + '});';
+};
+
+LocalVariableDeclaration.prototype.getSignature = function () {
   return {
     vavaType : this.vavaType
   };
@@ -320,7 +354,7 @@ var MethodDeclaration = exports.MethodDeclaration = function (vavaHeader, vavaBl
   if (vavaBlock.getType() !== 'Block') {
     throw new TypeError('Expected Vava block to be Block.');
   }
-  this.vavaBlock = vavaBlock;
+  this.appendChild(vavaBlock);
 }
 
 MethodDeclaration.inherits(ASTNode);
@@ -336,7 +370,7 @@ MethodDeclaration.prototype.compileNode = function () {
         builder.string(this.vavaIdentifier),
         builder.string(this.vavaType),
         builder.array(this.vavaFormalParameters.map(function (fP) { fP.compile(); })),
-        builder.wrapAsFunction(this.vavaBlock.compile())
+        builder.wrapAsFunction(this.children[0].compile())
       ],
       false
     )
@@ -399,9 +433,13 @@ var Block = exports.Block = function (vavaStatements) {
 
 Block.inherits(ASTNode);
 
-Block.prototype.compile = function () {
-  // TODO :)
-  return 'console.log("Hello world")';
+Block.prototype.compile = function (indent) {
+  indent = indent || 0;
+  var js = this.children.map(function (child) {
+    console.log(child.compile());
+    return child.compile(indent + 2);
+  }).join('\n');
+  return js + 'console.log(this);';
 };
 
 /**

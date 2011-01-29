@@ -21,7 +21,7 @@ var VavaMethod = exports.VavaMethod = function (vavaMethodName, vavaReturnType, 
  *
  * @param args Array of parameters
  */
-VavaMethod.prototype.call = function (args) {
+VavaMethod.prototype.call = function (scope, args) {
   
   for (var i = 0; i < this.vavaFormalParameters; i ++) {
     if (args[i].vavaType() !== this.vavaFormalParameters[i].vavaType) {
@@ -29,6 +29,6 @@ VavaMethod.prototype.call = function (args) {
     }
   }
   // TODO Check return type?
-  return this.vavaBlock.apply(this, args);
+  return this.vavaBlock.apply(scope.__descend(), args);
   
 };

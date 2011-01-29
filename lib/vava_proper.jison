@@ -255,9 +255,8 @@ block_statements
   ;
 
 block_statement
-  : type variable_declarators LINE_TERMINATOR
-    // TODO In the Java grammar they use a separate LocalVariableDeclarationStatement
-    { $$ = new yy.FieldDeclaration($1, $2); }
+  : local_variable_declaration_statement
+    { $$ = $1; }
   | statement
     { $$ = $1; }
   ;
@@ -269,11 +268,23 @@ statement
     { $$ = $1; }
   ;
 
+local_variable_declaration_statement
+  : local_variable_declaration LINE_TERMINATOR
+    { $$ = $1; }
+  ;
+
 statement_without_trailing_substatement
   : empty_statement
     { $$ = $1; }
   | expression_statement
     { $$ = $1; }
+  ;
+
+/* local_variable_declaration_statement */
+
+local_variable_declaration
+  : type variable_declarators
+    { $$ = new yy.LocalVariableDeclaration($1, $2); }
   ;
 
 /* statement_without_trailing_substatement */

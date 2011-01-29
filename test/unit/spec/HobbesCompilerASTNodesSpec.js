@@ -117,6 +117,37 @@ describe('Compiler', function () {
       
     }); // end FieldDeclaration spec
     
+    describe('LocalVariableDeclaration', function () {
+      
+      beforeEach(function () {
+        var mockVariableDeclarators = mockASTNode({
+          length: function () { return 1; }, type: 'VariableDeclarators',
+          toString: function () { return ''; }
+        });
+        testNode = new astNodes.LocalVariableDeclaration('int', mockVariableDeclarators);
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+      
+      it('should be of type `LocalVariableDeclaration`', function () {
+        expect(testNode.getType()).toBe('LocalVariableDeclaration');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <LocalVariableDeclaration vavaType: int>\n');
+      });
+      
+      it('should list its children', function () {
+        var mockVariableDeclarators = mockASTNode({
+          length: function () { return 1; }, type: 'VariableDeclarators',
+          toString: function () { return '  - Kiddo\n'; }
+        });
+        testNode = new astNodes.LocalVariableDeclaration('int', mockVariableDeclarators);
+        expect(testNode.toString()).toBe('- <LocalVariableDeclaration vavaType: int>\n  - Kiddo\n');
+      });
+      
+    }); // end LocalVariableDeclaration spec
+    
     describe('VariableDeclarators', function () {
       
       beforeEach(function () {
