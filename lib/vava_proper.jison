@@ -40,6 +40,9 @@
 "="                   {return 'OPERATOR_ASSIGNMENT'; /* Operators */}
 "+"                   {return 'OPERATOR_ADDITION';}
 "-"                   {return 'OPERATOR_SUBTRACTION';}
+"*"                   {return 'OPERATOR_MULTIPLICATION';}
+"/"                   {return 'OPERATOR_DIVISON';}
+"%"                   {return 'OPERATOR_MODULO';}
 
 
 [a-zA-Z][a-zA-Z0-9_]* {return 'IDENTIFIER'; /* Varying form */}
@@ -401,11 +404,21 @@ additive_expression
     { $$ = $1; }
   | additive_expression OPERATOR_ADDITION multiplicative_expression
     { $$ = new yy.Addition($1, $3); }
+  | additive_expression OPERATOR_SUBTRACTION multiplicative_expression
+    { $$ = new yy.Subtraction($1, $3); }
   ;
 
 multiplicative_expression
+  : unary_expression
+    { $$ = $1; }
+  | multiplicative_expression OPERATOR_MULTIPLICATION unary_expression
+    { $$ = new yy.Multiplication($1, $3); }
+  ;
+
+unary_expression
   : postfix_expression
-    { $$ = $1 };
+    { $$ = $1; }
+  ;
 
 postfix_expression
   : primary

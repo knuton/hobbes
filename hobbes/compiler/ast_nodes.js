@@ -541,3 +541,50 @@ Addition.inherits(ASTNode);
 Addition.prototype.compileNode = function (indent) {
   return this.children[0].compile() + '.add(' + this.children[1].compile() + ')';
 }
+
+/**
+ * Creates a node for an subtraction operation.
+ *
+ * @param numA The number to send the subtraction message to
+ * @param numB The number to subtract
+ */
+var Subtraction = exports.Subtraction = function (numA, numB) {
+  this.type = 'Subtraction';
+  this.children = [];
+  // TODO Compile-time type checking
+  if (!(numA) || !(numB)) {
+    throw new TypeError('Expected two integer numbers for subtraction.');
+  }
+  this.appendChild(numA);
+  this.appendChild(numB);
+}
+
+Subtraction.inherits(ASTNode);
+
+Subtraction.prototype.compileNode = function (indent) {
+  return this.children[0].compile() + '.subtract(' + this.children[1].compile() + ')';
+}
+
+/**
+ * Creates a node for a multiplication operation.
+ *
+ * @param numA The number to send the multiplication message to
+ * @param numB The number to multiply with
+ */
+var Multiplication = exports.Multiplication = function (numA, numB) {
+  this.type = 'Multiplication';
+  this.children = [];
+  // TODO Compile-time type checking
+  if (!(numA) || !(numB)) {
+    throw new TypeError('Expected two integer numbers for multiplication.');
+  }
+  this.appendChild(numA);
+  this.appendChild(numB);
+}
+
+Multiplication.inherits(ASTNode);
+
+Multiplication.prototype.compileNode = function (indent) {
+  return this.children[0].compile() + '.times(' + this.children[1].compile() + ')';
+}
+
