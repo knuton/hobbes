@@ -438,7 +438,32 @@ Block.prototype.compileNode = function (indent) {
   var js = this.children.map(function (child) {
     return child.compile(indent + 2);
   }).join('\n');
-  return js + '\nconsole.log(this);';
+  return js + '\nconsole.log(this.e);';
+};
+
+/**
+ * Creates a node for a name, i.e. a named reference.
+ *
+ * @param name The name in question
+ */
+var Name = exports.Name = function (name) {
+  this.type = 'Name';
+  this.children = [];
+  if (!name || !(/[a-zA-Z][a-zA-Z0-9_]*/.test(name))) {
+    throw new TypeError('Expected name to be an identifier.');
+  }
+  this.name = name;
+};
+
+Name.inherits(ASTNode);
+
+/* Simply resolve the name. */
+Name.prototype.compileNode = function (indent) {
+  return 'this["' + this.name + '"]';
+};
+
+Name.prototype.getSignature = function () {
+  return {name : this.name};
 };
 
 /**

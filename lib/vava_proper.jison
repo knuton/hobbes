@@ -310,6 +310,16 @@ statement_expression
 
 /*** NAMES ***/
 
+name
+  : simple_name
+    { $$ = new yy.Name($1); }
+  ;
+
+simple_name
+  : IDENTIFIER
+    { $$ = $1; }
+  ;
+
 /*** EXPRESSIONS ***/
 
 assignment
@@ -324,6 +334,38 @@ left_hand_side
   ;
 
 expression
+  : assignment_expression
+    { $$ = $1; }
+  ;
+
+/* assignment_expression */
+assignment_expression
+  : conditional_expression
+    { $$ = $1; }
+  //| assignment
+  //  { $$ = $1; }
+  ;
+
+// TODO Ternary operator
+conditional_expression
+  : conditional_or_expression
+    { $$ = $1; }
+  ;
+
+// TODO Undo this shortcut
+conditional_or_expression
+  : postfix_expression
+    { $$ = $1; }
+  ;
+
+postfix_expression
+  : primary
+    { $$ = $1; }
+  | name
+    { $$ = $1; }
+  ;
+
+primary
   : literal
     { $$ = $1; }
   ;
