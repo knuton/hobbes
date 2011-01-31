@@ -25,6 +25,8 @@
 
 "package"             {return 'KEYWORD_PACKAGE'; /* Keywords */}
 "import"              {return 'KEYWORD_IMPORT';}
+"true"                {return 'TRUE_LITERAL';}
+"false"               {return 'FALSE_LITERAL';}
 
 "class"               {return 'KEYWORD_CLASS';}
 
@@ -302,23 +304,24 @@ expression_statement
 /* statement_expression */
 
 statement_expression
-  // : assignment
-  : literal
+  : assignment
     { $$ = $1;}
   ;
 
+/*** NAMES ***/
+
 /*** EXPRESSIONS ***/
 
-//assignment
-//  : left_hand_side assignment_operator assignment_expression
-//    { $$ = $1; }
-//  ;
+assignment
+  : left_hand_side assignment_operator assignment_expression
+    { $$ = $1; }
+  ;
 
 // TODO FieldAccess and ArrayAccess
-//left_hand_side
-//  : name
-//    { $$ = $1; }
-//  ;
+left_hand_side
+  : name
+    { $$ = $1; }
+  ;
 
 expression
   : literal
@@ -326,8 +329,17 @@ expression
   ;
 
 literal
-  : integer_literal
+  : boolean_literal
     { $$ = $1; }
+  | integer_literal
+    { $$ = $1; }
+  ;
+
+boolean_literal
+  : TRUE_LITERAL
+    { $$ = new yy.BooleanLiteral($1); }
+  | FALSE_LITERAL
+    { $$ = new yy.BooleanLiteral($1); }
   ;
 
 integer_literal

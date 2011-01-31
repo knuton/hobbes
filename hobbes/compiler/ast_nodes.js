@@ -442,6 +442,32 @@ Block.prototype.compileNode = function (indent) {
 };
 
 /**
+ * Creates a node for a Boolean literal.
+ *
+ * @param bool The boolean as string
+ */
+var BooleanLiteral = exports.BooleanLiteral = function (bool) {
+  this.type = 'BooleanLiteral';
+  this.children = [];
+  var boolString = String(bool);
+  if (boolString === 'true' || boolString === 'false') {
+    this.value = boolString;
+  } else {
+    throw new TypeError('Expected literal to be `true` or `false`, but was ' + boolString + '.');
+  }
+};
+
+BooleanLiteral.inherits(ASTNode);
+
+BooleanLiteral.prototype.getSignature = function () {
+  return {value : this.value};
+}
+
+BooleanLiteral.prototype.compileNode = function (indent) {
+  return 'this.__env.BooleanValue["' + this.value + '"]';
+};
+
+/**
  * Creates a node for an Integer literal.
  *
  * @param num The number

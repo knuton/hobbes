@@ -112,6 +112,42 @@ TypedValue.prototype.get = function () {
   return this.rawValue;
 };
 
+// NATIVE TYPES
+
+// TODO Document and Test!
+var BooleanValue = exports.BooleanValue = function (rawValue) {
+  
+  this.vavaType = 'boolean';
+
+  if (rawValue) {
+    if (rawValue !== true && rawValue !== false) {
+      throw new Error('Expected JavaScript boolean');
+    }
+    this.rawValue = rawValue;
+  } else {
+    this.rawValue = false;
+  }
+
+};
+
+BooleanValue.inherits(TypedValue);
+
+// LOGICAL OPERATIONS
+BooleanValue.prototype.not = function () {
+  return BooleanValue[String(!this.get())];
+};
+
+BooleanValue.prototype.and = function (other) {
+  return BooleanValue[String(this.get() && other.get())];
+};
+
+BooleanValue.prototype.or = function (other) {
+  return BooleanValue[String(this.get() || other.get())];
+};
+
+BooleanValue['true'] = new BooleanValue(true);
+BooleanValue['false'] = new BooleanValue(false);
+
 // TODO how to handle inheritance here?
 var IntegralValue = function (rawValue) {
   
@@ -192,5 +228,6 @@ NullValue.inherits(TypedValue);
 //// NEEDS TO BE AT THE END
 // Lookup table for constructors for simple (?) types
 TypedValue.typeConstructors = {
+  "boolean" : BooleanValue,
   "int" : IntValue
 };

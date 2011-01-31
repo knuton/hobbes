@@ -8,5 +8,6 @@ exports.env = {
   VavaClass  : vavaClass.VavaClass,
   VavaMethod : vavaMethod.VavaMethod,
   TypedVariable : vavaType.TypedVariable,
+  BooleanValue : vavaType.BooleanValue,
   IntValue   : vavaType.IntValue
 }
