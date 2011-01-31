@@ -588,3 +588,26 @@ Multiplication.prototype.compileNode = function (indent) {
   return this.children[0].compile() + '.times(' + this.children[1].compile() + ')';
 }
 
+/**
+ * Creates a node for a division operation.
+ *
+ * @param numA The number to send the division message to
+ * @param numB The number to divide by
+ */
+var Division = exports.Division = function (numA, numB) {
+  this.type = 'Division';
+  this.children = [];
+  // TODO Compile-time type checking
+  if (!(numA) || !(numB)) {
+    throw new TypeError('Expected two integer numbers for division.');
+  }
+  this.appendChild(numA);
+  this.appendChild(numB);
+}
+
+Division.inherits(ASTNode);
+
+Division.prototype.compileNode = function (indent) {
+  return this.children[0].compile() + '.divide(' + this.children[1].compile() + ')';
+}
+

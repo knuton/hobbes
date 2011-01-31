@@ -413,6 +413,8 @@ multiplicative_expression
     { $$ = $1; }
   | multiplicative_expression OPERATOR_MULTIPLICATION unary_expression
     { $$ = new yy.Multiplication($1, $3); }
+  | multiplicative_expression OPERATOR_DIVISON unary_expression
+    { $$ = new yy.Division($1, $3); }
   ;
 
 unary_expression
