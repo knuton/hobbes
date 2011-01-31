@@ -38,6 +38,8 @@
 
 
 "="                   {return 'OPERATOR_ASSIGNMENT'; /* Operators */}
+"+"                   {return 'OPERATOR_ADDITION';}
+"-"                   {return 'OPERATOR_SUBTRACTION';}
 
 
 [a-zA-Z][a-zA-Z0-9_]* {return 'IDENTIFIER'; /* Varying form */}
@@ -352,11 +354,58 @@ conditional_expression
     { $$ = $1; }
   ;
 
-// TODO Undo this shortcut
 conditional_or_expression
-  : postfix_expression
+  : conditional_and_expression
+    { $$ = $1; }
+  | conditional_or_expression || conditional_and_expression
+    { $$ = new yy.OrExpression($1, $3); }
+  ;
+
+conditional_and_expression
+  : inclusive_or_expression
     { $$ = $1; }
   ;
+
+inclusive_or_expression
+  : exclusive_or_expression
+    { $$ = $1; }
+  ;
+
+exclusive_or_expression
+  : and_expression
+    { $$ = $1; }
+  ;
+
+and_expression
+  : equality_expression
+    { $$ = $1; }
+  ;
+
+equality_expression
+  : relational_expression
+    { $$ = $1; }
+  ;
+
+relational_expression
+  : shift_expression
+    { $$ = $1; }
+  ;
+
+shift_expression
+  : additive_expression
+    { $$ = $1; }
+  ;
+
+additive_expression
+  : multiplicative_expression
+    { $$ = $1; }
+  | additive_expression OPERATOR_ADDITION multiplicative_expression
+    { $$ = new yy.Addition($1, $3); }
+  ;
+
+multiplicative_expression
+  : postfix_expression
+    { $$ = $1 };
 
 postfix_expression
   : primary

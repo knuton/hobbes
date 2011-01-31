@@ -438,7 +438,7 @@ Block.prototype.compileNode = function (indent) {
   var js = this.children.map(function (child) {
     return child.compile(indent + 2);
   }).join('\n');
-  return js + '\nconsole.log(this.e);';
+  return js + '\nconsole.log(this);';
 };
 
 /**
@@ -459,7 +459,7 @@ Name.inherits(ASTNode);
 
 /* Simply resolve the name. */
 Name.prototype.compileNode = function (indent) {
-  return 'this["' + this.name + '"]';
+  return 'this["' + this.name + '"].get()';
 };
 
 Name.prototype.getSignature = function () {
@@ -517,3 +517,27 @@ IntegerLiteral.prototype.getSignature = function () {
 IntegerLiteral.prototype.compileNode = function (indent) {
   return builder.constructorCall('this.__env.IntValue', [this.value], false);
 };
+
+//// Operations
+/**
+ * Creates a node for an addition operation.
+ *
+ * @param numA The number to send the addition message to
+ * @param numB The number to add
+ */
+var Addition = exports.Addition = function (numA, numB) {
+  this.type = 'Addition';
+  this.children = [];
+  // TODO Compile-time type checking
+  if (!(numA) || !(numB)) {
+    throw new TypeError('Expected two integer numbers for addition.');
+  }
+  this.appendChild(numA);
+  this.appendChild(numB);
+}
+
+Addition.inherits(ASTNode);
+
+Addition.prototype.compileNode = function (indent) {
+  return this.children[0].compile() + '.add(' + this.children[1].compile() + ')';
+}
