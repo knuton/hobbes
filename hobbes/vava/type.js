@@ -192,6 +192,10 @@ IntegralValue.prototype.divide = function (other) {
   return new IntValue((thisRaw - remainder) / otherRaw);
 };
 
+IntegralValue.prototype.modulo = function (other) {
+  return new IntValue(this.toInt().get() % other.toInt().get());
+};
+
 // TODO Overflow of long type
 IntegralValue.prototype.toInt = function () {
   return new IntValue(this.get());

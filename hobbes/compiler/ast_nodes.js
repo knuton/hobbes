@@ -438,7 +438,7 @@ Block.prototype.compileNode = function (indent) {
   var js = this.children.map(function (child) {
     return child.compile(indent + 2);
   }).join('\n');
-  return js + '\nconsole.log(this);';
+  return js + '\nconsole.log(this.f);';
 };
 
 /**
@@ -611,3 +611,69 @@ Division.prototype.compileNode = function (indent) {
   return this.children[0].compile() + '.divide(' + this.children[1].compile() + ')';
 }
 
+/**
+ * Creates a node for a modulo operation.
+ *
+ * @param numA The number to send the modulo message to
+ * @param numB The number to modulate by
+ */
+var Modulo = exports.Modulo = function (numA, numB) {
+  this.type = 'Modulo';
+  this.children = [];
+  // TODO Compile-time type checking
+  if (!(numA) || !(numB)) {
+    throw new TypeError('Expected two integer numbers for modulo.');
+  }
+  this.appendChild(numA);
+  this.appendChild(numB);
+}
+
+Modulo.inherits(ASTNode);
+
+Modulo.prototype.compileNode = function (indent) {
+  return this.children[0].compile() + '.modulo(' + this.children[1].compile() + ')';
+}
+
+/**
+ * Creates a node for an equality comparison.
+ *
+ * @param a First value to be compared
+ * @param b Second value to be compared
+ */
+var Equals = exports.Equals = function (a, b) {
+  this.type = 'Equals';
+  this.children = [];
+  if (!a || !b) {
+    throw new TypeError('Expected two values to compare for equality.');
+  }
+  this.appendChild(a);
+  this.appendChild(b);
+};
+
+Equals.inherits(ASTNode);
+
+Equals.prototype.compileNode = function (indent) {
+  return 'this.__env.BooleanValue[String(' + this.children[0].compile() + ' === ' + this.children[1].compile() + ')]';
+};
+
+/**
+ * Creates a node for an inequality comparison.
+ *
+ * @param a First value to be compared
+ * @param b Second value to be compared
+ */
+var NotEquals = exports.NotEquals = function (a, b) {
+  this.type = 'NotEquals';
+  this.children = [];
+  if (!a || !b) {
+    throw new TypeError('Expected two values to compare for inequality.');
+  }
+  this.appendChild(a);
+  this.appendChild(b);
+};
+
+NotEquals.inherits(ASTNode);
+
+NotEquals.prototype.compileNode = function (indent) {
+  return 'this.__env.BooleanValue[String(' + this.children[0].compile() + ' !== ' + this.children[1].compile() + ')]';
+};

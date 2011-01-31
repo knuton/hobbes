@@ -37,6 +37,8 @@
 "float"               {return 'PRIMITIVE_FLOAT';}
 
 
+"=="                  {return 'OPERATOR_EQUAL';}
+"!="                  {return 'OPERATOR_NOT_EQUAL';}
 "="                   {return 'OPERATOR_ASSIGNMENT'; /* Operators */}
 "+"                   {return 'OPERATOR_ADDITION';}
 "-"                   {return 'OPERATOR_SUBTRACTION';}
@@ -387,6 +389,10 @@ and_expression
 equality_expression
   : relational_expression
     { $$ = $1; }
+  | equality_expression OPERATOR_EQUAL relational_expression
+    { $$ = new yy.Equals($1, $3); }
+  | equality_expression OPERATOR_NOT_EQUAL relational_expression
+    { $$ = new yy.NotEquals($1, $3); }
   ;
 
 relational_expression
@@ -415,6 +421,8 @@ multiplicative_expression
     { $$ = new yy.Multiplication($1, $3); }
   | multiplicative_expression OPERATOR_DIVISON unary_expression
     { $$ = new yy.Division($1, $3); }
+  | multiplicative_expression OPERATOR_MODULO unary_expression
+    { $$ = new yy.Modulo($1, $3); }
   ;
 
 unary_expression
