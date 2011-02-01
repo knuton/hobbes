@@ -725,3 +725,29 @@ IfThen.prototype.compileNode = function (indent) {
   js += this.children[1].compileNode(indent + 2);
   return js + '}\n';
 };
+
+/**
+ * Creates a node for a while loop.
+ *
+ * @param condition The condition
+ * @param statement The looped statements
+ */
+var WhileLoop = exports.WhileLoop = function (condition, statement) {
+  this.type = 'WhileLoop';
+  this.children = [];
+  if (!condition || !statement) {
+    throw new TypeError('Expected condition and conditional.');
+  }
+  this.appendChild(condition);
+  this.appendChild(statement);
+};
+
+WhileLoop.inherits(ASTNode);
+
+WhileLoop.prototype.compileNode = function (indent) {
+  var js = 'while (this.__env.BooleanValue.true === ';
+  js += this.children[0].compileNode() + ') {\n';
+  js += this.children[1].compileNode(indent + 2);
+  return js + '}\n';
+};
+

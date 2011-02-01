@@ -26,6 +26,7 @@
 "package"             {return 'KEYWORD_PACKAGE'; /* Keywords */}
 "import"              {return 'KEYWORD_IMPORT';}
 "if"                  {return 'KEYWORD_IF';}
+"while"               {return 'KEYWORD_WHILE';}
 "true"                {return 'TRUE_LITERAL';}
 "false"               {return 'FALSE_LITERAL';}
 
@@ -290,6 +291,8 @@ statement
     { $$ = $1; }
   | if_then_statement
     { $$ = $1; }
+  | while_statement
+    { $$ = $1; }
   ;
 
 statement_without_trailing_substatement
@@ -307,7 +310,13 @@ if_then_statement
   : KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN statement
     { $$ = new yy.IfThen($3, $5); }
   ;
-  
+
+/*** CONTROL STRUCTURES: LOOPS ***/
+
+while_statement
+  : KEYWORD_WHILE LEFT_PAREN expression RIGHT_PAREN statement
+    { $$ = new yy.WhileLoop($3, $5); }
+  ;
 
 /* statement_without_trailing_substatement */
 
@@ -343,7 +352,8 @@ simple_name
 /*** EXPRESSIONS ***/
 
 assignment
-  : left_hand_side OPERATOR_ASSIGNMENT assignment_expression
+  // TODO Should be assignment_expression
+  : left_hand_side OPERATOR_ASSIGNMENT conditional_expression
     { $$ = new yy.Assignment($1, $3); }
   ;
 
