@@ -483,6 +483,47 @@ FormalParameter.prototype.getSignature = function () {
 }
 
 /**
+ * Creates a node for a method invocation.
+ *
+ * @param name The name of the method
+ * @param argumentList List of arguments
+ */
+var MethodInvocation = exports.MethodInvocation = function (name, argumentList) {
+  this.type = 'MethodInvocation';
+  this.children = [];
+  this.name = name;
+  this.appendChild(argumentList);
+};
+
+MethodInvocation.inherits(ASTNode);
+
+MethodInvocation.prototype.compileNode = function (indent) {
+  return utils.indent('this.' + this.name.prefix() + '.send("' + this.name.simple() + '", ' + this.children[0].compile() + ')', indent);
+};
+
+MethodInvocation.prototype.getSignature = function () {
+  return {name: this.name.qualified()};
+};
+
+/**
+ * Creates a node for an argument list.
+ *
+ * @param firstArg The first argument, optional
+ */
+var ArgumentList = exports.ArgumentList = function (firstArg) {
+  this.type = 'ArgumentList';
+  this.children = [];
+  
+  if (firstArg) this.appendChild(firstArg);
+};
+
+ArgumentList.inherits(ASTNode);
+
+ArgumentList.prototype.compileNode = function () {
+  return '[' + this.children.map(function (child) { return child.compile() }).join(', ') + ']';
+};
+
+/**
  * Creates a node for a Block.
  * 
  * @param vavaStatements A list of statements
@@ -505,7 +546,7 @@ Block.prototype.compileNode = function (indent) {
   var js = this.children.map(function (child) {
     return child.compile((indent || 0) + 2);
   }).join('\n');
-  return js + '\nthis.IO.send("println", [this.z.get()]);';
+  return js;
 };
 
 /**
@@ -550,6 +591,14 @@ Name.inherits(ASTNode);
 Name.prototype.simple = function () {
   var identifiers = this.name.split('.');
   return identifiers[identifiers.length - 1];
+};
+
+/**
+ * Return the name without the last identifier.
+ */
+Name.prototype.prefix = function () {
+  var identifiers = this.name.split('.');
+  return identifiers.slice(0, -1).join('.');
 };
 
 /**
@@ -622,6 +671,27 @@ IntegerLiteral.prototype.getSignature = function () {
 
 IntegerLiteral.prototype.compileNode = function (indent) {
   return builder.functionCall('this.__env.IntValue.intern', [this.value], false);
+};
+
+/**
+ * Creates a node for a String literal.
+ *
+ * @param str The string
+ */
+var StringLiteral = exports.StringLiteral = function (str) {
+  this.type = 'StringLiteral';
+  this.children = [];
+  this.value = str;
+};
+
+StringLiteral.inherits(ASTNode);
+
+StringLiteral.prototype.getSignature = function () {
+  return {value : this.value};
+};
+
+StringLiteral.prototype.compileNode = function (indent) {
+  return builder.constructorCall('this.__env.StringValue', [this.value], false);
 };
 
 //// Operations

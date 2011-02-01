@@ -33,7 +33,6 @@
 
 "class"               {return 'KEYWORD_CLASS';}
 
-"void"                {return 'KEYWORD_VOID';}
 
 "boolean"             {return 'PRIMITIVE_BOOLEAN';}
 "int"                 {return 'PRIMITIVE_INTEGER';}
@@ -54,7 +53,8 @@
 [a-zA-Z][a-zA-Z0-9_]* {return 'IDENTIFIER'; /* Varying form */}
 [0-9]+                {return 'DECIMAL_INTEGER_LITERAL';}
 [0-9]+\.[0-9]*        {return 'FLOAT_EXPRESSION';}
-
+"\"".*"\""              {return 'STRING_LITERAL';}
+"//".                 {/*skip comments*/}
 <<EOF>>               {return 'EOF';}
 .                     {return 'INVALID';}
 
@@ -116,6 +116,8 @@ type_declaration
 class_declaration
   : KEYWORD_CLASS IDENTIFIER class_body
     { $$ = new yy.ClassDeclaration($2, $3); }
+  | MODIFIER_PUBLIC KEYWORD_CLASS IDENTIFIER class_body
+    { $$ = new yy.ClassDeclaration($3, $4); }
   ;
 
 /*** CLASS ***/
@@ -168,8 +170,9 @@ method_declaration
 method_header
   : type method_declarator
     %{ $$ = yy.utils.merge({vavaType: $1}, $2); %}
-  | KEYWORD_VOID method_declarator
-    %{ $$ = yy.utils.merge({vavaType: $1}, $2); %}
+  // TODO Specialty item
+  | MODIFIER_PUBLIC MODIFIER_STATIC MODIFIER_VOID method_declarator
+    %{ $$ = yy.utils.merge({vavaType: $3}, $4); %}
   ;
 
 method_declarator
@@ -356,7 +359,9 @@ expression_statement
 
 statement_expression
   : assignment
-    { $$ = $1;}
+    { $$ = $1; }
+  | method_invocation
+    { $$ = $1; }
   ;
 
 /*** NAMES ***/
@@ -494,6 +499,8 @@ postfix_expression
 primary
   : literal
     { $$ = $1; }
+  | method_invocation
+    { $$ = $1; }
   ;
 
 literal
@@ -501,6 +508,22 @@ literal
     { $$ = $1; }
   | integer_literal
     { $$ = $1; }
+  | string_literal
+    { $$ = $1; }
+  ;
+
+method_invocation
+  : name LEFT_PAREN RIGHT_PAREN
+    { $$ = new yy.MethodInvocation($1); }
+  | name LEFT_PAREN argument_list RIGHT_PAREN
+    { $$ = new yy.MethodInvocation($1, $3); }
+  ;
+
+argument_list
+  : expression
+    { $$ = new yy.ArgumentList($1); }
+  | argument_list COMMA expression
+    { $1.appendChild($3); $$ = $1; }
   ;
 
 boolean_literal
@@ -514,3 +537,8 @@ integer_literal
  : DECIMAL_INTEGER_LITERAL
    { $$ = new yy.IntegerLiteral($1); }
  ;
+
+string_literal
+  : STRING_LITERAL
+    { $$ = new yy.StringLiteral($1); }
+  ;

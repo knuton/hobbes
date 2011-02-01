@@ -254,6 +254,27 @@ IntValue.intern = function (number) {
     return this.stored[number] = new this(number);
 };
 
+var StringValue = exports.StringValue = function (rawValue) {
+  
+  this.vavaType = 'String';
+
+  if (rawValue) {
+    if (typeof rawValue !== 'string') {
+      throw new Error('Expected JavaScript string');
+    }
+    this.rawValue = rawValue;
+  } else {
+    this.rawValue = '';
+  }
+
+};
+
+StringValue.inherits(TypedValue);
+
+StringValue.prototype.add = function (other) {
+  return new StringValue(this.get() + other.get());
+};
+
 // Reference Types
 var NullValue = exports.NullValue = function () {
   this.vavaType = 'null';
