@@ -82,13 +82,11 @@ ASTNode.prototype.assembleSignature = function () {
  *   - Child B
  */
 ASTNode.prototype.toString = function (indent) {
-  // default indentation is none
-  indent = indent || 0
   // add indentation and own type
-  var str = utils.indent(indent) + '- ' + this.assembleSignature() + '\n';
+  var str = utils.indent('- ' + this.assembleSignature() + '\n', indent);
   // append toString results of children
   this.children.forEach(function (child) {
-    str += child.toString(indent + 2);
+    str += child.toString((indent || 0) + 2);
   });
   
   return str;
@@ -115,7 +113,7 @@ CompilationUnit.prototype.compileNode = function () {
   var jsSource = '';
   
   this.children.forEach(function (child) {
-    jsSource += child.compile(0);
+    jsSource += child.compile(0) + '\n';
   });
   
   return jsSource;
@@ -123,9 +121,65 @@ CompilationUnit.prototype.compileNode = function () {
 
 CompilationUnit.prototype.getSignature = function () {
   return {
-    vavaPackage : this.vavaPackage,
-    vavaImports : this.vavaImports
+    vavaPackage : this.vavaPackage
   };
+};
+
+/**
+ * Creates a node for a collection of import declarations.
+ *
+ * @param importDeclaration Optional first import declaration
+ */
+var ImportDeclarations = exports.ImportDeclarations = function (importDeclaration) {
+  this.type = 'ImportDeclarations';
+  this.children = [];
+
+  if (importDeclaration) this.appendChild(importDeclaration);
+};
+
+ImportDeclarations.inherits(ASTNode);
+
+ImportDeclarations.prototype.compileNode = function () {
+  return [this.children.map(function (child) { return child.compileNode() })].join('\n');
+};
+
+ImportDeclarations.prototype.checkChild = function (declaration) {
+  if (!declaration || declaration.getType() !== 'ImportDeclaration') {
+    throw new TypeError('Expected import declaration to be of type `ImportDeclaration`.');
+  }
+};
+
+ImportDeclarations.prototype.length = function () {
+  return this.children.length;
+};
+  
+ImportDeclarations.prototype.getSignature = function () {
+  return {
+    declarations : this.children.length
+  };
+};
+
+/**
+ * Creates a node for an import declaration.
+ *
+ * @param name The name/qualifier of the import
+ */
+var ImportDeclaration = exports.ImportDeclaration = function (name) {
+  this.type = 'ImportDeclaration';
+  this.children = [];
+  this.appendChild(name);
+};
+
+ImportDeclaration.inherits(ASTNode);
+
+ImportDeclaration.prototype.checkChild = function (name) {
+  if (!name || name.getType() !== 'Name') {
+    throw new TypeError('Expected import declaration to be of type `Name`.');
+  }
+};
+
+ImportDeclaration.prototype.compileNode = function () {
+  return 'this.' + this.children[0].simple() + ' = this.' + this.children[0].qualified() + ';';
 };
 
 /**
@@ -154,7 +208,6 @@ ClassDeclaration.prototype.getSignature = function () {
 
 ClassDeclaration.prototype.compileNode = function (indent) {
   var self = this;
-  indent = indent || 0;
   
   var serializedBody = builder.joinToObject(
     // Field Declarations
@@ -207,8 +260,6 @@ var FieldDeclaration = exports.FieldDeclaration = function (vavaType, variableDe
 FieldDeclaration.inherits(ASTNode);
 
 FieldDeclaration.prototype.compileNode = function (indent) {
-  indent = indent || 0;
-  
   return this.children[0].compileNode(this.vavaType);
 };
 
@@ -241,9 +292,7 @@ var LocalVariableDeclaration = exports.LocalVariableDeclaration = function (vava
 LocalVariableDeclaration.inherits(ASTNode);
 
 LocalVariableDeclaration.prototype.compileNode = function (indent) {
-  indent = indent || 0;
-  
-  return utils.indent(indent) + 'this.__add({' + this.children[0].compileNode(this.vavaType) + '});';
+  return utils.indent('this.__add({' + this.children[0].compileNode(this.vavaType) + '});', indent);
 };
 
 LocalVariableDeclaration.prototype.getSignature = function () {
@@ -346,7 +395,7 @@ var Assignment = exports.Assignment = function (name, value) {
 Assignment.inherits(ASTNode);
 
 Assignment.prototype.compileNode = function (indent) {
-  return this.children[0].compileNode('set') + '.set(' + this.children[1].compileNode() + ')';
+  return utils.indent(this.children[0].compileNode('set') + '.set(' + this.children[1].compileNode() + ')', indent);
 };
 
 /**
@@ -453,11 +502,29 @@ var Block = exports.Block = function (vavaStatements) {
 Block.inherits(ASTNode);
 
 Block.prototype.compileNode = function (indent) {
-  indent = indent || 0;
   var js = this.children.map(function (child) {
-    return child.compile(indent + 2);
+    return child.compile((indent || 0) + 2);
   }).join('\n');
-  return js + '\nconsole.log(this);';
+  return js + '\nconsole.log(this.IO);';
+};
+
+/**
+ * Creates a node for an expression statement.
+ *
+ * Serves only to add line terminator and newline to the expressions.
+ *
+ * @param expression The expression to terminate
+ */
+var ExpressionStatement = exports.ExpressionStatement = function (expression) {
+  this.type = 'ExpressionStatement';
+  this.children = [];
+  this.appendChild(expression);
+};
+
+ExpressionStatement.inherits(ASTNode);
+
+ExpressionStatement.prototype.compileNode = function (indent) {
+  return this.children[0].compile(indent) + ';';
 };
 
 /**
@@ -477,12 +544,28 @@ var Name = exports.Name = function (name) {
 Name.inherits(ASTNode);
 
 /**
+ * Return the name's last identifier.
+ *
+ */
+Name.prototype.simple = function () {
+  var identifiers = this.name.split('.');
+  return identifiers[identifiers.length - 1];
+};
+
+/**
+ * Return the full qualified name.
+ */
+Name.prototype.qualified = function () {
+  return this.name;
+};
+
+/**
  * Simply resolve the name.
  *
  * @param dontGet If truthy, don't call #get
  */
 Name.prototype.compileNode = function (dontGet) {
-  return 'this["' + this.name + '"]' + (dontGet ? '' : '.get()');
+  return 'this.' + this.name + (dontGet ? '' : '.get()');
 };
 
 Name.prototype.getSignature = function () {
@@ -562,7 +645,7 @@ var Addition = exports.Addition = function (numA, numB) {
 Addition.inherits(ASTNode);
 
 Addition.prototype.compileNode = function (indent) {
-  return this.children[0].compile() + '.add(' + this.children[1].compile() + ')';
+  return utils.indent(this.children[0].compile() + '.add(' + this.children[1].compile() + ')', indent);
 }
 
 /**
@@ -585,7 +668,7 @@ var Subtraction = exports.Subtraction = function (numA, numB) {
 Subtraction.inherits(ASTNode);
 
 Subtraction.prototype.compileNode = function (indent) {
-  return this.children[0].compile() + '.subtract(' + this.children[1].compile() + ')';
+  return utils.indent(this.children[0].compile() + '.subtract(' + this.children[1].compile() + ')', indent);
 }
 
 /**
@@ -608,7 +691,7 @@ var Multiplication = exports.Multiplication = function (numA, numB) {
 Multiplication.inherits(ASTNode);
 
 Multiplication.prototype.compileNode = function (indent) {
-  return this.children[0].compile() + '.times(' + this.children[1].compile() + ')';
+  return utils.indent(this.children[0].compile() + '.times(' + this.children[1].compile() + ')', indent);
 }
 
 /**
@@ -631,7 +714,7 @@ var Division = exports.Division = function (numA, numB) {
 Division.inherits(ASTNode);
 
 Division.prototype.compileNode = function (indent) {
-  return this.children[0].compile() + '.divide(' + this.children[1].compile() + ')';
+  return utils.indent(this.children[0].compile() + '.divide(' + this.children[1].compile() + ')', indent);
 }
 
 /**
@@ -654,7 +737,7 @@ var Modulo = exports.Modulo = function (numA, numB) {
 Modulo.inherits(ASTNode);
 
 Modulo.prototype.compileNode = function (indent) {
-  return this.children[0].compile() + '.modulo(' + this.children[1].compile() + ')';
+  return utils.indent(this.children[0].compile() + '.modulo(' + this.children[1].compile() + ')', indent);
 }
 
 /**
@@ -676,7 +759,7 @@ var Equals = exports.Equals = function (a, b) {
 Equals.inherits(ASTNode);
 
 Equals.prototype.compileNode = function (indent) {
-  return 'this.__env.BooleanValue[String(' + this.children[0].compile() + ' === ' + this.children[1].compile() + ')]';
+  return utils.indent('this.__env.BooleanValue[String(' + this.children[0].compile() + ' === ' + this.children[1].compile() + ')]', indent);
 };
 
 /**
@@ -698,7 +781,7 @@ var NotEquals = exports.NotEquals = function (a, b) {
 NotEquals.inherits(ASTNode);
 
 NotEquals.prototype.compileNode = function (indent) {
-  return 'this.__env.BooleanValue[String(' + this.children[0].compile() + ' !== ' + this.children[1].compile() + ')]';
+  return utils.indent('this.__env.BooleanValue[String(' + this.children[0].compile() + ' !== ' + this.children[1].compile() + ')]', indent);
 };
 
 /**
@@ -722,8 +805,38 @@ IfThen.inherits(ASTNode);
 IfThen.prototype.compileNode = function (indent) {
   var js = 'if (this.__env.BooleanValue.true === ';
   js += this.children[0].compileNode() + ') {\n';
-  js += this.children[1].compileNode(indent + 2);
-  return js + '}\n';
+  js += this.children[1].compileNode(2);
+  return utils.indent(js + '\n}\n', indent);
+};
+
+/**
+ * Creates a node for an if-then-else conditional.
+ *
+ * @param condition The condition
+ * @param truthyStatement The statement for true condition
+ * @param falsyStatement The statement for false condition
+ */
+var IfThenElse = exports.IfThenElse = function (condition, truthyStatement, falsyStatement) {
+  this.type = 'IfThenElse';
+  this.children = [];
+  if (!condition || !truthyStatement || !falsyStatement) {
+    throw new TypeError('Expected condition and conditionals.');
+  }
+  this.appendChild(condition);
+  this.appendChild(truthyStatement);
+  this.appendChild(falsyStatement);
+};
+
+IfThenElse.inherits(ASTNode);
+
+IfThenElse.prototype.compileNode = function (indent) {
+  var js = utils.indent('if (this.__env.BooleanValue.true === ', indent);
+  js += this.children[0].compileNode() + ') {\n';
+  js += this.children[1].compileNode(indent + 2) + '\n';
+  js += utils.indent('} else {\n', indent);
+  js += this.children[2].compileNode(indent + 2) + '\n';
+  js += utils.indent('}', indent);
+  return js;
 };
 
 /**
@@ -745,9 +858,10 @@ var WhileLoop = exports.WhileLoop = function (condition, statement) {
 WhileLoop.inherits(ASTNode);
 
 WhileLoop.prototype.compileNode = function (indent) {
-  var js = 'while (this.__env.BooleanValue.true === ';
+  var js = utils.indent('while (this.__env.BooleanValue.true === ', indent);
   js += this.children[0].compileNode() + ') {\n';
-  js += this.children[1].compileNode(indent + 2);
-  return js + '}\n';
+  js += this.children[1].compileNode(indent + 2) + '\n';
+  js += utils.indent('}\n', indent);
+  return js;
 };
 

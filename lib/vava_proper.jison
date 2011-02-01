@@ -26,6 +26,7 @@
 "package"             {return 'KEYWORD_PACKAGE'; /* Keywords */}
 "import"              {return 'KEYWORD_IMPORT';}
 "if"                  {return 'KEYWORD_IF';}
+"else"                {return 'KEYWORD_ELSE';}
 "while"               {return 'KEYWORD_WHILE';}
 "true"                {return 'TRUE_LITERAL';}
 "false"               {return 'FALSE_LITERAL';}
@@ -48,6 +49,7 @@
 "/"                   {return 'OPERATOR_DIVISON';}
 "%"                   {return 'OPERATOR_MODULO';}
 
+'.'                   {return 'SEPARATOR_DOT';}
 
 [a-zA-Z][a-zA-Z0-9_]* {return 'IDENTIFIER'; /* Varying form */}
 [0-9]+                {return 'DECIMAL_INTEGER_LITERAL';}
@@ -68,17 +70,17 @@ compilation_unit
   | package_declaration EOF
     { var cu = new yy.CompilationUnit(); cu.vavaPackage = $1; return cu; }
   | import_declarations EOF
-    { var cu = new yy.CompilationUnit(); cu.vavaImports = $1; return cu; }
+    { var cu = new yy.CompilationUnit(); cu.appendChild($1); return cu; }
   | type_declarations EOF
     { var cu = new yy.CompilationUnit(); cu.appendChild($1); return cu; }
   | package_declaration import_declarations EOF
-    { var cu = new yy.CompilationUnit(); cu.vavaPackage = $1; cu.vavaImports = $2; return cu; }
+    { var cu = new yy.CompilationUnit(); cu.vavaPackage = $1; cu.appendChild($2); return cu; }
   | package_declaration type_declarations EOF
     { var cu = new yy.CompilationUnit(); cu.vavaPackage = $1; cu.appendChild($2); return cu; }
   | import_declarations type_declarations EOF
-    { var cu = new yy.CompilationUnit(); cu.vavaImports = $1; cu.appendChild($2); return cu; }
+    { var cu = new yy.CompilationUnit(); cu.appendChild($1); cu.appendChild($2); return cu; }
   | package_declaration import_declarations type_declarations EOF
-    { var cu = new yy.CompilationUnit(); cu.vavaPackage = $1; cu.vavaImports = $2; cu.appendChild($3); return cu; }
+    { var cu = new yy.CompilationUnit(); cu.vavaPackage = $1; cu.appendChild($2); cu.appendChild($3); return cu; }
   ;
 
 /*** COMPILATION UNIT ***/
@@ -90,14 +92,14 @@ package_declaration
 
 import_declarations
   : import_declaration
-    { $$ = [$1]; }
+    { $$ = new yy.ImportDeclarations($1); }
   | import_declarations import_declaration
-    { $1.push($2); $$ = $1; }
+    { $1.appendChild($2); $$ = $1; }
   ;
 
 import_declaration
-  : KEYWORD_IMPORT IDENTIFIER LINE_TERMINATOR
-    { $$ = $2; }
+  : KEYWORD_IMPORT name LINE_TERMINATOR
+    { $$ = new yy.ImportDeclaration($2); }
   ;
 
 type_declarations
@@ -289,6 +291,8 @@ local_variable_declaration
 statement
   : statement_without_trailing_substatement
     { $$ = $1; }
+  | if_then_else_statement
+    { $$ = $1; }
   | if_then_statement
     { $$ = $1; }
   | while_statement
@@ -311,6 +315,24 @@ if_then_statement
     { $$ = new yy.IfThen($3, $5); }
   ;
 
+if_then_else_statement
+  : KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN statement_no_short_if KEYWORD_ELSE statement
+    { $$ = new yy.IfThenElse($3, $5, $7); }
+  ;
+
+statement_no_short_if
+  : statement_without_trailing_substatement
+    { $$ = $1; }
+  | labeled_statement_no_short_if
+    { $$ = $1; }
+  | if_then_else_statement_no_short_if
+    { $$ = $1; }
+  | while_statement_no_short_if
+    { $$ = $1; }
+  | for_statement_no_short_if
+    { $$ = $1; }
+  ;
+
 /*** CONTROL STRUCTURES: LOOPS ***/
 
 while_statement
@@ -327,7 +349,7 @@ empty_statement
 
 expression_statement
   : statement_expression LINE_TERMINATOR
-    { $$ = $1; }
+    { $$ = new yy.ExpressionStatement($1); }
   ;
 
 /* statement_expression */
@@ -341,12 +363,20 @@ statement_expression
 
 name
   : simple_name
-    { $$ = new yy.Name($1); }
+    { $$ = $1; }
+  | qualified_name
+    { $$ = $1; }
   ;
 
 simple_name
   : IDENTIFIER
-    { $$ = $1; }
+    { $$ = new yy.Name($1); }
+  ;
+
+qualified_name
+  // TODO OMG Hacks
+  : name SEPARATOR_DOT IDENTIFIER
+    { $$ = new yy.Name($1.qualified() + '.' + $3); }
   ;
 
 /*** EXPRESSIONS ***/

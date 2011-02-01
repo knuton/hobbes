@@ -4,6 +4,14 @@ var parser = exports.parser = require('./compiler/parser').parser;
 parser.yy = require('./compiler/ast_nodes');
 parser.yy.utils = utils.yyUtils;
 
+var AlgoTools = {
+  IO : {
+    println : function (toPrint) {
+      console.log(toPrint.get().get());
+    }
+  }
+};
+
 // Simple interface for now
 exports.run = function (vavaSrc) {
   if (typeof vavaSrc !== 'string') {
@@ -13,6 +21,6 @@ exports.run = function (vavaSrc) {
   var compilation = vavaAST.compile();
   
   var runner = new Function (compilation);
-  var scope = new vava.scope.Scope({__env : vava.env});
+  var scope = new vava.scope.Scope({__env : vava.env, AlgoTools : AlgoTools});
   runner.call(scope);
 }

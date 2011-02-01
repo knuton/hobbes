@@ -85,7 +85,7 @@ var isArray = exports.isArray = function (value) {
  * @param {number} number Number of spaces
  * @returns ' '*number
  */
-var indent = exports.indent = function (number) {
+var indentSpaces = exports.indentSpaces = function (number) {
   if (typeof number !== 'number' || number < 0) {
     throw new TypeError('indent expected a positive number.');
   }
@@ -95,6 +95,16 @@ var indent = exports.indent = function (number) {
     spaces += ' ';
   }
   return spaces;
+};
+
+/**
+ * Indents a string by number-many spaces.
+ *
+ * @param str The string to indent
+ * @param num The number of spaces to use
+ */
+var indent = exports.indent = function (str, num) {
+  return indentSpaces(num || 0) + str;
 };
 
 /**
