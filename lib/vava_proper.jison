@@ -25,6 +25,7 @@
 
 "package"             {return 'KEYWORD_PACKAGE'; /* Keywords */}
 "import"              {return 'KEYWORD_IMPORT';}
+"if"                  {return 'KEYWORD_IF';}
 "true"                {return 'TRUE_LITERAL';}
 "false"               {return 'FALSE_LITERAL';}
 
@@ -32,14 +33,14 @@
 
 "void"                {return 'KEYWORD_VOID';}
 
-"boolean"             {return 'PRIMITIVE_BOOLEAN'; /* Primitive Types */}
+"boolean"             {return 'PRIMITIVE_BOOLEAN';}
 "int"                 {return 'PRIMITIVE_INTEGER';}
 "float"               {return 'PRIMITIVE_FLOAT';}
 
 
 "=="                  {return 'OPERATOR_EQUAL';}
 "!="                  {return 'OPERATOR_NOT_EQUAL';}
-"="                   {return 'OPERATOR_ASSIGNMENT'; /* Operators */}
+"="                   {return 'OPERATOR_ASSIGNMENT';}
 "+"                   {return 'OPERATOR_ADDITION';}
 "-"                   {return 'OPERATOR_SUBTRACTION';}
 "*"                   {return 'OPERATOR_MULTIPLICATION';}
@@ -270,22 +271,8 @@ block_statement
     { $$ = $1; }
   ;
 
-/*** STATEMENTS ***/
-
-statement
-  : statement_without_trailing_substatement
-    { $$ = $1; }
-  ;
-
 local_variable_declaration_statement
   : local_variable_declaration LINE_TERMINATOR
-    { $$ = $1; }
-  ;
-
-statement_without_trailing_substatement
-  : empty_statement
-    { $$ = $1; }
-  | expression_statement
     { $$ = $1; }
   ;
 
@@ -295,6 +282,32 @@ local_variable_declaration
   : type variable_declarators
     { $$ = new yy.LocalVariableDeclaration($1, $2); }
   ;
+
+/*** STATEMENTS ***/
+
+statement
+  : statement_without_trailing_substatement
+    { $$ = $1; }
+  | if_then_statement
+    { $$ = $1; }
+  ;
+
+statement_without_trailing_substatement
+  : block
+    { $$ = $1; }
+  | empty_statement
+    { $$ = $1; }
+  | expression_statement
+    { $$ = $1; }
+  ;
+
+/*** CONTROL STRUCTURES: BRANCHING ***/
+
+if_then_statement
+  : KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN statement
+    { $$ = new yy.IfThen($3, $5); }
+  ;
+  
 
 /* statement_without_trailing_substatement */
 
@@ -330,8 +343,8 @@ simple_name
 /*** EXPRESSIONS ***/
 
 assignment
-  : left_hand_side assignment_operator assignment_expression
-    { $$ = $1; }
+  : left_hand_side OPERATOR_ASSIGNMENT assignment_expression
+    { $$ = new yy.Assignment($1, $3); }
   ;
 
 // TODO FieldAccess and ArrayAccess
@@ -341,7 +354,8 @@ left_hand_side
   ;
 
 expression
-  : assignment_expression
+  // TODO Should be assignment_expression
+  : conditional_expression
     { $$ = $1; }
   ;
 
@@ -349,8 +363,8 @@ expression
 assignment_expression
   : conditional_expression
     { $$ = $1; }
-  //| assignment
-  //  { $$ = $1; }
+  | assignment
+    { $$ = $1; }
   ;
 
 // TODO Ternary operator
@@ -363,7 +377,7 @@ conditional_or_expression
   : conditional_and_expression
     { $$ = $1; }
   | conditional_or_expression || conditional_and_expression
-    { $$ = new yy.OrExpression($1, $3); }
+    { $$ = new yy.OrOrExpression($1, $3); }
   ;
 
 conditional_and_expression

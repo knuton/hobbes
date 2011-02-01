@@ -331,6 +331,25 @@ VariableDeclarator.prototype.getSignature = function () {
 };
 
 /**
+ * Creates a node for an assignment.
+ *
+ * @param name The name of the variable to assign to
+ * @param value The value to assign
+ */
+var Assignment = exports.Assignment = function (name, value) {
+  this.type = 'Assignment';
+  this.children = [];
+  this.appendChild(name);
+  this.appendChild(value);
+};
+
+Assignment.inherits(ASTNode);
+
+Assignment.prototype.compileNode = function (indent) {
+  return this.children[0].compileNode('set') + '.set(' + this.children[1].compileNode() + ')';
+};
+
+/**
  * Creates a node for a MethodDeclaration.
  *
  * @param vavaHeader An object containing header information
@@ -438,7 +457,7 @@ Block.prototype.compileNode = function (indent) {
   var js = this.children.map(function (child) {
     return child.compile(indent + 2);
   }).join('\n');
-  return js + '\nconsole.log(this.f);';
+  return js + '\nconsole.log(this);';
 };
 
 /**
@@ -457,9 +476,13 @@ var Name = exports.Name = function (name) {
 
 Name.inherits(ASTNode);
 
-/* Simply resolve the name. */
-Name.prototype.compileNode = function (indent) {
-  return 'this["' + this.name + '"].get()';
+/**
+ * Simply resolve the name.
+ *
+ * @param dontGet If truthy, don't call #get
+ */
+Name.prototype.compileNode = function (dontGet) {
+  return 'this["' + this.name + '"]' + (dontGet ? '' : '.get()');
 };
 
 Name.prototype.getSignature = function () {
@@ -676,4 +699,29 @@ NotEquals.inherits(ASTNode);
 
 NotEquals.prototype.compileNode = function (indent) {
   return 'this.__env.BooleanValue[String(' + this.children[0].compile() + ' !== ' + this.children[1].compile() + ')]';
+};
+
+/**
+ * Creates a node for an if-then conditional.
+ *
+ * @param ifExpr The condition
+ * @param thenExpr The conditional statement
+ */
+var IfThen = exports.IfThen = function (ifExpr, thenExpr) {
+  this.type = 'IfThen';
+  this.children = [];
+  if (!ifExpr || !thenExpr) {
+    throw new TypeError('Expected condition and conditional.');
+  }
+  this.appendChild(ifExpr);
+  this.appendChild(thenExpr);
+};
+
+IfThen.inherits(ASTNode);
+
+IfThen.prototype.compileNode = function (indent) {
+  var js = 'if (this.__env.BooleanValue.true === ';
+  js += this.children[0].compileNode() + ') {\n';
+  js += this.children[1].compileNode(indent + 2);
+  return js + '}\n';
 };

@@ -32,7 +32,7 @@ TypedVariable.prototype.getVavaType = function () {
  * Returns the default value for the variable's Vava type.
  */
 TypedVariable.prototype.defaultValue = function () {
-  return TypedValue.typeConstructors[this.vavaType] ? new TypedValue.typeConstructors[this.vavaType]() : new NullValue();
+  return TypedValue.defaults[this.vavaType] || new NullValue();
 };
 
 /**
@@ -131,6 +131,23 @@ var BooleanValue = exports.BooleanValue = function (rawValue) {
 };
 
 BooleanValue.inherits(TypedValue);
+
+BooleanValue.stored = {};
+
+/**
+ * Used to intern BooleanValues for efficiency and object identity.
+ *
+ * Looks up the existing object for true/false and creates one if none is
+ * present. The object is then returned.
+ *
+ * @param bool The boolean value to lookup/insert
+ */
+BooleanValue.intern = function (bool) {
+  if (this.stored[bool])
+    return this.stored[bool];
+  else
+    return this.stored[bool] = new this(bool);
+};
 
 // LOGICAL OPERATIONS
 BooleanValue.prototype.not = function () {
@@ -248,7 +265,7 @@ NullValue.inherits(TypedValue);
 
 //// NEEDS TO BE AT THE END
 // Lookup table for constructors for simple (?) types
-TypedValue.typeConstructors = {
-  "boolean" : BooleanValue,
-  "int" : IntValue
+TypedValue.defaults = {
+  "boolean" : BooleanValue.intern(false),
+  "int" : IntValue.intern(0)
 };
