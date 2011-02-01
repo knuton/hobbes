@@ -170,11 +170,11 @@ IntegralValue.inherits(TypedValue);
 
 // ARITHMETIC
 IntegralValue.prototype.inverse = function () {
-  return new IntValue(this.get() * -1);
+  return IntValue.intern(this.get() * -1);
 };
 
 IntegralValue.prototype.add = function (other) {
-  return new IntValue(this.toInt().get() + other.toInt().get());
+  return IntValue.intern(this.toInt().get() + other.toInt().get());
 };
 
 IntegralValue.prototype.subtract = function (other) {
@@ -182,23 +182,23 @@ IntegralValue.prototype.subtract = function (other) {
 };
 
 IntegralValue.prototype.times = function (other) {
-  return new IntValue(this.toInt().get() * other.toInt().get());
+  return IntValue.intern(this.toInt().get() * other.toInt().get());
 };
 
 IntegralValue.prototype.divide = function (other) {
   var thisRaw = this.toInt().get(),
       otherRaw = other.toInt().get();
   var remainder = thisRaw % otherRaw;
-  return new IntValue((thisRaw - remainder) / otherRaw);
+  return IntValue.intern((thisRaw - remainder) / otherRaw);
 };
 
 IntegralValue.prototype.modulo = function (other) {
-  return new IntValue(this.toInt().get() % other.toInt().get());
+  return IntValue.intern(this.toInt().get() % other.toInt().get());
 };
 
 // TODO Overflow of long type
 IntegralValue.prototype.toInt = function () {
-  return new IntValue(this.get());
+  return IntValue.intern(this.get());
 };
 
 var IntValue = exports.IntValue = function (rawValue) {
@@ -219,6 +219,23 @@ var IntValue = exports.IntValue = function (rawValue) {
 }
 
 IntValue.inherits(IntegralValue);
+
+IntValue.stored = {};
+
+/**
+ * Used to intern IntValues for efficiency and object identity.
+ *
+ * Looks up the existing object for a given number and creates one if none is
+ * present. The object is then returned.
+ *
+ * @param number The number to lookup/insert
+ */
+IntValue.intern = function (number) {
+  if (this.stored[number])
+    return this.stored[number];
+  else
+    return this.stored[number] = new this(number);
+};
 
 // Reference Types
 var NullValue = exports.NullValue = function () {

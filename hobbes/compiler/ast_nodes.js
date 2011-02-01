@@ -515,7 +515,7 @@ IntegerLiteral.prototype.getSignature = function () {
 };
 
 IntegerLiteral.prototype.compileNode = function (indent) {
-  return builder.constructorCall('this.__env.IntValue', [this.value], false);
+  return builder.functionCall('this.__env.IntValue.intern', [this.value], false);
 };
 
 //// Operations
