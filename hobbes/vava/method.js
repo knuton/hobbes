@@ -5,12 +5,13 @@
  * @param vavaFormalParameters An array containing dictionaries of name and type of the formal parameters
  * @param vavaBlock A function to be called when the method gets called
  *
- *   new VavaMethod('main', [{identifier:'foo',vavaType:'int'}], function () {return 1;})
+ *   new VavaMethod('main', int, [{identifier:'foo',vavaType:'int'}], function (foo) {return 1;})
  */
  // TODO modifiers
 var VavaMethod = exports.VavaMethod = function (vavaMethodName, vavaReturnType, vavaFormalParameters, vavaBlock) {
   
   this.vavaMethodName = vavaMethodName;
+  this.vavaReturnType = vavaReturnType;
   this.vavaFormalParameters = vavaFormalParameters;
   this.vavaBlock = vavaBlock;
   
@@ -23,12 +24,15 @@ var VavaMethod = exports.VavaMethod = function (vavaMethodName, vavaReturnType, 
  */
 VavaMethod.prototype.call = function (scope, args) {
   
-  for (var i = 0; i < this.vavaFormalParameters; i ++) {
-    if (args[i].vavaType() !== this.vavaFormalParameters[i].vavaType) {
+  var locals = {};
+
+  for (var i = 0; i < this.vavaFormalParameters.length; i++) {
+    if (args[i].getVavaType() !== this.vavaFormalParameters[i].vavaType) {
       // TODO Throw Java-style error
     }
+    locals[this.vavaFormalParameters[i].identifier] = args[i];
   }
   // TODO Check return type?
-  return this.vavaBlock.apply(scope.__descend(), args);
+  return this.vavaBlock.apply(scope.__descend(locals));
   
 };

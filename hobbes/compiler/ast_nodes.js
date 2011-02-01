@@ -505,7 +505,7 @@ Block.prototype.compileNode = function (indent) {
   var js = this.children.map(function (child) {
     return child.compile((indent || 0) + 2);
   }).join('\n');
-  return js + '\nconsole.log(this.IO);';
+  return js + '\nthis.IO.send("println", [this.z.get()]);';
 };
 
 /**

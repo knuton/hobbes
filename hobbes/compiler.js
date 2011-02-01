@@ -5,11 +5,16 @@ parser.yy = require('./compiler/ast_nodes');
 parser.yy.utils = utils.yyUtils;
 
 var AlgoTools = {
-  IO : {
-    println : function (toPrint) {
-      console.log(toPrint.get().get());
+  IO : new vava.env.VavaClass('IO', {
+    methods : {
+      println : new vava.env.VavaMethod(
+        'println',
+        'void',
+        [{identifier: 'num', vavaType: 'int'}],
+        function () { console.log(this.num.get()); }
+      )
     }
-  }
+  }, new vava.scope.Scope({__env : vava.env}))
 };
 
 // Simple interface for now
