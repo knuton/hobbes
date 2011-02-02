@@ -3511,8 +3511,14 @@ var hobbes = function (exports) {
           println : new vava.env.VavaMethod(
             'println',
             'void',
-            [{identifier: 'num', vavaType: 'int'}],
-            function () { console.log(this.num.get()); }
+            [{identifier: 'str', vavaType: 'int'}],
+            function () { console.log(this.str.get()); }
+          ),
+          readInt : new vava.env.VavaMethod(
+            'readInt',
+            'int',
+            [{identifier: 'str', vavaType: 'int'}],
+            function () { return new vava.env.IntValue(Number(prompt(this.str.get()))); }
           )
         }
       }, new vava.scope.Scope({__env : vava.env}))
@@ -3528,6 +3534,7 @@ var hobbes = function (exports) {
 
       var runner = new Function (compilation);
       var scope = new vava.scope.Scope({__env : vava.env, AlgoTools : AlgoTools});
+      console.log(scope);
       runner.call(scope);
     }
     
