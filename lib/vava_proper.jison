@@ -10,6 +10,8 @@
 "}"                   {return 'UNBRACE';}
 "("                   {return 'LEFT_PAREN';}
 ")"                   {return 'RIGHT_PAREN';}
+"["                   {return 'LEFT_BRACKET';}
+"]"                   {return 'RIGHT_BRACKET';}
 ","                   {return 'COMMA';}
 ";"                   {return 'LINE_TERMINATOR';}
 
@@ -37,6 +39,7 @@
 "boolean"             {return 'PRIMITIVE_BOOLEAN';}
 "int"                 {return 'PRIMITIVE_INTEGER';}
 "float"               {return 'PRIMITIVE_FLOAT';}
+"String"              {return 'STRING_TYPE';}
 
 
 "=="                  {return 'OPERATOR_EQUAL';}
@@ -178,6 +181,8 @@ method_header
 method_declarator
   : IDENTIFIER LEFT_PAREN formal_parameter_list RIGHT_PAREN
     %{ $$ = {vavaIdentifier: $1, vavaFormalParameters: $3}; %}
+  | IDENTIFIER LEFT_PAREN STRING_TYPE LEFT_BRACKET RIGHT_BRACKET IDENTIFIER RIGHT_PAREN
+    %{ $$ = {vavaIdentifier: $1, vavaFormalParameters: []}; %}
   ;
 
 formal_parameter_list
