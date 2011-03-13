@@ -3520,7 +3520,7 @@ var hobbes = function (exports) {
             'println',
             'void',
             [{identifier: 'str', vavaType: 'int'}],
-            function () { console.log(this.str.get()); }
+            function () { alert(this.str.get()); }
           ),
           readInt : new vava.env.VavaMethod(
             'readInt',
