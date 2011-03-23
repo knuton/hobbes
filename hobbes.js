@@ -15,5 +15,4 @@ require('./hobbes/extensions');
 exports.utils    = require('./hobbes/utils');
 exports.vava     = require('./hobbes/vava');
 exports.compiler = require('./hobbes/compiler');
-exports.browser  = require('./hobbes/browser');
 
