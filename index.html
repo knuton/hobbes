@@ -27,9 +27,13 @@
         execButton.onclick = function () {
           // Function creates execution scope
           var src = sourceTextarea.value;
-          console.log(hobbes.compiler.parser.parse(src).toString());
-          console.log(hobbes.compiler.parser.parse(src).compile());
-          hobbes.compiler.run(src);
+          try {
+            console.log(hobbes.compiler.parser.parse(src).toString());
+            console.log(hobbes.compiler.parser.parse(src).compile());
+            hobbes.compiler.run(src);
+          } catch (e) {
+            console.log(e);
+          }
           return false;
         };
       };
