@@ -27,7 +27,11 @@ namespace :build do
     task :dev, :needs => 'hobbes.js' do
       src = src_for_node_path('/hobbes')
       wrapped_src = "var hobbes = function (exports) {\n  var require = 'lol', hobbes = exports;\n#{indent(src, 2)}\n  return exports;\n}({});\n"
-      File.open('hobbes-web.js', 'w') {|f| f.write(wrapped_src) }
+      if File.open('hobbes-web.js', 'w') {|f| f.write(wrapped_src) }
+        puts "Wrote browser version to hobbes-web.js."
+      else
+        puts "Couldn't save browser version."
+      end
     end
 
     # Expects uglify-js to be somewhere in node's include path.
@@ -65,6 +69,7 @@ namespace :build do
     end
 
     def src_for_node_path(node_path, pwd = [])
+      puts " + Processing #{node_path}."
       path_points = local_node_path_to_file_path_points(node_path, pwd)
       recurse_require(File.join(path_points), path_points[0..-2])
     end
