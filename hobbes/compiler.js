@@ -10,8 +10,14 @@ var AlgoTools = {
       println : new vava.env.VavaMethod(
         'println',
         'void',
-        [{identifier: 'num', vavaType: 'int'}],
-        function () { console.log(this.num.get()); }
+        [{identifier: 'str', vavaType: 'int'}],
+        function () { alert(this.str.get()); }
+      ),
+      readInt : new vava.env.VavaMethod(
+        'readInt',
+        'int',
+        [{identifier: 'str', vavaType: 'int'}],
+        function () { return new vava.env.IntValue(Number(prompt(this.str.get()))); }
       )
     }
   }, new vava.scope.Scope({__env : vava.env}))
