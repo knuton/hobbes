@@ -1,3 +1,7 @@
+require 'lib/pretty_print'
+
+include PrettyPrint
+
 HOBBES_PATH = 'hobbes'
 GRAMMAR_FILE = 'vava_proper'
 
@@ -21,8 +25,9 @@ namespace :build do
 
     desc 'Uncompressed browser version'
     task :dev, :needs => 'hobbes.js' do
-      src = replace_require_calls('hobbes.js')
-      File.open('hobbes-web.js', 'w') {|f| f.write(src) }
+      src = src_for_node_path('/hobbes')
+      wrapped_src = "var hobbes = function (exports) {\n  var hobbes = exports;\n#{indent(src, 1)}\n}({});\n"
+      File.open('hobbes-web.js', 'w') {|f| f.write(wrapped_src) }
     end
 
     # Expects uglify-js to be somewhere in node's include path.
@@ -38,19 +43,32 @@ namespace :build do
       end
     end
 
-    def replace_require_calls(file_name)
+    def recurse_require(file_name, pwd = [])
       begin
         src = File.read(file_name)
       rescue
         puts "Error reading #{file_name}."
       end
-      src.gsub(/[a-z]+\s*=\s*(require\(['"]\.((?:\/[a-z_]+)+)['"]\));/) { |match|
-        match.gsub($1, replace_require_call($2))
+      src.gsub(/[a-z]+\s*=\s*(require\(['"]\.((?:\/[a-z0-9_]+)+)['"]\));/) { |require_assignment|
+        require_assignment.gsub($1, replace_require_assignment($2, pwd))
+      }.gsub(/^(require\(['"]\.((?:\/[a-z0-9_]+)+)['"]\));/) { |require_call|
+        src_for_node_path($2, pwd)
       }
     end
 
-    def replace_require_call(path)
-      "function (exports) {\n  #{path}\n  return exports;\n}({})"
+    def replace_require_assignment(path, pwd)
+      "function (exports) {\n#{indent(src_for_node_path(path, pwd), pwd.size)}\n  return exports;\n}({})"
+    end
+
+    def src_for_node_path(node_path, pwd = [])
+      path_points = local_node_path_to_file_path_points(node_path, pwd)
+      recurse_require(File.join(path_points), path_points[0..-2])
+    end
+
+    def local_node_path_to_file_path_points(path, pwd)
+      path_points = path[1..-1].split('/')
+      path_points.last << '.js'
+      pwd + path_points
     end
 
   end
