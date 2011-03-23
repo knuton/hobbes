@@ -1,6 +1,7 @@
 var utils = (typeof hobbes !== 'undefined' && hobbes.utils) || require('./utils');
 var vava = (typeof hobbes !== 'undefined' && hobbes.vava) || require('./vava');
-var parser = exports.parser = require('./compiler/parser').parser;
+var jison = require('./compiler/parser');
+var parser = exports.parser = jison.parser;
 parser.yy = require('./compiler/ast_nodes');
 parser.yy.utils = utils.yyUtils;
 

@@ -26,7 +26,7 @@ namespace :build do
     desc 'Uncompressed browser version'
     task :dev, :needs => 'hobbes.js' do
       src = src_for_node_path('/hobbes')
-      wrapped_src = "var hobbes = function (exports) {\n  var hobbes = exports;\n#{indent(src, 1)}\n}({});\n"
+      wrapped_src = "var hobbes = function (exports) {\n  var hobbes = exports;\n#{indent(src, 2)}\n}({});\n"
       File.open('hobbes-web.js', 'w') {|f| f.write(wrapped_src) }
     end
 
@@ -49,15 +49,18 @@ namespace :build do
       rescue
         puts "Error reading #{file_name}."
       end
+        # Replace assigned requires with assigned wrapped objects
       src.gsub(/[a-z]+\s*=\s*(require\(['"]\.((?:\/[a-z0-9_]+)+)['"]\));/) { |require_assignment|
         require_assignment.gsub($1, replace_require_assignment($2, pwd))
+        # Replace non-assigned require statements by the required source
       }.gsub(/^(require\(['"]\.((?:\/[a-z0-9_]+)+)['"]\));/) { |require_call|
         src_for_node_path($2, pwd)
-      }
+        # Remove require statements that are fallbacks for tested objects
+      }.gsub(/\s*\|\|\s*require\(['"][^"']+['"]\);/, ';')
     end
 
     def replace_require_assignment(path, pwd)
-      "function (exports) {\n#{indent(src_for_node_path(path, pwd), pwd.size)}\n  return exports;\n}({})"
+      "function (exports) {\n#{indent(src_for_node_path(path, pwd), 2 * pwd.size)}\n  return exports;\n}({})"
     end
 
     def src_for_node_path(node_path, pwd = [])
