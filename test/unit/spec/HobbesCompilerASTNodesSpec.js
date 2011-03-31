@@ -279,6 +279,24 @@ describe('Compiler', function () {
       
     }); // end Addition spec
     
+    describe('Subtraction', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.Addition(mockASTNode(), mockASTNode());
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `Subtraction`', function () {
+        expect(testNode.getType()).toBe('Subtraction');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <Subtraction>\n  - <ASTNode>\n  - <ASTNode>\n');
+      });
+      
+    }); // end Addition spec
+    
     afterEach(function () {
       testNode = null;
     });
