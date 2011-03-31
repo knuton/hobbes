@@ -295,7 +295,25 @@ describe('Compiler', function () {
         expect(testNode.toString()).toBe('- <Subtraction>\n  - <ASTNode>\n  - <ASTNode>\n');
       });
       
-    }); // end Addition spec
+    }); // end Subtraction spec
+    
+    describe('Multiplication', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.Multiplication(mockASTNode(), mockASTNode());
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `Multiplication`', function () {
+        expect(testNode.getType()).toBe('Multiplication');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <Multiplication>\n  - <ASTNode>\n  - <ASTNode>\n');
+      });
+      
+    }); // end Multiplication spec
     
     afterEach(function () {
       testNode = null;
