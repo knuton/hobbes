@@ -269,6 +269,14 @@ describe('Compiler', function () {
       
       it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
 
+      it('should be of type `Addition`', function () {
+        expect(testNode.getType()).toBe('Addition');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <Addition>\n  - <ASTNode>\n  - <ASTNode>\n');
+      });
+      
     }); // end Addition spec
     
     afterEach(function () {
