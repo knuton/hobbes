@@ -333,6 +333,24 @@ describe('Compiler', function () {
       
     }); // end Division spec
     
+    describe('Modulo', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.Modulo(mockASTNode(), mockASTNode());
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `Modulo`', function () {
+        expect(testNode.getType()).toBe('Modulo');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <Modulo>\n  - <ASTNode>\n  - <ASTNode>\n');
+      });
+      
+    }); // end Modulo spec
+    
     afterEach(function () {
       testNode = null;
     });
