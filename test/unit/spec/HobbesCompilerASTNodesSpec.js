@@ -282,7 +282,7 @@ describe('Compiler', function () {
     describe('Subtraction', function () {
       
       beforeEach(function () {
-        testNode = new astNodes.Addition(mockASTNode(), mockASTNode());
+        testNode = new astNodes.Subtraction(mockASTNode(), mockASTNode());
       });
       
       it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
