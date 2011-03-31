@@ -5,11 +5,11 @@ describe('Utils', function () {
   describe('indentation helper', function () {
     
     it('should create zero spaces for no indentation', function () {
-      expect(utils.indent(0)).toBe('');
+      expect(utils.indent('a', 0)).toBe('a');
     });
     
     it('should create two spaces for indentation of 2', function () {
-      expect(utils.indent(2)).toBe('  ');
+      expect(utils.indent('a', 2)).toBe('  a');
     });
     
   });
