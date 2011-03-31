@@ -315,6 +315,24 @@ describe('Compiler', function () {
       
     }); // end Multiplication spec
     
+    describe('Division', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.Division(mockASTNode(), mockASTNode());
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `Division`', function () {
+        expect(testNode.getType()).toBe('Division');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <Division>\n  - <ASTNode>\n  - <ASTNode>\n');
+      });
+      
+    }); // end Division spec
+    
     afterEach(function () {
       testNode = null;
     });
