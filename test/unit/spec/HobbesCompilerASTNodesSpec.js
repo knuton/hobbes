@@ -9,6 +9,7 @@ describe('Compiler', function () {
     
     // Common
     function mockASTNode(properties) {
+      properties = properties || {};
       var mockNode = new astNodes.ASTNode();
       for (key in properties) {
         mockNode[key] = properties[key];
@@ -61,9 +62,8 @@ describe('Compiler', function () {
       
       it('should turn itself into a string', function () {
         testNode.vavaPackage = 'java.util';
-        testNode.vavaImports = ['java.foo'];
         testNode.vavaType = {vavaClassName: "Test" };
-        expect(testNode.toString()).toBe('- <CompilationUnit vavaPackage: java.util vavaImports: java.foo>\n');
+        expect(testNode.toString()).toBe('- <CompilationUnit vavaPackage: java.util>\n');
       });
       
     }); // end CompilationUnit spec
@@ -260,6 +260,16 @@ describe('Compiler', function () {
       });
       
     }); // end IntegerLiteral spec
+
+    describe('Addition', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.Addition(mockASTNode(), mockASTNode());
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+    }); // end Addition spec
     
     afterEach(function () {
       testNode = null;

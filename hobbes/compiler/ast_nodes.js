@@ -99,7 +99,6 @@ var CompilationUnit = exports.CompilationUnit = function CompilationUnit () {
   this.type = 'CompilationUnit';
   this.children = [];
   this.vavaPackage = null;
-  this.vavaImports = [];
 };
 
 CompilationUnit.inherits(ASTNode);
