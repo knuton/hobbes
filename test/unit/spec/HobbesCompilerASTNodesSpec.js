@@ -351,6 +351,96 @@ describe('Compiler', function () {
       
     }); // end Modulo spec
     
+    describe('Equals', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.Equals(mockASTNode(), mockASTNode());
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `Equals`', function () {
+        expect(testNode.getType()).toBe('Equals');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <Equals>\n  - <ASTNode>\n  - <ASTNode>\n');
+      });
+      
+    }); // end Equals spec
+    
+    describe('NotEquals', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.NotEquals(mockASTNode(), mockASTNode());
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `NotEquals`', function () {
+        expect(testNode.getType()).toBe('NotEquals');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <NotEquals>\n  - <ASTNode>\n  - <ASTNode>\n');
+      });
+      
+    }); // end NotEquals spec
+    
+    describe('IfThen', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.IfThen(mockASTNode(), mockASTNode());
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `IfThen`', function () {
+        expect(testNode.getType()).toBe('IfThen');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <IfThen>\n  - <ASTNode>\n  - <ASTNode>\n');
+      });
+      
+    }); // end IfThen spec
+    
+    describe('IfThenElse', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.IfThenElse(mockASTNode(), mockASTNode(), mockASTNode());
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `IfThenElse`', function () {
+        expect(testNode.getType()).toBe('IfThenElse');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <IfThenElse>\n  - <ASTNode>\n  - <ASTNode>\n  - <ASTNode>\n');
+      });
+      
+    }); // end IfThenElse spec
+    
+    describe('WhileLoop', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.WhileLoop(mockASTNode(), mockASTNode());
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `WhileLoop`', function () {
+        expect(testNode.getType()).toBe('WhileLoop');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <WhileLoop>\n  - <ASTNode>\n  - <ASTNode>\n');
+      });
+      
+    }); // end IfThen spec
+    
     afterEach(function () {
       testNode = null;
     });
