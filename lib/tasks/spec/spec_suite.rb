@@ -34,9 +34,7 @@ class SpecSuite
         expected = `java -classpath #{base_path} #{class_name(file_path)} 2>&1`
       end
 
-      create_js(file_path)
-
-      hobbes = `js tmp/hobbes-cli.js 2>&1`
+      hobbes = `./bin/hobbes #{file_path} 2>&1`
 
       passed = hobbes == expected
 
@@ -49,26 +47,13 @@ class SpecSuite
         newline
       end
 
+
       passed
     end
 
     private
     def class_name(file_path)
       file_path.split('/')[-1][0..-6]
-    end
-
-    def create_js(test_file_path)
-      java_src = File.open(test_file_path, 'rb') { |f| f.read }.gsub('"', '\"').gsub("\n", '\n')
-
-      js = <<-JS
-        load('require-cli.js');
-        load('hobbes.js');
-        var javaSrc = "#{java_src}";
-        (function executionScope (System) {
-          hobbes.parser.parse(javaSrc);
-        })({out: {println: print}});
-      JS
-      File.open('tmp/hobbes-cli.js', 'w') { |f| f << js }
     end
 
   end
