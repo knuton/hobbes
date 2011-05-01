@@ -489,7 +489,36 @@ multiplicative_expression
     { $$ = new yy.Modulo($1, $3); }
   ;
 
+/*
+UnaryExpression:
+  PreIncrementExpression
+  PreDecrementExpression
+  + UnaryExpression
+  - UnaryExpression
+  UnaryExpressionNotPlusMinus
+
+PreIncrementExpression:
+  ++ UnaryExpression
+
+PreDecrementExpression:
+  -- UnaryExpression
+
+UnaryExpressionNotPlusMinus:
+  PostfixExpression
+  ~ UnaryExpression
+  ! UnaryExpression
+  CastExpression
+*/
 unary_expression
+  : OPERATOR_SUBTRACTION unary_expression
+    { $$ = new yy.UnaryMinus($2); }
+  | OPERATOR_ADDITION unary_expression
+    { $$ = new yy.UnaryPlus($2); }
+  | unary_expression_not_plus_minus
+    { $$ = $1; }
+  ;
+
+unary_expression_not_plus_minus
   : postfix_expression
     { $$ = $1; }
   ;

@@ -261,6 +261,54 @@ describe('Compiler', function () {
       
     }); // end IntegerLiteral spec
 
+    describe('UnaryMinus', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.UnaryMinus(mockASTNode({
+          compile : function () { return 'MOCK'; }
+        }));
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `UnaryMinus`', function () {
+        expect(testNode.getType()).toBe('UnaryMinus');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <UnaryMinus>\n  - <ASTNode>\n');
+      });
+
+      it('should compile to inversion call', function () {
+        expect(testNode.compile()).toBe('MOCK.inverse()');
+      });
+      
+    }); // end UnaryMinus spec
+    
+    describe('UnaryPlus', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.UnaryPlus(mockASTNode({
+          compile : function () { return 'MOCK'; }
+        }));
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `UnaryPlus`', function () {
+        expect(testNode.getType()).toBe('UnaryPlus');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <UnaryPlus>\n  - <ASTNode>\n');
+      });
+
+      it('should compile to child\'s compilation', function () {
+        expect(testNode.compile()).toBe('MOCK');
+      });
+      
+    }); // end UnaryPlus spec
+    
     describe('Addition', function () {
       
       beforeEach(function () {

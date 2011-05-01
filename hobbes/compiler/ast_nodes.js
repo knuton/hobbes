@@ -694,6 +694,51 @@ StringLiteral.prototype.compileNode = function (indent) {
 };
 
 //// Operations
+// Unary
+
+/**
+ * Creates a node for a unary minus expression.
+ *
+ * @param unaryExpressoin The operand
+ */
+var UnaryMinus = exports.UnaryMinus = function (unaryExpression) {
+  this.type = 'UnaryMinus';
+  this.children = [];
+
+  this.appendChild(unaryExpression);
+};
+
+UnaryMinus.inherits(ASTNode);
+
+UnaryMinus.prototype.getSignature = function () {
+  return {};
+};
+
+UnaryMinus.prototype.compileNode = function (indent) {
+  return builder.functionCall(this.children[0].compile() + '.inverse', [], false);
+};
+
+/**
+ * Creates a node for a unary plus expression.
+ *
+ * @param unaryExpression The operand
+ */
+var UnaryPlus = exports.UnaryPlus = function (unaryExpression) {
+  this.type = 'UnaryPlus';
+  this.children = [];
+
+  this.appendChild(unaryExpression);
+};
+
+UnaryPlus.inherits(ASTNode);
+
+UnaryPlus.prototype.getSignature = function () {
+  return {};
+};
+
+UnaryPlus.prototype.compileNode = function (indent) {
+  return this.children[0].compile();
+};
 /**
  * Creates a node for an addition operation.
  *
