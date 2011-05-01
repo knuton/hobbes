@@ -1,27 +1,9 @@
 var utils = (typeof hobbes !== 'undefined' && hobbes.utils) || require('./utils');
 var vava = (typeof hobbes !== 'undefined' && hobbes.vava) || require('./vava');
+var stdlib = (typeof hobbes !== 'undefined' && hobbes.stdlib) || require('./stdlib');
 var parser = exports.parser = require('./compiler/parser').parser;
 parser.yy = require('./compiler/ast_nodes');
 parser.yy.utils = utils.yyUtils;
-
-var AlgoTools = {
-  IO : new vava.env.VavaClass('IO', {
-    methods : {
-      println : new vava.env.VavaMethod(
-        'println',
-        'void',
-        [{identifier: 'str', vavaType: 'int'}],
-        function () { alert(this.str.get()); }
-      ),
-      readInt : new vava.env.VavaMethod(
-        'readInt',
-        'int',
-        [{identifier: 'str', vavaType: 'int'}],
-        function () { return new vava.env.IntValue(Number(prompt(this.str.get()))); }
-      )
-    }
-  }, new vava.scope.Scope({__env : vava.env}))
-};
 
 // Simple interface for now
 exports.run = function (vavaSrc) {
@@ -32,6 +14,7 @@ exports.run = function (vavaSrc) {
   var compilation = vavaAST.compile();
   
   var runner = new Function (compilation);
-  var scope = new vava.scope.Scope({__env : vava.env, AlgoTools : AlgoTools});
+  // TODO How does the import of `java.lang` happen in Java?
+  var scope = new vava.scope.Scope({__env : vava.env}).__add(stdlib).__add(stdlib.java.lang);
   runner.call(scope);
 }

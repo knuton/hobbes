@@ -2,7 +2,7 @@
 
 global.sys = require(/^v0\.[012]/.test(process.version) ? "sys" : "util");
 var fs = require("fs");
-var hobbes = require("./hobbes");
+var hobbes = require("../hobbes");
 
 var filename = process.argv[2];
 
@@ -10,29 +10,12 @@ if (filename) {
   fs.readFile(filename, "utf8", function(err, src){
     if (err) throw err;
     execute(src);
+
+    process.exit();
   });
 }
 
 function execute(src) {
-  console.log(src);
-};
-
-function output(text) {
-        var out;
-        if (options.out_same_file && filename)
-                options.output = filename;
-        if (options.output === true) {
-                out = process.stdout;
-        } else {
-                out = fs.createWriteStream(options.output, {
-                        flags: "w",
-                        encoding: "utf8",
-                        mode: 0644
-                });
-        }
-        out.write(text);
-        if (options.output !== true) {
-                out.end();
-        }
+  hobbes.compiler.run(src);
 };
 
