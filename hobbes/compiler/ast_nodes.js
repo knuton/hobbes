@@ -719,6 +719,14 @@ FloatingPointLiteral.prototype.getSignature = function () {
   };
 };
 
+FloatingPointLiteral.prototype.compileNode = function (indent) {
+  if (this.vavaType === 'f') {
+    return builder.functionCall('this.__env.FloatValue.intern', [this.prePoint, this.postPoint, this.exponent], false);
+  } else {
+    return builder.functionCall('this.__env.DoubleValue.intern', [this.prePoint, this.postPoint, this.exponent], false);
+  }
+};
+
 /**
  * Creates a node for a String literal.
  *
@@ -736,6 +744,7 @@ StringLiteral.prototype.getSignature = function () {
   return {value : this.value};
 };
 
+// TODO Interned strings
 StringLiteral.prototype.compileNode = function (indent) {
   return builder.constructorCall('this.__env.StringValue', [this.value], false);
 };
