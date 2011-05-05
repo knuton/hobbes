@@ -261,6 +261,24 @@ describe('Compiler', function () {
       
     }); // end IntegerLiteral spec
 
+    describe('FloatingPointLiteral', function () {
+
+      beforeEach(function () {
+        testNode = new astNodes.FloatingPointLiteral('0f');
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `FloatingPointLiteral`', function () {
+        expect(testNode.getType()).toBe('FloatingPointLiteral');
+      });
+
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <FloatingPointLiteral prePoint: 0 postPoint: 0 exponent: 0 vavaType: f>\n');
+      });
+      
+    }); // end FloatingPointLiteral spec
+
     describe('UnaryMinus', function () {
       
       beforeEach(function () {
