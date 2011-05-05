@@ -2,6 +2,12 @@
 
 /* lexical grammar */
 %lex
+
+D                 [0-9]
+NZ                [1-9]
+Ds                ({NZ}{D}*)
+EXPO              ([Ee][+-]?{Ds})
+
 %%
 
 "//".*                {/* skip comments */}
@@ -16,8 +22,6 @@
 ","                   {return 'COMMA';}
 ";"                   {return 'LINE_TERMINATOR';}
 
-[eE]/![a-zA-Z0-9_]    {return 'EXPONENT_INDICATOR';}
-[fFdD]/![a-zA-Z0-9_]  {return 'FLOAT_TYPE_SUFFIX';}
 
 "public"              {return 'MODIFIER_PUBLIC'; /* Modifier */}
 "private"             {return 'MODIFIER_PRIVATE';}
@@ -57,7 +61,8 @@
 "."                   {return 'SEPARATOR_DOT';}
 
 [a-zA-Z][a-zA-Z0-9_]* {return 'IDENTIFIER'; /* Varying form */}
-[0-9]+                {return 'DECIMAL_INTEGER_LITERAL';}
+{Ds}\b                {return 'DECIMAL_INTEGER_LITERAL';}
+({Ds}"."{Ds}?{EXPO}?[fFdD]?|"."{Ds}{EXPO}?[fFdD]?|{Ds}{EXPO}[fFdD]?|{Ds}{EXPO}?[fFdD])\b   {return 'FLOATING_POINT_LITERAL';}
 "\"".*"\""            {return 'STRING_LITERAL';}
 <<EOF>>               {return 'EOF';}
 .                     {return 'INVALID';}
@@ -575,67 +580,11 @@ integer_literal
     { $$ = new yy.IntegerLiteral($1); }
   ;
 
-digits
-  : DECIMAL_INTEGER_LITERAL
-    { $$ = Number($1); }
-  ;
-
 // FLOATING POINT
 
 floating_point_literal
-  // Digits . Digits_opt ExponentPart_opt FloatTypeSuffix_opt
-  : digits SEPARATOR_DOT digits exponent_part FLOAT_TYPE_SUFFIX
-    { $$ = new yy.FloatingPointLiteral($1, $3, $4, $5); }
-  | digits SEPARATOR_DOT digits exponent_part
-    { $$ = new yy.FloatingPointLiteral($1, $3, $4); }
-  | digits SEPARATOR_DOT digits FLOAT_TYPE_SUFFIX
-    { $$ = new yy.FloatingPointLiteral($1, $3, null, $4); }
-  | digits SEPARATOR_DOT digits 
-    { $$ = new yy.FloatingPointLiteral($1, $3); }
-  | digits SEPARATOR_DOT exponent_part FLOAT_TYPE_SUFFIX
-    { $$ = new yy.FloatingPointLiteral($1, null, $3, $4); }
-  | digits SEPARATOR_DOT exponent_part
-    { $$ = new yy.FloatingPointLiteral($1, null, $3); }
-  | digits SEPARATOR_DOT FLOAT_TYPE_SUFFIX
-    { $$ = new yy.FloatingPointLiteral($1, null, null, $3); }
-  | digits SEPARATOR_DOT
+  : FLOATING_POINT_LITERAL
     { $$ = new yy.FloatingPointLiteral($1); }
-  // . Digits ExponentPart_opt FloatTypeSuffix_opt
-  | SEPARATOR_DOT digits exponent_part FLOAT_TYPE_SUFFIX
-    { $$ = new yy.FloatingPointLiteral(null, $3, $4, $5); }
-  | SEPARATOR_DOT digits exponent_part
-    { $$ = new yy.FloatingPointLiteral(null, $3, $4); }
-  | SEPARATOR_DOT digits FLOAT_TYPE_SUFFIX
-    { $$ = new yy.FloatingPointLiteral(null, $3, null, $4); }
-  | SEPARATOR_DOT digits
-    { $$ = new yy.FloatingPointLiteral(null, $3); }
-  // Digits ExponentPart FloatTypeSuffix_opt
-  | digits exponent_part FLOAT_TYPE_SUFFIX
-    { $$ = new yy.FloatingPointLiteral($1, null, $2, $3); }
-  | digits exponent_part
-    { $$ = new yy.FloatingPointLiteral($1, null, $2); }
-  // Digits ExponentPart_opt FloatTypeSuffix
-  | digits FLOAT_TYPE_SUFFIX
-    { $$ = new yy.FloatingPointLiteral($1, null, null, $2); }
-  ;
-
-exponent_part
-  : EXPONENT_INDICATOR signed_integer
-    { $$ = $2; }
-  ;
-
-signed_integer
-  : sign digits
-    %{ $$ = {sign: $1, digits: $2} %}
-  | digits
-    %{ $$ = {digits: $2} %}
-  ;
-
-sign
-  : OPERATOR_ADDITION
-    { $$ = $1; }
-  | OPERATOR_SUBTRACTION
-    { $$ = $1; }
   ;
 
 // END FLOATING POINT
