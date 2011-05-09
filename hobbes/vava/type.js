@@ -165,10 +165,39 @@ BooleanValue.prototype.or = function (other) {
 BooleanValue['true'] = new BooleanValue(true);
 BooleanValue['false'] = new BooleanValue(false);
 
+//// NUMBER TYPES
+
+var NumberValue = function () {
+  this.vavaType = undefined;
+};
+
+NumberValue.inherits(TypedValue);
+
+NumberValue.prototype.inverse = function () {
+  return this.constructor.intern(this.get() * -1);
+};
+
+/**
+ * Used to intern values for efficiency and object identity.
+ *
+ * Looks up the existing object for a given number and creates one if none is
+ * present. The object is then returned.
+ *
+ * @param number The number to lookup/insert
+ */
+NumberValue.intern = function (number) {
+  if (this.stored[number])
+    return this.stored[number];
+  else
+    return this.stored[number] = new this(number);
+};
+
+// INTEGER VALUES
+
 // TODO how to handle inheritance here?
 var IntegralValue = function (rawValue) {
   
-  this.vavaType = 'int';
+  this.vavaType = undefined;
   
   if (rawValue) {
     // TODO More precise testing of value
@@ -183,13 +212,9 @@ var IntegralValue = function (rawValue) {
   
 }
 
-IntegralValue.inherits(TypedValue);
+IntegralValue.inherits(NumberValue);
 
 // ARITHMETIC
-IntegralValue.prototype.inverse = function () {
-  return IntValue.intern(this.get() * -1);
-};
-
 IntegralValue.prototype.add = function (other) {
   return IntValue.intern(this.toInt().get() + other.toInt().get());
 };
@@ -224,7 +249,6 @@ var IntValue = exports.IntValue = function (rawValue) {
 
   if (rawValue) {
     // TODO More precise testing of value
-    // Next step: Add this to AST -> compile -> test with Java src files
     if (isNaN(rawValue)) {
       throw new Error('Not a number!');
     }
@@ -236,23 +260,26 @@ var IntValue = exports.IntValue = function (rawValue) {
 }
 
 IntValue.inherits(IntegralValue);
-
 IntValue.stored = {};
 
-/**
- * Used to intern IntValues for efficiency and object identity.
- *
- * Looks up the existing object for a given number and creates one if none is
- * present. The object is then returned.
- *
- * @param number The number to lookup/insert
- */
-IntValue.intern = function (number) {
-  if (this.stored[number])
-    return this.stored[number];
-  else
-    return this.stored[number] = new this(number);
+// FLOATING POINT TYPES
+
+var FloatValue = exports.FloatValue = function (prePoint, postPoint, exponent) {
+  
+  this.vavaType = 'float';
+
+  prePoint = prePoint || 0; postPoint = postPoint || 0; exponent = exponent || 0;
+  if (isNaN(prePoint) || isNaN(postPoint) || isNaN(exponent)) {
+    throw new Error('Not a number in FloatValue constructor');
+  }
+  this.rawValue = (prePoint + postPoint/10) * Math.pow(10, exponent);
+
 };
+
+FloatValue.inherits(NumberValue);
+FloatValue.stored = {};
+
+//// STRING TYPE
 
 var StringValue = exports.StringValue = function (rawValue) {
   
@@ -275,7 +302,8 @@ StringValue.prototype.add = function (other) {
   return new StringValue(this.get() + other.get());
 };
 
-// Reference Types
+//// REFERENCE TYPES
+
 var NullValue = exports.NullValue = function () {
   this.vavaType = 'null';
 

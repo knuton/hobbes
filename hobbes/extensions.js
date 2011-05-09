@@ -28,6 +28,14 @@ if (!Function.prototype.inherits) {
       d[name] -= 1;
       return r;
     };
+    // copy constructor members
+    for (var prop in parent) {
+      if (parent.hasOwnProperty(prop)) {
+        this[prop] = parent[prop];
+      }
+    }
+    // fix constructor reference
+    this.prototype.constructor = this;
     return this;
   }
 }
