@@ -61,7 +61,7 @@ EXPO              ([Ee][+-]?{Ds})
 
 
 [a-zA-Z][a-zA-Z0-9_]* {return 'IDENTIFIER'; /* Varying form */}
-({Ds}"."{Ds}?{EXPO}?[fFdD]?|"."{Ds}{EXPO}?[fFdD]?|{Ds}{EXPO}[fFdD]?|{Ds}{EXPO}?[fFdD])\b   {return 'FLOATING_POINT_LITERAL';}
+({Ds}"."{Ds}?{EXPO}?[fFdD]?|"."{Ds}{EXPO}?[fFdD]?|{Ds}{EXPO}[fFdD]?|{Ds}{EXPO}?[fFdD])/([^\w]|$)   {return 'FLOATING_POINT_LITERAL';}
 {Ds}\b                {return 'DECIMAL_INTEGER_LITERAL';}
 "\"".*"\""            {return 'STRING_LITERAL';}
 
