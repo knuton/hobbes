@@ -268,6 +268,7 @@ var FloatValue = exports.FloatValue = function (prePoint, postPoint, exponent) {
   
   this.vavaType = 'float';
 
+  // TODO float limits
   prePoint = prePoint || 0; postPoint = postPoint || 0; exponent = exponent || 0;
   if (isNaN(prePoint) || isNaN(postPoint) || isNaN(exponent)) {
     throw new Error('Not a number in FloatValue constructor');
@@ -278,6 +279,23 @@ var FloatValue = exports.FloatValue = function (prePoint, postPoint, exponent) {
 
 FloatValue.inherits(NumberValue);
 FloatValue.stored = {};
+
+
+var DoubleValue = exports.DoubleValue = function (prePoint, postPoint, exponent) {
+  
+  this.vavaType = 'double';
+
+  // TODO double limits
+  prePoint = prePoint || 0; postPoint = postPoint || 0; exponent = exponent || 0;
+  if (isNaN(prePoint) || isNaN(postPoint) || isNaN(exponent)) {
+    throw new Error('Not a number in FloatValue constructor');
+  }
+  this.rawValue = (prePoint + postPoint/10) * Math.pow(10, exponent);
+
+};
+
+DoubleValue.inherits(NumberValue);
+DoubleValue.stored = {};
 
 //// STRING TYPE
 

@@ -12,5 +12,6 @@ exports.env = {
   BooleanValue : vavaType.BooleanValue,
   IntValue   : vavaType.IntValue,
   FloatValue   : vavaType.FloatValue,
+  DoubleValue   : vavaType.DoubleValue,
   StringValue : vavaType.StringValue
 }
