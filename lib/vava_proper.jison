@@ -46,6 +46,7 @@ EXPO              ([Ee][+-]?{Ds})
 "boolean"             {return 'PRIMITIVE_BOOLEAN';}
 "int"                 {return 'PRIMITIVE_INTEGER';}
 "float"               {return 'PRIMITIVE_FLOAT';}
+"double"              {return 'PRIMITIVE_DOUBLE';}
 "String"              {return 'STRING_TYPE';}
 
 
@@ -58,12 +59,14 @@ EXPO              ([Ee][+-]?{Ds})
 "/"                   {return 'OPERATOR_DIVISON';}
 "%"                   {return 'OPERATOR_MODULO';}
 
-"."                   {return 'SEPARATOR_DOT';}
 
 [a-zA-Z][a-zA-Z0-9_]* {return 'IDENTIFIER'; /* Varying form */}
-{Ds}\b                {return 'DECIMAL_INTEGER_LITERAL';}
 ({Ds}"."{Ds}?{EXPO}?[fFdD]?|"."{Ds}{EXPO}?[fFdD]?|{Ds}{EXPO}[fFdD]?|{Ds}{EXPO}?[fFdD])\b   {return 'FLOATING_POINT_LITERAL';}
+{Ds}\b                {return 'DECIMAL_INTEGER_LITERAL';}
 "\"".*"\""            {return 'STRING_LITERAL';}
+
+"."                   {return 'SEPARATOR_DOT';}
+
 <<EOF>>               {return 'EOF';}
 .                     {return 'INVALID';}
 
@@ -262,6 +265,8 @@ integral_type
 
 floating_point_type
   : PRIMITIVE_FLOAT
+    { $$ = $1; }
+  | PRIMITIVE_DOUBLE
     { $$ = $1; }
   ;
 
