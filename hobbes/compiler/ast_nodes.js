@@ -686,19 +686,19 @@ var FloatingPointLiteral = exports.FloatingPointLiteral = function (numString) {
     this.postPoint = (parts[2] && Number(parts[2])) || 0;
     this.exponent = (parts[4] || 0) * (parts[3] === '-' ? -1 : 1);
     // TODO Is f the default?
-    this.vavaType = (parts[5] && parts[5].toLowerCase()) || 'f';
+    this.vavaType = (parts[5] && parts[5].toLowerCase()) || 'd';
   } else if (parts = numString.match(/\.([1-9][0-9]*)(?:[Ee]([+-])?([1-9][0-9]*))?([fFdD])?/)) {
     this.prePoint = 0;
     this.postPoint = Number(parts[1]);
     this.exponent = (parts[3] || 0) * (parts[2] === '-' ? -1 : 1);
     // TODO Is f the default?
-    this.vavaType = (parts[4] && parts[4].toLowerCase()) || 'f';
+    this.vavaType = (parts[4] && parts[4].toLowerCase()) || 'd';
   } else if (parts = numString.match(/(0|[1-9][0-9]*)(?:[Ee]([+-])?([1-9][0-9]*))([fFdD])?/)) {
     this.prePoint = Number(parts[1]);
     this.postPoint = 0;
     this.exponent = parts[3] * (parts[2] === '-' ? -1 : 1);
     // TODO Is f the default?
-    this.vavaType = (parts[4] && parts[4].toLowerCase()) || 'f';
+    this.vavaType = (parts[4] && parts[4].toLowerCase()) || 'd';
   } else if (parts = numString.match(/(0|[1-9][0-9]*)(?:[Ee]([+-])?([1-9][0-9]*))?([fFdD])/)) {
     this.prePoint = Number(parts[1]);
     this.postPoint = 0;
