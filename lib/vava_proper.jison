@@ -44,7 +44,10 @@ EXPO              ([Ee][+-]?{Ds})
 
 
 "boolean"             {return 'PRIMITIVE_BOOLEAN';}
+"byte"                {return 'PRIMITIVE_BYTE';}
+"short"               {return 'PRIMITIVE_SHORT';}
 "int"                 {return 'PRIMITIVE_INTEGER';}
+"long"                {return 'PRIMITIVE_LONG';}
 "float"               {return 'PRIMITIVE_FLOAT';}
 "double"              {return 'PRIMITIVE_DOUBLE';}
 "String"              {return 'STRING_TYPE';}
@@ -62,7 +65,7 @@ EXPO              ([Ee][+-]?{Ds})
 
 [a-zA-Z][a-zA-Z0-9_]* {return 'IDENTIFIER'; /* Varying form */}
 ({Ds}"."{Ds}?{EXPO}?[fFdD]?|"."{Ds}{EXPO}?[fFdD]?|{Ds}{EXPO}[fFdD]?|{Ds}{EXPO}?[fFdD])/([^\w]|$)   {return 'FLOATING_POINT_LITERAL';}
-{Ds}\b                {return 'DECIMAL_INTEGER_LITERAL';}
+{Ds}[lL]?\b           {return 'DECIMAL_INTEGER_LITERAL';}
 "\"".*"\""            {return 'STRING_LITERAL';}
 
 "."                   {return 'SEPARATOR_DOT';}
@@ -259,7 +262,13 @@ numeric_type
   ;
 
 integral_type
-  : PRIMITIVE_INTEGER
+  : PRIMITIVE_BYTE
+    { $$ = $1; }
+  | PRIMITIVE_SHORT
+    { $$ = $1; }
+  | PRIMITIVE_INTEGER
+    { $$ = $1; }
+  | PRIMITIVE_LONG
     { $$ = $1; }
   ;
 

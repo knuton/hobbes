@@ -4,6 +4,7 @@ specifications:
   
   - description: "A literal is the source code representation of a value of a primitive type, the String type, or the null type."
     test_files:
+      # TODO char type
       - 'Primitives.java'
 
   - description: "String literals and, more generally, strings that are the values of constant expressions are \"interned\" so as to share unique instances, using the method String.intern."

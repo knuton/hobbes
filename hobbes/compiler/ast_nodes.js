@@ -654,6 +654,12 @@ BooleanLiteral.prototype.compileNode = function (indent) {
 var IntegerLiteral = exports.IntegerLiteral = function (num) {
   this.type = 'IntegerLiteral';
   this.children = [];
+  if (/l$/i.test(num)) {
+    this.vavaType = 'long';
+    num = num.substr(0, num.length - 1);
+  } else {
+    this.vavaType = 'int';
+  }
   // TODO Octal and hexal numbers
   if ((parseFloat(num) === parseInt(num)) && !isNaN(num)) {
     this.value = num;
@@ -665,11 +671,15 @@ var IntegerLiteral = exports.IntegerLiteral = function (num) {
 IntegerLiteral.inherits(ASTNode);
 
 IntegerLiteral.prototype.getSignature = function () {
-  return {value : this.value};
+  return {value : this.value, vavaType : this.vavaType};
 };
 
 IntegerLiteral.prototype.compileNode = function (indent) {
-  return builder.functionCall('this.__env.IntValue.intern', [this.value], false);
+  if (this.vavaType === 'long') {
+    return builder.functionCall('this.__env.LongValue.intern', [this.value], false);
+  } else {
+    return builder.functionCall('this.__env.IntValue.intern', [this.value], false);
+  }
 };
 
 /**

@@ -32,7 +32,7 @@ TypedVariable.prototype.getVavaType = function () {
  * Returns the default value for the variable's Vava type.
  */
 TypedVariable.prototype.defaultValue = function () {
-  return TypedValue.defaults[this.vavaType] || new NullValue();
+  return TypedValue.constructorFor(this.vavaType).defaultValue();
 };
 
 /**
@@ -42,12 +42,24 @@ TypedVariable.prototype.defaultValue = function () {
 TypedVariable.prototype.set = function (typedValue) {
   
   if (this.isAssignmentCompatible(typedValue)) {
-    this.typedValue = typedValue;
+    this._setAdjusted(typedValue);
   } else {
     // TODO How to handle Vava errors?
     throw new Error("Vava Type error: Expected " + this.getVavaType() + ", but was " + typedValue.getVavaType() + ".");
   }
   
+};
+
+
+/**
+ * Sets the typed value of the variable to a potentially adjusted value
+ * computed from the provided typed value.
+ *
+ * @param typedValue The value to adjust and assign
+ */
+TypedVariable.prototype._setAdjusted = function (typedValue) {
+  // Leave it to specific types to convert themselves
+  this.typedValue = typedValue.to(this.vavaType);
 };
 
 /**
@@ -61,6 +73,27 @@ TypedVariable.prototype.isPrimitive = function () {
 }
 
 /**
+ * Checks if variable is of integral type.
+ *
+ * That is, whether it is one of {byte, short, int, long}.
+ * TODO Might want to add `char`
+ */
+TypedVariable.prototype.isIntegral = function () {
+  var vT = this.getVavaType();
+  return (vT === "byte" || vT === "short" || vT === "int" || vT === "long");
+};
+
+/**
+ * Checks if variable is of floating point type.
+ *
+ * That is, whether it is one of {float, double}.
+ */
+TypedVariable.prototype.isFloatingPoint = function () {
+  var vT = this.getVavaType();
+  return (vT === "float" || vT === "double");
+};
+
+/**
  * Checks for compatibility of own and provided type.
  *
  * TODO Autocasting for natives
@@ -69,7 +102,9 @@ TypedVariable.prototype.isPrimitive = function () {
 TypedVariable.prototype.isAssignmentCompatible = function (typedValue) {
 
   if (this.isPrimitive()) {
-    return typedValue.getVavaType() === this.getVavaType();
+    if (typedValue.getVavaType() === this.getVavaType()) return true;
+    if (this.isIntegral() && typedValue.isIntegral()) return true;
+    return this.isFloatingPoint() && typedValue.isFloatingPoint();
   } else {
     var vavaType = typedValue.getVavaType();
     return (vavaType === "null" || vavaType === this.getVavaType());
@@ -112,6 +147,40 @@ TypedValue.prototype.get = function () {
   return this.rawValue;
 };
 
+/**
+ * Casts typed value to value of type `vavaType`.
+ *
+ * There is not checking here whether any such cast is in fact possible. It is
+ * expected that for primitive types this checking is done at compile time.
+ *
+ * @param vavaType The type to cast to
+ */
+TypedValue.prototype.to = function (vavaType) {
+  return TypedValue.constructorFor(vavaType).intern(this.get());
+};
+
+TypedValue.prototype.isPrimitive = TypedVariable.prototype.isPrimitive;
+TypedValue.prototype.isIntegral = TypedVariable.prototype.isIntegral;
+TypedValue.prototype.isFloatingPoint = TypedVariable.prototype.isFloatingPoint;
+
+/**
+ * Returns the default value for any value type.
+ *
+ * Overwrite for interning etc.
+ */
+TypedValue.defaultValue = function () {
+  return new this();
+};
+
+/**
+ * Returns the constructor for the given type.
+ *
+ * @param vavaType The type, e.g. `int`
+ */
+TypedValue.constructorFor = function (vavaType) {
+  return TypedValue.constructors[vavaType] || NullValue;
+};
+
 // NATIVE TYPES
 
 // TODO Document and Test!
@@ -149,6 +218,10 @@ BooleanValue.intern = function (bool) {
     return this.stored[bool] = new this(bool);
 };
 
+BooleanValue.defaultValue = function () {
+  return this.intern(false);
+}
+
 // LOGICAL OPERATIONS
 BooleanValue.prototype.not = function () {
   return BooleanValue[String(!this.get())];
@@ -162,6 +235,7 @@ BooleanValue.prototype.or = function (other) {
   return BooleanValue[String(this.get() || other.get())];
 };
 
+// TODO Both this and `BooleanValue.intern`?
 BooleanValue['true'] = new BooleanValue(true);
 BooleanValue['false'] = new BooleanValue(false);
 
@@ -192,27 +266,34 @@ NumberValue.intern = function (number) {
     return this.stored[number] = new this(number);
 };
 
+NumberValue.defaultValue = function () {
+  return this.intern(0);
+}
+
 // INTEGER VALUES
 
-// TODO how to handle inheritance here?
 var IntegralValue = function (rawValue) {
   
   this.vavaType = undefined;
   
-  if (rawValue) {
-    // TODO More precise testing of value
-    // Next step: Add this to AST -> compile -> test with Java src files
-    if (isNaN(rawValue)) {
-      throw new Error('Not a number!');
-    }
-    this.rawValue = rawValue;
-  } else {
-    this.rawValue = 0;
-  }
-  
 }
 
 IntegralValue.inherits(NumberValue);
+
+
+IntegralValue.checkedValue = function (rawValue) {
+  if (rawValue) {
+    if (isNaN(rawValue)) {
+      throw new Error('Not a number!');
+    }
+    if (rawValue > this.MIN_VALUE && rawValue < this.MAX_VALUE) {
+      return rawValue;
+    } else {
+      return parseInt(rawValue.toString(2).substr(-this.BITS,this.BITS), 2);
+    }
+  }
+  else return 0;
+};
 
 // ARITHMETIC
 IntegralValue.prototype.add = function (other) {
@@ -243,24 +324,42 @@ IntegralValue.prototype.toInt = function () {
   return IntValue.intern(this.get());
 };
 
+var ByteValue = exports.ByteValue = function (rawValue) {
+
+  this.vavaType = 'byte';
+  this.rawValue = this.constructor.checkedValue(rawValue);
+
+};
+
+ByteValue.inherits(IntegralValue, {stored: {}, BITS: 8, MIN_VALUE: -128, MAX_VALUE: 127});
+
+var ShortValue = exports.ShortValue = function (rawValue) {
+
+  this.vavaType = 'short';
+  this.rawValue = this.constructor.checkedValue(rawValue);
+
+};
+
+ShortValue.inherits(IntegralValue, {stored: {}, BITS: 16, MIN_VALUE: -32768, MAX_VALUE: 32767});
+
 var IntValue = exports.IntValue = function (rawValue) {
 
   this.vavaType = 'int';
-
-  if (rawValue) {
-    // TODO More precise testing of value
-    if (isNaN(rawValue)) {
-      throw new Error('Not a number!');
-    }
-    this.rawValue = rawValue;
-  } else {
-    this.rawValue = 0;
-  }
+  this.rawValue = this.constructor.checkedValue(rawValue);
 
 }
 
-IntValue.inherits(IntegralValue);
-IntValue.stored = {};
+IntValue.inherits(IntegralValue, {stored: {}, BITS: 32, MIN_VALUE: -2147483648, MAX_VALUE: 2147483647});
+
+var LongValue = exports.LongValue = function (rawValue) {
+
+  this.vavaType = 'long';
+  this.rawValue = this.constructor.checkedValue(rawValue);
+
+};
+
+// TODO `long` seems to be too much for JS
+LongValue.inherits(IntegralValue, {stored: {}, BITS: 64, MIN_VALUE: -9223372036854775808, MAX_VALUE: 9223372036854775807});
 
 // FLOATING POINT TYPES
 
@@ -330,9 +429,22 @@ var NullValue = exports.NullValue = function () {
 
 NullValue.inherits(TypedValue);
 
+NullValue.intern = function () {
+  return NullValue.stored['null'];
+}
+
+NullValue.stored = {
+  'null' : new NullValue()
+};
+
 //// NEEDS TO BE AT THE END
 // Lookup table for constructors for simple (?) types
-TypedValue.defaults = {
-  "boolean" : BooleanValue.intern(false),
-  "int" : IntValue.intern(0)
+TypedValue.constructors = {
+  "boolean" : BooleanValue,
+  "byte" : ByteValue,
+  "short" : ShortValue,
+  "int" : IntValue,
+  "long" : LongValue,
+  "float" : FloatValue,
+  "double" : DoubleValue
 };
