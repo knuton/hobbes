@@ -3,7 +3,7 @@ require('./extensions/json');
 
 // Based on Crockford's http://javascript.crockford.com/inheritance.html
 if (!Function.prototype.inherits) {
-  Function.prototype.inherits = function (parent) {
+  Function.prototype.inherits = function (parent, constructorMembers) {
     // Use new instance of parent as prototype
     var d = {}, p = (this.prototype = new parent());
     this.prototype['uber'] = function (name) {
@@ -33,6 +33,10 @@ if (!Function.prototype.inherits) {
       if (parent.hasOwnProperty(prop)) {
         this[prop] = parent[prop];
       }
+    }
+    // prefill constructor members
+    if (constructorMembers) {
+      for (var prop in constructorMembers) this[prop] = constructorMembers[prop];
     }
     // fix constructor reference
     this.prototype.constructor = this;
