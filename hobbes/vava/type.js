@@ -390,13 +390,16 @@ FloatingPointValue.checkedValue = function (prePoint, postPoint, exponent) {
   // Actual NaN
   if (String(prePoint) === 'NaN')
     return NaN;
-  // TODO Other special values
-  // TODO limits
   prePoint = prePoint || 0; postPoint = postPoint || 0; exponent = exponent || 0;
   if (isNaN(prePoint) || isNaN(postPoint) || isNaN(exponent)) {
     throw new Error('Not a number in floating point constructor');
   }
-  return (prePoint + postPoint/10) * Math.pow(10, exponent);
+  var computedValue = (prePoint + postPoint/10) * Math.pow(10, exponent);
+  if (computedValue > this.MAX_VALUE) return Number.POSITIVE_INFINITY;
+  if (computedValue < -this.MAX_VALUE) return Number.NEGATIVE_INFINITY;
+  if (computedValue > 0 && computedValue < this.MIN_VALUE) return 1e-46;
+  if (computedValue < 0 && computedValue > -this.MIN_VALUE) return -1e-46;
+  return computedValue;
 };
 
 FloatingPointValue.prototype.add = function (other) {
@@ -435,7 +438,7 @@ var FloatValue = exports.FloatValue = function (prePoint, postPoint, exponent) {
 
 };
 
-FloatValue.inherits(FloatingPointValue, {stored: {}});
+FloatValue.inherits(FloatingPointValue, {stored: {}, MIN_VALUE: 1.40239846e-45, MAX_VALUE: 3.40282347e+38});
 
 var DoubleValue = exports.DoubleValue = function (prePoint, postPoint, exponent) {
   
@@ -445,7 +448,7 @@ var DoubleValue = exports.DoubleValue = function (prePoint, postPoint, exponent)
 
 };
 
-DoubleValue.inherits(FloatingPointValue, {stored: {}});
+DoubleValue.inherits(FloatingPointValue, {stored: {}, MIN_VALUE: 4.94065645841246544e-324, MAX_VALUE: 1.79769313486231570e+308});
 
 //// STRING TYPE
 
