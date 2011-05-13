@@ -303,32 +303,42 @@ IntegralValue.checkedValue = function (rawValue) {
 };
 
 // ARITHMETIC
+// TODO Is to('int') a. necessary, b. causing problems with long?
 IntegralValue.prototype.add = function (other) {
-  return IntValue.intern(this.toInt().get() + other.toInt().get());
+  if (other.isIntegral())
+    return IntValue.intern(this.to('int').get() + other.to('int').get());
+  else
+    return other.add(this);
 };
 
 IntegralValue.prototype.subtract = function (other) {
-  return this.add(other.inverse());
+  if (other.isIntegral())
+    return this.add(other.inverse());
+  else
+    return other.constructor.intern(this.to('int').get() - other.get());
 };
 
 IntegralValue.prototype.times = function (other) {
-  return IntValue.intern(this.toInt().get() * other.toInt().get());
+  if (other.isIntegral())
+    return IntValue.intern(this.to('int').get() * other.to('int').get());
+  else
+    return other.times(this);
 };
 
 IntegralValue.prototype.divide = function (other) {
-  var thisRaw = this.toInt().get(),
-      otherRaw = other.toInt().get();
-  var remainder = thisRaw % otherRaw;
-  return IntValue.intern((thisRaw - remainder) / otherRaw);
+  if (other.isIntegral()) {
+    var thisRaw = this.to('int').get(),
+        otherRaw = other.to('int').get();
+    var remainder = thisRaw % otherRaw;
+    return IntValue.intern((thisRaw - remainder) / otherRaw);
+  } else {
+    // TODO What about negative/positive zero/infinity?
+    return other.constructor.intern(this.to('int').get() / other.get());
+  }
 };
 
 IntegralValue.prototype.modulo = function (other) {
-  return IntValue.intern(this.toInt().get() % other.toInt().get());
-};
-
-// TODO Overflow of long type
-IntegralValue.prototype.toInt = function () {
-  return IntValue.intern(this.get());
+  return IntValue.intern(this.to('int').get() % other.to('int').get());
 };
 
 var ByteValue = exports.ByteValue = function (rawValue) {
@@ -377,12 +387,39 @@ var FloatingPointValue = function () {
 FloatingPointValue.inherits(NumberValue);
 
 FloatingPointValue.checkedValue = function (prePoint, postPoint, exponent) {
+  // Actual NaN
+  if (String(prePoint) === 'NaN')
+    return NaN;
+  // TODO Other special values
   // TODO limits
   prePoint = prePoint || 0; postPoint = postPoint || 0; exponent = exponent || 0;
   if (isNaN(prePoint) || isNaN(postPoint) || isNaN(exponent)) {
     throw new Error('Not a number in floating point constructor');
   }
   return (prePoint + postPoint/10) * Math.pow(10, exponent);
+};
+
+FloatingPointValue.prototype.add = function (other) {
+  return this.constructor.intern(this.get() + other.get());
+};
+
+FloatingPointValue.prototype.subtract = function (other) {
+  return this.add(other.inverse());
+};
+
+FloatingPointValue.prototype.times = function (other) {
+  return this.constructor.intern(this.get() * other.get());
+};
+
+FloatingPointValue.prototype.divide = function (other) {
+  var thisRaw = this.get(),
+      otherRaw = other.get();
+  if (otherRaw === 0) {
+    if (thisRaw === 0)
+      return this.constructor.intern(NaN);
+  }
+  
+  return this.constructor.intern(this.get() / other.get());
 };
 
 FloatingPointValue.prototype.toString = function () {
