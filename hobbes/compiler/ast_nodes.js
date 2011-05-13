@@ -683,6 +683,27 @@ IntegerLiteral.prototype.compileNode = function (indent) {
 };
 
 /**
+ * Creates a node for a char literal.
+ *
+ * @param character The character
+ */
+var CharLiteral = exports.CharLiteral = function (character) {
+  this.type = 'CharLiteral';
+  this.children = [];
+  this.character = character.substr(1,1);
+};
+
+CharLiteral.inherits(ASTNode);
+
+CharLiteral.prototype.getSignature = function () {
+  return {character : this.character};
+};
+
+CharLiteral.prototype.compileNode = function (indent) {
+  return builder.functionCall('this.__env.CharValue.intern', [builder.string(this.character)], false);
+};
+
+/**
  * Creates a node for a FloatingPoint literal.
  *
  * @param numString The string describing the number

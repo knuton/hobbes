@@ -48,6 +48,7 @@ EXPO              ([Ee][+-]?{Ds})
 "short"               {return 'PRIMITIVE_SHORT';}
 "int"                 {return 'PRIMITIVE_INTEGER';}
 "long"                {return 'PRIMITIVE_LONG';}
+"char"                {return 'PRIMITIVE_CHAR';}
 "float"               {return 'PRIMITIVE_FLOAT';}
 "double"              {return 'PRIMITIVE_DOUBLE';}
 "String"              {return 'STRING_TYPE';}
@@ -68,6 +69,7 @@ EXPO              ([Ee][+-]?{Ds})
 ({Ds}"."{Ds}?{EXPO}?[fFdD]?|"."{Ds}{EXPO}?[fFdD]?|{Ds}{EXPO}[fFdD]?|{Ds}{EXPO}?[fFdD])/([^\w]|$)   {return 'FLOATING_POINT_LITERAL';}
 {Ds}[lL]?\b           {return 'DECIMAL_INTEGER_LITERAL';}
 "\"".*"\""            {return 'STRING_LITERAL';}
+"'"."'"               {return 'CHAR_LITERAL';}
 
 "."                   {return 'SEPARATOR_DOT';}
 
@@ -270,6 +272,8 @@ integral_type
   | PRIMITIVE_INTEGER
     { $$ = $1; }
   | PRIMITIVE_LONG
+    { $$ = $1; }
+  | PRIMITIVE_CHAR
     { $$ = $1; }
   ;
 
@@ -574,6 +578,8 @@ primary
 literal
   : integer_literal
     { $$ = $1; }
+  | char_literal
+    { $$ = $1; }
   | floating_point_literal
     { $$ = $1; }
   | boolean_literal
@@ -608,6 +614,11 @@ boolean_literal
 integer_literal
   : DECIMAL_INTEGER_LITERAL
     { $$ = new yy.IntegerLiteral($1); }
+  ;
+
+char_literal
+  : CHAR_LITERAL
+    { $$ = new yy.CharLiteral($1); }
   ;
 
 null_literal

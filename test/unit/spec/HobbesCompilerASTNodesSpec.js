@@ -261,6 +261,28 @@ describe('Compiler', function () {
       
     }); // end IntegerLiteral spec
 
+    describe('CharLiteral', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.CharLiteral("'a'");
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+      
+      it('should be of type `CharLiteral`', function () {
+        expect(testNode.getType()).toBe('CharLiteral');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <CharLiteral character: a>\n');
+      });
+
+      it('should compile itself', function () {
+        expect(testNode.compile()).toBe('this.__env.CharValue.intern("a")');
+      });
+      
+    }); // end CharLiteral spec
+
     describe('FloatingPointLiteral', function () {
 
       beforeEach(function () {

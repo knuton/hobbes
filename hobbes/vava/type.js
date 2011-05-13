@@ -378,6 +378,20 @@ var LongValue = exports.LongValue = function (rawValue) {
 // TODO `long` seems to be too much for JS
 LongValue.inherits(IntegralValue, {stored: {}, BITS: 64, MIN_VALUE: -9223372036854775808, MAX_VALUE: 9223372036854775807});
 
+var CharValue = exports.CharValue = function (charOrCharCode) {
+
+  var charCode = typeof charOrCharCode === 'string' ? charOrCharCode.charCodeAt(0) : charOrCharCode;
+  this.vavaType = 'char';
+  this.rawValue = this.constructor.checkedValue(charCode);
+
+};
+
+CharValue.inherits(IntegralValue, {stored: {}, BITS: 16, MIN_VALUE: 0, MAX_VALUE: 65534});
+
+CharValue.prototype.toString = function () {
+  return String.fromCharCode(this.rawValue);
+};
+
 // FLOATING POINT TYPES
 
 var FloatingPointValue = function () {
@@ -499,6 +513,7 @@ TypedValue.constructors = {
   "short" : ShortValue,
   "int" : IntValue,
   "long" : LongValue,
+  "char" : CharValue,
   "float" : FloatValue,
   "double" : DoubleValue
 };
