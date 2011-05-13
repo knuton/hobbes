@@ -760,6 +760,7 @@ StringLiteral.prototype.compileNode = function (indent) {
 };
 
 //// Operations
+
 // Unary
 
 /**
@@ -805,6 +806,32 @@ UnaryPlus.prototype.getSignature = function () {
 UnaryPlus.prototype.compileNode = function (indent) {
   return this.children[0].compile();
 };
+
+/**
+ * Creates a node for a cast expression.
+ *
+ * @param vavaType The type to cast to
+ * @param unaryExpression The expression whose value to cast
+ */
+var CastExpression = exports.CastExpression = function (vavaType, unaryExpression) {
+  this.type = 'CastExpression';
+  this.children = [];
+  this.vavaType = vavaType;
+  this.appendChild(unaryExpression);
+};
+
+CastExpression.inherits(ASTNode);
+
+CastExpression.prototype.getSignature = function () {
+  return {vavaType : this.vavaType};
+};
+
+CastExpression.prototype.compileNode = function (indent) {
+  return builder.functionCall('(' + this.children[0].compile() + ').to', [builder.string(this.vavaType)], false);
+};
+
+// Binary
+
 /**
  * Creates a node for an addition operation.
  *

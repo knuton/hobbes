@@ -164,6 +164,13 @@ TypedValue.prototype.isIntegral = TypedVariable.prototype.isIntegral;
 TypedValue.prototype.isFloatingPoint = TypedVariable.prototype.isFloatingPoint;
 
 /**
+ * Returns a string representation of the value.
+ */
+TypedValue.prototype.toString = function () {
+  return String(this.get());
+};
+
+/**
  * Returns the default value for any value type.
  *
  * Overwrite for interning etc.
@@ -363,38 +370,45 @@ LongValue.inherits(IntegralValue, {stored: {}, BITS: 64, MIN_VALUE: -92233720368
 
 // FLOATING POINT TYPES
 
+var FloatingPointValue = function () {
+  this.vavaType = undefined;
+};
+
+FloatingPointValue.inherits(NumberValue);
+
+FloatingPointValue.checkedValue = function (prePoint, postPoint, exponent) {
+  // TODO limits
+  prePoint = prePoint || 0; postPoint = postPoint || 0; exponent = exponent || 0;
+  if (isNaN(prePoint) || isNaN(postPoint) || isNaN(exponent)) {
+    throw new Error('Not a number in floating point constructor');
+  }
+  return (prePoint + postPoint/10) * Math.pow(10, exponent);
+};
+
+FloatingPointValue.prototype.toString = function () {
+  var value = this.get();
+  return parseInt(value) === value ? value.toFixed(1) : value;
+};
+
 var FloatValue = exports.FloatValue = function (prePoint, postPoint, exponent) {
   
   this.vavaType = 'float';
-
   // TODO float limits
-  prePoint = prePoint || 0; postPoint = postPoint || 0; exponent = exponent || 0;
-  if (isNaN(prePoint) || isNaN(postPoint) || isNaN(exponent)) {
-    throw new Error('Not a number in FloatValue constructor');
-  }
-  this.rawValue = (prePoint + postPoint/10) * Math.pow(10, exponent);
+  this.rawValue = this.constructor.checkedValue(prePoint, postPoint, exponent);
 
 };
 
-FloatValue.inherits(NumberValue);
-FloatValue.stored = {};
-
+FloatValue.inherits(FloatingPointValue, {stored: {}});
 
 var DoubleValue = exports.DoubleValue = function (prePoint, postPoint, exponent) {
   
   this.vavaType = 'double';
-
   // TODO double limits
-  prePoint = prePoint || 0; postPoint = postPoint || 0; exponent = exponent || 0;
-  if (isNaN(prePoint) || isNaN(postPoint) || isNaN(exponent)) {
-    throw new Error('Not a number in FloatValue constructor');
-  }
-  this.rawValue = (prePoint + postPoint/10) * Math.pow(10, exponent);
+  this.rawValue = this.constructor.checkedValue(prePoint, postPoint, exponent);
 
 };
 
-DoubleValue.inherits(NumberValue);
-DoubleValue.stored = {};
+DoubleValue.inherits(FloatingPointValue, {stored: {}});
 
 //// STRING TYPE
 

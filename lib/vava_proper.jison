@@ -541,6 +541,8 @@ unary_expression
 unary_expression_not_plus_minus
   : postfix_expression
     { $$ = $1; }
+  | cast_expression
+    { $$ = $1; }
   ;
 
 postfix_expression
@@ -548,6 +550,17 @@ postfix_expression
     { $$ = $1; }
   | name
     { $$ = $1; }
+  ;
+
+/*
+CastExpression:
+  ( PrimitiveType Dims_opt ) UnaryExpression
+  ( Expression ) UnaryExpressionNotPlusMinus
+  ( Name Dims ) UnaryExpressionNotPlusMinus
+*/
+cast_expression
+  : LEFT_PAREN primitive_type RIGHT_PAREN unary_expression
+    { $$ = new yy.CastExpression($2, $4); }
   ;
 
 primary
