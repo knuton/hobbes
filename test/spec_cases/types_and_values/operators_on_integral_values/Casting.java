@@ -7,6 +7,11 @@ public class Casting {
     int   c = 32;
     long  d = 64;
 
+    float  e = 128.5f;
+    double f = 256.5d;
+
+    char g = 'g';
+
     // Promote `byte`
     byte byteToByte = (byte) a;
     System.out.println(byteToByte);
@@ -20,6 +25,8 @@ public class Casting {
     System.out.println(byteToFloat);
     double byteToDouble = (double) a;
     System.out.println(byteToDouble);
+    char byteToChar = (char) a;
+    System.out.println(byteToChar);
 
     // Cast `short`
     byte shortToByte = (byte) b;
@@ -34,6 +41,8 @@ public class Casting {
     System.out.println(shortToFloat);
     double shortToDouble = (double) b;
     System.out.println(shortToDouble);
+    char shortToChar = (char) b;
+    System.out.println(shortToChar);
 
     // Cast `int`
     byte intToByte = (byte) c;
@@ -48,6 +57,8 @@ public class Casting {
     System.out.println(intToFloat);
     double intToDouble = (double) c;
     System.out.println(intToDouble);
+    char intToChar = (char) c;
+    System.out.println(intToChar);
 
     // Cast `long`
     byte longToByte = (byte) d;
@@ -62,7 +73,44 @@ public class Casting {
     System.out.println(longToFloat);
     double longToDouble = (double) d;
     System.out.println(longToDouble);
+    char longToChar = (char) d;
+    System.out.println(longToChar);
 
+    // Cast `float`
+    byte floatToByte = (byte) e;
+    System.out.println(floatToByte);
+    short floatToShort = (short) e;
+    System.out.println(floatToShort);
+    int floatToInt = (int) e;
+    System.out.println(floatToInt);
+    long floatToLong = (long) e;
+    System.out.println(floatToLong);
+    float floatToFloat = (float) e;
+    System.out.println(floatToFloat);
+    double floatToDouble = (double) e;
+    System.out.println(floatToDouble);
+    char floatToChar = (char) e;
+    System.out.println(floatToChar);
+
+    // Cast `double`
+    byte doubleToByte = (byte) f;
+    System.out.println(doubleToByte);
+    short doubleToShort = (short) f;
+    System.out.println(doubleToShort);
+    int doubleToInt = (int) f;
+    System.out.println(doubleToInt);
+    long doubleToLong = (long) f;
+    System.out.println(doubleToLong);
+    float doubleToFloat = (float) f;
+    System.out.println(doubleToFloat);
+    double doubleToDouble = (double) f;
+    System.out.println(doubleToDouble);
+    char doubleToChar = (char) f;
+    System.out.println(doubleToChar);
+
+    // Giant `double` to `char` (unsigned int)
+    short w00t = (short) (char) 25e+7;
+    System.out.println(w00t);
   }
 
 }

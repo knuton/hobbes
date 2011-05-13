@@ -751,10 +751,11 @@ FloatingPointLiteral.prototype.getSignature = function () {
 };
 
 FloatingPointLiteral.prototype.compileNode = function (indent) {
+  var num = (this.prePoint + this.postPoint/Math.pow(10,this.postPoint.toString(10).length)) * Math.pow(10, this.exponent);
   if (this.vavaType === 'f') {
-    return builder.functionCall('this.__env.FloatValue.intern', [this.prePoint, this.postPoint, this.exponent], false);
+    return builder.functionCall('this.__env.FloatValue.intern', [num], false);
   } else {
-    return builder.functionCall('this.__env.DoubleValue.intern', [this.prePoint, this.postPoint, this.exponent], false);
+    return builder.functionCall('this.__env.DoubleValue.intern', [num], false);
   }
 };
 

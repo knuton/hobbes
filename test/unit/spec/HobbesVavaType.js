@@ -51,6 +51,25 @@ describe('Vava Types', function () {
       });
       
     }); // end TypedValue
+
+    describe('ByteValue', function () {
+
+      beforeEach(function () {
+        testValue = new type.ByteValue();
+      });
+      
+      it('should satisfy common requirements for typed values', commonTypedValueTests);
+      
+      it('should have type `byte`', function () {
+        expect(testValue.getVavaType()).toBe('byte');
+      });
+
+      it('should overflow Java style', function () {
+        testValue = new type.ByteValue(128);
+        expect(testValue.get()).toBe(-128);
+      });
+
+    });
     
     describe('IntValue', function () {
       

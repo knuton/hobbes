@@ -287,16 +287,21 @@ var IntegralValue = function (rawValue) {
 
 IntegralValue.inherits(NumberValue);
 
-
 IntegralValue.checkedValue = function (rawValue) {
   if (rawValue) {
     if (isNaN(rawValue)) {
       throw new Error('Not a number!');
     }
     if (rawValue > this.MIN_VALUE && rawValue < this.MAX_VALUE) {
-      return rawValue;
+      return parseInt(rawValue);
     } else {
-      return parseInt(rawValue.toString(2).substr(-this.BITS,this.BITS), 2);
+      // Dual representation cut to length of type
+      var dual = parseInt(rawValue).toString(2).substr(-this.BITS,this.BITS);
+      // Leading bit determines sign (numspace is divided into positive and negative half)
+      var leadingBitNum = -(parseInt(dual.charAt(0), 2) * Math.pow(2, this.BITS-1));
+      // Resulting number is -(2^(BITS-1)) + decimal without leading bit
+      // or decimals without leading bit, if leading bit is 0
+      return leadingBitNum + parseInt(dual.substr(1), 2);
     }
   }
   else return 0;
@@ -388,6 +393,22 @@ var CharValue = exports.CharValue = function (charOrCharCode) {
 
 CharValue.inherits(IntegralValue, {stored: {}, BITS: 16, MIN_VALUE: 0, MAX_VALUE: 65534});
 
+CharValue.checkedValue = function (rawValue) {
+  if (rawValue) {
+    if (isNaN(rawValue)) {
+      throw new Error('Not a number!');
+    }
+    if (rawValue > this.MIN_VALUE && rawValue < this.MAX_VALUE) {
+      return parseInt(rawValue);
+    } else {
+      // Dual representation cut to length of type
+      var dual = parseInt(rawValue).toString(2).substr(-this.BITS,this.BITS);
+      return parseInt(dual, 2);
+    }
+  }
+  else return 0;
+};
+
 CharValue.prototype.toString = function () {
   return String.fromCharCode(this.rawValue);
 };
@@ -400,20 +421,18 @@ var FloatingPointValue = function () {
 
 FloatingPointValue.inherits(NumberValue);
 
-FloatingPointValue.checkedValue = function (prePoint, postPoint, exponent) {
+FloatingPointValue.checkedValue = function (rawValue) {
   // Actual NaN
-  if (String(prePoint) === 'NaN')
+  if (String(rawValue) === 'NaN')
     return NaN;
-  prePoint = prePoint || 0; postPoint = postPoint || 0; exponent = exponent || 0;
-  if (isNaN(prePoint) || isNaN(postPoint) || isNaN(exponent)) {
+  if (isNaN(rawValue)) {
     throw new Error('Not a number in floating point constructor');
   }
-  var computedValue = (prePoint + postPoint/10) * Math.pow(10, exponent);
-  if (computedValue > this.MAX_VALUE) return Number.POSITIVE_INFINITY;
-  if (computedValue < -this.MAX_VALUE) return Number.NEGATIVE_INFINITY;
-  if (computedValue > 0 && computedValue < this.MIN_VALUE) return 1e-46;
-  if (computedValue < 0 && computedValue > -this.MIN_VALUE) return -1e-46;
-  return computedValue;
+  if (rawValue > this.MAX_VALUE) return Number.POSITIVE_INFINITY;
+  if (rawValue < -this.MAX_VALUE) return Number.NEGATIVE_INFINITY;
+  if (rawValue > 0 && rawValue < this.MIN_VALUE) return 1e-46;
+  if (rawValue < 0 && rawValue > -this.MIN_VALUE) return -1e-46;
+  return rawValue;
 };
 
 FloatingPointValue.prototype.add = function (other) {
@@ -444,21 +463,19 @@ FloatingPointValue.prototype.toString = function () {
   return parseInt(value) === value ? value.toFixed(1) : value;
 };
 
-var FloatValue = exports.FloatValue = function (prePoint, postPoint, exponent) {
+var FloatValue = exports.FloatValue = function (rawValue) {
   
   this.vavaType = 'float';
-  // TODO float limits
-  this.rawValue = this.constructor.checkedValue(prePoint, postPoint, exponent);
+  this.rawValue = this.constructor.checkedValue(rawValue);
 
 };
 
 FloatValue.inherits(FloatingPointValue, {stored: {}, MIN_VALUE: 1.40239846e-45, MAX_VALUE: 3.40282347e+38});
 
-var DoubleValue = exports.DoubleValue = function (prePoint, postPoint, exponent) {
+var DoubleValue = exports.DoubleValue = function (rawValue) {
   
   this.vavaType = 'double';
-  // TODO double limits
-  this.rawValue = this.constructor.checkedValue(prePoint, postPoint, exponent);
+  this.rawValue = this.constructor.checkedValue(rawValue);
 
 };
 
