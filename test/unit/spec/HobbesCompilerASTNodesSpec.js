@@ -279,6 +279,24 @@ describe('Compiler', function () {
       
     }); // end FloatingPointLiteral spec
 
+    describe('NullLiteral', function () {
+
+      beforeEach(function () {
+        testNode = new astNodes.NullLiteral();
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `NullLiteral`', function () {
+        expect(testNode.getType()).toBe('NullLiteral');
+      });
+
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <NullLiteral>\n');
+      });
+      
+    }); // end NullLiteral spec
+
     describe('UnaryMinus', function () {
       
       beforeEach(function () {

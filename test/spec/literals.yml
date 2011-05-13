@@ -10,3 +10,6 @@ specifications:
   - description: "String literals and, more generally, strings that are the values of constant expressions are \"interned\" so as to share unique instances, using the method String.intern."
 
   - description: "The null type has one value, the null reference, denoted by the literal null. The boolean type has two values, denoted by the literals true and false."
+    test_files:
+      - 'NullType.java'
+      - 'BooleanType.java'

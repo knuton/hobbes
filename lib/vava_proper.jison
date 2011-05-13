@@ -62,6 +62,7 @@ EXPO              ([Ee][+-]?{Ds})
 "/"                   {return 'OPERATOR_DIVISON';}
 "%"                   {return 'OPERATOR_MODULO';}
 
+"null"                {return 'NULL_LITERAL';}
 
 [a-zA-Z][a-zA-Z0-9_]* {return 'IDENTIFIER'; /* Varying form */}
 ({Ds}"."{Ds}?{EXPO}?[fFdD]?|"."{Ds}{EXPO}?[fFdD]?|{Ds}{EXPO}[fFdD]?|{Ds}{EXPO}?[fFdD])/([^\w]|$)   {return 'FLOATING_POINT_LITERAL';}
@@ -579,6 +580,8 @@ literal
     { $$ = $1; }
   | string_literal
     { $$ = $1; }
+  | null_literal
+    { $$ = $1; }
   ;
 
 method_invocation
@@ -605,6 +608,11 @@ boolean_literal
 integer_literal
   : DECIMAL_INTEGER_LITERAL
     { $$ = new yy.IntegerLiteral($1); }
+  ;
+
+null_literal
+  : NULL_LITERAL
+    { $$ = new yy.NullLiteral($1); }
   ;
 
 // FLOATING POINT

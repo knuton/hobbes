@@ -643,7 +643,7 @@ BooleanLiteral.prototype.getSignature = function () {
 }
 
 BooleanLiteral.prototype.compileNode = function (indent) {
-  return 'this.__env.BooleanValue["' + this.value + '"]';
+  return 'this.__env.BooleanValue.intern(' + this.value + ')';
 };
 
 /**
@@ -736,6 +736,22 @@ FloatingPointLiteral.prototype.compileNode = function (indent) {
     return builder.functionCall('this.__env.DoubleValue.intern', [this.prePoint, this.postPoint, this.exponent], false);
   }
 };
+
+/**
+ * Creates a node for a null literal.
+ *
+ */
+var NullLiteral = exports.NullLiteral = function () {
+  this.type = 'NullLiteral';
+  this.children = [];
+};
+
+NullLiteral.inherits(ASTNode);
+
+NullLiteral.prototype.compileNode = function (indent) {
+  return 'this.__env.NullValue.intern()';
+};
+
 
 /**
  * Creates a node for a String literal.
@@ -966,7 +982,7 @@ var Equals = exports.Equals = function (a, b) {
 Equals.inherits(ASTNode);
 
 Equals.prototype.compileNode = function (indent) {
-  return utils.indent('this.__env.BooleanValue[String(' + this.children[0].compile() + ' === ' + this.children[1].compile() + ')]', indent);
+  return utils.indent('this.__env.BooleanValue.intern(' + this.children[0].compile() + ' === ' + this.children[1].compile() + ')', indent);
 };
 
 /**
@@ -988,7 +1004,7 @@ var NotEquals = exports.NotEquals = function (a, b) {
 NotEquals.inherits(ASTNode);
 
 NotEquals.prototype.compileNode = function (indent) {
-  return utils.indent('this.__env.BooleanValue[String(' + this.children[0].compile() + ' !== ' + this.children[1].compile() + ')]', indent);
+  return utils.indent('this.__env.BooleanValue.intern(' + this.children[0].compile() + ' !== ' + this.children[1].compile() + ')', indent);
 };
 
 /**
@@ -1010,7 +1026,7 @@ var IfThen = exports.IfThen = function (ifExpr, thenExpr) {
 IfThen.inherits(ASTNode);
 
 IfThen.prototype.compileNode = function (indent) {
-  var js = 'if (this.__env.BooleanValue.true === ';
+  var js = 'if (this.__env.BooleanValue.intern(true) === ';
   js += this.children[0].compileNode() + ') {\n';
   js += this.children[1].compileNode(2);
   return utils.indent(js + '\n}\n', indent);
@@ -1037,7 +1053,7 @@ var IfThenElse = exports.IfThenElse = function (condition, truthyStatement, fals
 IfThenElse.inherits(ASTNode);
 
 IfThenElse.prototype.compileNode = function (indent) {
-  var js = utils.indent('if (this.__env.BooleanValue.true === ', indent);
+  var js = utils.indent('if (this.__env.BooleanValue.intern(true) === ', indent);
   js += this.children[0].compileNode() + ') {\n';
   js += this.children[1].compileNode(indent + 2) + '\n';
   js += utils.indent('} else {\n', indent);
@@ -1065,7 +1081,7 @@ var WhileLoop = exports.WhileLoop = function (condition, statement) {
 WhileLoop.inherits(ASTNode);
 
 WhileLoop.prototype.compileNode = function (indent) {
-  var js = utils.indent('while (this.__env.BooleanValue.true === ', indent);
+  var js = utils.indent('while (this.__env.BooleanValue.intern(true) === ', indent);
   js += this.children[0].compileNode() + ') {\n';
   js += this.children[1].compileNode(indent + 2) + '\n';
   js += utils.indent('}\n', indent);
