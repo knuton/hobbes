@@ -9,5 +9,7 @@ specifications:
   - description: "The built-in integer operators do not indicate overflow or underflow in any way; they wrap around on overflow or underflow. The only integer operators that can throw an exception are the integer divide and integer remainder operators, which can throw an ArithmeticException if the right-hand operand is zero."
 
   - description: "Any value of any integral type may be cast to or from any numeric type."
+    test_files:
+      - 'Casting.java'
 
   - description: "There are no casts between integral types and the type boolean."

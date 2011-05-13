@@ -256,7 +256,7 @@ describe('Compiler', function () {
       });
       
       it('should turn itself into a string', function () {
-        expect(testNode.toString()).toBe('- <IntegerLiteral value: 0>\n');
+        expect(testNode.toString()).toBe('- <IntegerLiteral value: 0 vavaType: int>\n');
       });
       
     }); // end IntegerLiteral spec
@@ -326,6 +326,30 @@ describe('Compiler', function () {
       });
       
     }); // end UnaryPlus spec
+    
+    describe('CastExpression', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.CastExpression('int', mockASTNode({
+          compile : function () { return 'MOCK'; }
+        }));
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `CastExpression`', function () {
+        expect(testNode.getType()).toBe('CastExpression');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <CastExpression vavaType: int>\n  - <ASTNode>\n');
+      });
+
+      it('should compile to child\'s compilation', function () {
+        expect(testNode.compile()).toBe('(MOCK).to("int")');
+      });
+      
+    }); // end CastExpression spec
     
     describe('Addition', function () {
       
