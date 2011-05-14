@@ -190,7 +190,6 @@ TypedValue.constructorFor = function (vavaType) {
 
 // NATIVE TYPES
 
-// TODO Document and Test!
 var BooleanValue = exports.BooleanValue = function (rawValue) {
   
   this.vavaType = 'boolean';
@@ -241,10 +240,6 @@ BooleanValue.prototype.and = function (other) {
 BooleanValue.prototype.or = function (other) {
   return BooleanValue[String(this.get() || other.get())];
 };
-
-// TODO Both this and `BooleanValue.intern`?
-BooleanValue['true'] = new BooleanValue(true);
-BooleanValue['false'] = new BooleanValue(false);
 
 //// NUMBER TYPES
 
