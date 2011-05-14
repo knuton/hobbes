@@ -55,6 +55,9 @@ EXPO              ([Ee][+-]?{Ds})
 "String"              {return 'STRING_TYPE';}
 
 
+"<<"                  {return 'OPERATOR_LEFTSHIFT';}
+">>>"                 {return 'OPERATOR_ZEROFILL_RIGHTSHIFT';}
+">>"                  {return 'OPERATOR_RIGHTSHIFT';}
 "<="                  {return 'OPERATOR_LESS_THAN_EQUAL';}
 "<"                   {return 'OPERATOR_LESS_THAN';}
 "=="                  {return 'OPERATOR_EQUAL';}
@@ -66,6 +69,7 @@ EXPO              ([Ee][+-]?{Ds})
 "^"                   {return 'OPERATOR_XOR';}
 "&&"                  {return 'OPERATOR_LOGICAL_AND';}
 "&"                   {return 'OPERATOR_INCLUSIVE_AND';}
+"~"                   {return 'OPERATOR_BITWISE_NEGATION';}
 "!"                   {return 'OPERATOR_NEGATION';}
 "="                   {return 'OPERATOR_ASSIGNMENT';}
 "++"                  {return 'OPERATOR_INCREMENT';}
@@ -521,6 +525,12 @@ relational_expression
 shift_expression
   : additive_expression
     { $$ = $1; }
+  | shift_expression OPERATOR_LEFTSHIFT additive_expression
+    { $$ = new yy.LeftShift($1, $3); }
+  | shift_expression OPERATOR_RIGHTSHIFT additive_expression
+    { $$ = new yy.RightShift($1, $3); }
+  | shift_expression OPERATOR_ZEROFILL_RIGHTSHIFT additive_expression
+    { $$ = new yy.ZeroFillRightShift($1, $3); }
   ;
 
 additive_expression
@@ -590,6 +600,8 @@ post_decrement_expression
 unary_expression_not_plus_minus
   : postfix_expression
     { $$ = $1; }
+  | OPERATOR_BITWISE_NEGATION unary_expression
+    { $$ = new yy.BitwiseNegation($2); }
   | OPERATOR_NEGATION unary_expression
     { $$ = new yy.Negation($2); }
   | cast_expression

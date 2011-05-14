@@ -396,6 +396,34 @@ IntegralValue.prototype.modulo = function (other) {
   return IntValue.intern(this.to('int').get() % other.to('int').get());
 };
 
+IntegralValue.prototype.and = function (other) {
+  return IntValue.intern(this.get() & other.get());
+};
+
+IntegralValue.prototype.or = function (other) {
+  return IntValue.intern(this.get() | other.get());
+};
+
+IntegralValue.prototype.leftshift = function (other) {
+  return IntValue.intern(this.get() << other.get());
+};
+
+IntegralValue.prototype.rightshift = function (other) {
+  return IntValue.intern(this.get() >> other.get());
+};
+
+IntegralValue.prototype.zerofillRightshift = function (other) {
+  return IntValue.intern(this.get() >>> other.get());
+};
+
+IntegralValue.prototype.xor = function (other) {
+  return IntValue.intern(this.get() ^ other.get());
+};
+
+IntegralValue.prototype.bitwiseNot = function () {
+  return IntValue.intern(~this.get());
+};
+
 var ByteValue = exports.ByteValue = function (rawValue) {
 
   this.vavaType = 'byte';

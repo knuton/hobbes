@@ -780,6 +780,94 @@ describe('Compiler', function () {
       
     }); // end Negation spec
     
+    describe('BitwiseNegation', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.BitwiseNegation(mockASTNode({vavaType: 'int'}));
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `BitwiseNegation`', function () {
+        expect(testNode.getType()).toBe('BitwiseNegation');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <BitwiseNegation vavaType: int>\n  - <ASTNode vavaType: int>\n');
+      });
+      
+      it('should compile itself', function () {
+        expect(testNode.compile()).toBe('MOCK.bitwiseNot()');
+      });
+      
+    }); // end BitwiseNegation spec
+    
+    describe('LeftShift', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.LeftShift(mockASTNode({vavaType: 'int'}), mockASTNode({vavaType: 'int'}));
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `LeftShift`', function () {
+        expect(testNode.getType()).toBe('LeftShift');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <LeftShift vavaType: int>\n  - <ASTNode vavaType: int>\n  - <ASTNode vavaType: int>\n');
+      });
+      
+      it('should compile itself', function () {
+        expect(testNode.compile()).toBe('MOCK.leftshift(MOCK)');
+      });
+      
+    }); // end LeftShift spec
+
+    describe('RightShift', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.RightShift(mockASTNode({vavaType: 'int'}), mockASTNode({vavaType: 'int'}));
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `RightShift`', function () {
+        expect(testNode.getType()).toBe('RightShift');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <RightShift vavaType: int>\n  - <ASTNode vavaType: int>\n  - <ASTNode vavaType: int>\n');
+      });
+      
+      it('should compile itself', function () {
+        expect(testNode.compile()).toBe('MOCK.rightshift(MOCK)');
+      });
+      
+    }); // end RightShift spec
+
+    describe('ZeroFillRightShift', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.ZeroFillRightShift(mockASTNode({vavaType: 'int'}), mockASTNode({vavaType: 'int'}));
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `ZeroFillRightShift`', function () {
+        expect(testNode.getType()).toBe('ZeroFillRightShift');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <ZeroFillRightShift vavaType: int>\n  - <ASTNode vavaType: int>\n  - <ASTNode vavaType: int>\n');
+      });
+      
+      it('should compile itself', function () {
+        expect(testNode.compile()).toBe('MOCK.zerofillRightshift(MOCK)');
+      });
+      
+    }); // end ZeroFillRightShift spec
+
     describe('IfThen', function () {
       
       beforeEach(function () {

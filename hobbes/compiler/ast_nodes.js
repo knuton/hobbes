@@ -1317,6 +1317,97 @@ Negation.prototype.compileNode = function (indent) {
 };
 
 /**
+ * Creates a node for a bitwise negation.
+ *
+ * @param num Expression of integral type
+ */
+var BitwiseNegation = exports.BitwiseNegation = function (num) {
+  this.type = 'BitwiseNegation';
+  this.vavaType = 'int';
+  this.children = [];
+  // TODO Check condition
+  this.appendChild(num);
+}
+
+BitwiseNegation.inherits(ASTNode);
+
+BitwiseNegation.prototype.compileNode = function (indent) {
+  return this.children[0].compile() + '.bitwiseNot()';
+};
+
+/**
+ * Creates a node for a leftshift operation.
+ *
+ * @param a First value
+ * @param b Second value
+ */
+var LeftShift = exports.LeftShift = function (a, b) {
+  this.type = 'LeftShift';
+  this.vavaType = 'int';
+  this.children = [];
+  this.appendChild(a);
+  this.appendChild(b);
+}
+
+LeftShift.inherits(ASTNode);
+
+LeftShift.prototype.compileNode = function (indent) {
+  return builder.functionCall(
+    this.children[0].compile() + '.leftshift',
+    [this.children[1].compile()],
+    false
+  );
+};
+
+/**
+ * Creates a node for a rightshift operation.
+ *
+ * @param a First value
+ * @param b Second value
+ */
+var RightShift = exports.RightShift = function (a, b) {
+  this.type = 'RightShift';
+  this.vavaType = 'int';
+  this.children = [];
+  this.appendChild(a);
+  this.appendChild(b);
+}
+
+RightShift.inherits(ASTNode);
+
+RightShift.prototype.compileNode = function (indent) {
+  return builder.functionCall(
+    this.children[0].compile() + '.rightshift',
+    [this.children[1].compile()],
+    false
+  );
+};
+
+/**
+ * Creates a node for a zero-filling rightshift operation.
+ *
+ * @param a First value
+ * @param b Second value
+ */
+var ZeroFillRightShift = exports.ZeroFillRightShift = function (a, b) {
+  this.type = 'ZeroFillRightShift';
+  this.vavaType = 'int';
+  this.children = [];
+  this.appendChild(a);
+  this.appendChild(b);
+}
+
+ZeroFillRightShift.inherits(ASTNode);
+
+ZeroFillRightShift.prototype.compileNode = function (indent) {
+  return builder.functionCall(
+    this.children[0].compile() + '.zerofillRightshift',
+    [this.children[1].compile()],
+    false
+  );
+};
+
+/**
  * Creates a node for an if-then conditional.
  *
  * @param ifExpr The condition
