@@ -37,6 +37,9 @@ TypedVariable.prototype.defaultValue = function () {
 
 /**
  * Sets the typed value of the variable.
+ *
+ * Returns the typed value.
+ *
  * @throws Error for wrong type
  */
 TypedVariable.prototype.set = function (typedValue) {
@@ -47,6 +50,8 @@ TypedVariable.prototype.set = function (typedValue) {
     // TODO How to handle Vava errors?
     throw new Error("Vava Type error: Expected " + this.getVavaType() + ", but was " + typedValue.getVavaType() + ".");
   }
+
+  return this.get();
   
 };
 
@@ -117,6 +122,44 @@ TypedVariable.prototype.isAssignmentCompatible = function (typedValue) {
 TypedVariable.prototype.get = function () {
   return this.typedValue;
 };
+
+/**
+ * Increments the variable's value by one, but returns the value held before
+ * incrementing.
+ */
+TypedVariable.prototype.postInc = function () {
+  var prior = this.get();
+  this.preInc();
+  return prior;
+};
+
+/**
+ * Decrements the variable's value by one, but returns the value held before
+ * decrementing.
+ */
+TypedVariable.prototype.postDec = function () {
+  var prior = this.get();
+  this.preDec();
+  return prior;
+};
+
+/**
+ * Increments the variable's value by one, then returns its value.
+ */
+TypedVariable.prototype.preInc = function () {
+  if (!this.isPrimitive()) throw new Error("Incrementing only available for primitive types.");
+  return this.set(this.get().add(new IntValue(1)));
+};
+
+/**
+ * Decrements the variable's value by one, then returns its value.
+ */
+TypedVariable.prototype.preDec = function () {
+  if (!this.isPrimitive()) throw new Error("Decrementing only available for primtive types.");
+  return this.set(this.get().add(new IntValue(-1)));
+};
+
+//// VALUES
 
 var TypedValueInterface = exports.TypedValueInterface = new utils.Interface('TypedValue', 'get', 'getVavaType');
 

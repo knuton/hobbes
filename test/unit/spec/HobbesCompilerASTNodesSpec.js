@@ -347,9 +347,7 @@ describe('Compiler', function () {
     describe('UnaryPlus', function () {
       
       beforeEach(function () {
-        testNode = new astNodes.UnaryPlus(mockASTNode({
-          compile : function () { return 'MOCK'; }
-        }));
+        testNode = new astNodes.UnaryPlus(mockASTNode());
       });
       
       it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
@@ -368,6 +366,94 @@ describe('Compiler', function () {
       
     }); // end UnaryPlus spec
     
+    describe('PostIncrement', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.PostIncrement(mockASTNode({vavaType: 'int'}), 1);
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `PostIncrement`', function () {
+        expect(testNode.getType()).toBe('PostIncrement');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <PostIncrement vavaType: int>\n  - <ASTNode vavaType: int>\n');
+      });
+
+      it('should compile itself', function () {
+        expect(testNode.compile()).toBe('MOCK.postInc()');
+      });
+      
+    }); // end PostIncrement spec
+
+    describe('PostDecrement', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.PostDecrement(mockASTNode({vavaType: 'int'}), 1);
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `PostDecrement`', function () {
+        expect(testNode.getType()).toBe('PostDecrement');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <PostDecrement vavaType: int>\n  - <ASTNode vavaType: int>\n');
+      });
+
+      it('should compile itself', function () {
+        expect(testNode.compile()).toBe('MOCK.postDec()');
+      });
+      
+    }); // end PostDecrement spec
+
+    describe('PreIncrement', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.PreIncrement(mockASTNode({vavaType: 'int'}), 1);
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `PreIncrement`', function () {
+        expect(testNode.getType()).toBe('PreIncrement');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <PreIncrement vavaType: int>\n  - <ASTNode vavaType: int>\n');
+      });
+
+      it('should compile itself', function () {
+        expect(testNode.compile()).toBe('MOCK.preInc()');
+      });
+      
+    }); // end PreIncrement spec
+
+    describe('PreDecrement', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.PreDecrement(mockASTNode({vavaType: 'int'}), 1);
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `PreDecrement`', function () {
+        expect(testNode.getType()).toBe('PreDecrement');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <PreDecrement vavaType: int>\n  - <ASTNode vavaType: int>\n');
+      });
+
+      it('should compile itself', function () {
+        expect(testNode.compile()).toBe('MOCK.preDec()');
+      });
+      
+    }); // end PreDecrement spec
+
     describe('CastExpression', function () {
       
       beforeEach(function () {

@@ -856,6 +856,86 @@ UnaryPlus.prototype.compileNode = function (indent) {
 };
 
 /**
+ * Creates a node for post incrementing.
+ *
+ * @param variable The variable to increment
+ */
+var PostIncrement = exports.PostIncrement = function (variable) {
+  this.type = 'PostIncrement';
+  this.children = [];
+  this.vavaType = 'int';
+  this.appendChild(variable);
+};
+
+PostIncrement.inherits(ASTNode);
+
+PostIncrement.prototype.compileNode = function (indent) {
+  return builder.functionCall(
+    this.children[0].compileNode('set') + '.postInc', [], false
+  );
+}
+
+/**
+ * Creates a node for post decrementing.
+ *
+ * @param variable The variable to decrement
+ */
+var PostDecrement = exports.PostDecrement = function (variable) {
+  this.type = 'PostDecrement';
+  this.children = [];
+  this.vavaType = 'int';
+  this.appendChild(variable);
+};
+
+PostDecrement.inherits(ASTNode);
+
+PostDecrement.prototype.compileNode = function (indent) {
+  return builder.functionCall(
+    this.children[0].compileNode('set') + '.postDec', [], false
+  );
+}
+
+/**
+ * Creates a node for pre incrementing.
+ *
+ * @param variable The variable to increment
+ */
+var PreIncrement = exports.PreIncrement = function (variable) {
+  this.type = 'PreIncrement';
+  this.children = [];
+  this.vavaType = 'int';
+  this.appendChild(variable);
+};
+
+PreIncrement.inherits(ASTNode);
+
+PreIncrement.prototype.compileNode = function (indent) {
+  return builder.functionCall(
+    this.children[0].compileNode('set') + '.preInc', [], false
+  );
+}
+
+/**
+ * Creates a node for pre decrementing.
+ *
+ * @param variable The variable to decrement
+ */
+var PreDecrement = exports.PreDecrement = function (variable) {
+  this.type = 'PreDecrement';
+  this.children = [];
+  this.vavaType = 'int';
+  this.appendChild(variable);
+};
+
+PreDecrement.inherits(ASTNode);
+
+PreDecrement.prototype.compileNode = function (indent) {
+  return builder.functionCall(
+    this.children[0].compileNode('set') + '.preDec', [], false
+  );
+}
+
+/**
  * Creates a node for a cast expression.
  *
  * @param vavaType The type to cast to
@@ -869,10 +949,6 @@ var CastExpression = exports.CastExpression = function (vavaType, unaryExpressio
 };
 
 CastExpression.inherits(ASTNode);
-
-CastExpression.prototype.getSignature = function () {
-  return {vavaType : this.vavaType};
-};
 
 CastExpression.prototype.compileNode = function (indent) {
   return builder.functionCall('(' + this.children[0].compile() + ').to', [builder.string(this.vavaType)], false);

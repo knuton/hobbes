@@ -62,7 +62,9 @@ EXPO              ([Ee][+-]?{Ds})
 "!="                  {return 'OPERATOR_NOT_EQUAL';}
 "||"                  {return 'OPERATOR_LOGICAL_OR';}
 "="                   {return 'OPERATOR_ASSIGNMENT';}
+"++"                  {return 'OPERATOR_INCREMENT';}
 "+"                   {return 'OPERATOR_ADDITION';}
+"--"                  {return 'OPERATOR_DECREMENT';}
 "-"                   {return 'OPERATOR_SUBTRACTION';}
 "*"                   {return 'OPERATOR_MULTIPLICATION';}
 "/"                   {return 'OPERATOR_DIVISON';}
@@ -548,13 +550,28 @@ UnaryExpressionNotPlusMinus:
   CastExpression
 */
 unary_expression
-  : OPERATOR_SUBTRACTION unary_expression
+  : pre_increment_expression
+    { $$ = $1; }
+  | pre_decrement_expression
+    { $$ = $1; }
+  | OPERATOR_SUBTRACTION unary_expression
     { $$ = new yy.UnaryMinus($2); }
   | OPERATOR_ADDITION unary_expression
     { $$ = new yy.UnaryPlus($2); }
   | unary_expression_not_plus_minus
     { $$ = $1; }
   ;
+
+post_increment_expression
+  : OPERATOR_INCREMENT unary_expression
+    { $$ = new yy.PreIncrement($2); }
+  ;
+
+post_decrement_expression
+  : OPERATOR_DECREMENT unary_expression
+    { $$ = new yy.PreDecrement($2); }
+  ;
+
 
 unary_expression_not_plus_minus
   : postfix_expression
@@ -568,6 +585,20 @@ postfix_expression
     { $$ = $1; }
   | name
     { $$ = $1; }
+  | post_increment_expression
+    { $$ = $1; }
+  | post_decrement_expression
+    { $$ = $1; }
+  ;
+
+post_increment_expression
+  : postfix_expression OPERATOR_INCREMENT
+    { $$ = new yy.PostIncrement($1); }
+  ;
+
+post_decrement_expression
+  : postfix_expression OPERATOR_DECREMENT
+    { $$ = new yy.PostDecrement($1); }
   ;
 
 /*

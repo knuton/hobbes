@@ -20,6 +20,25 @@ public class IntegralOperators {
     System.out.println(1 != 0);
     System.out.println(1 != 1);
     System.out.println(1 != 2);
+
+    // Arithmetic operators
+    System.out.println(5 + 3);
+    System.out.println(5 - 3);
+    System.out.println(5 * 3);
+    System.out.println(5 / 3);
+    System.out.println(5 % 3);
+
+    // Increment and decrement
+    int a = 1;
+    System.out.println(a++);
+    System.out.println(a);
+    System.out.println(a--);
+    System.out.println(a);
+
+    System.out.println(++a);
+    System.out.println(a);
+    System.out.println(--a);
+    System.out.println(a);
   }
 
 }
