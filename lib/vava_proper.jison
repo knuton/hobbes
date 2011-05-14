@@ -11,6 +11,7 @@ EXPO              ([Ee][+-]?{Ds})
 %%
 
 "//".*                {/* skip comments */}
+"/*"(.|\n)*"*/"       {/* skip comments */}
 \s+                   {/* skip whitespace */}
 
 "{"                   {return 'EMBRACE'; /* Basic Syntax */}
