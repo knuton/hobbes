@@ -34,5 +34,7 @@ specifications:
   - description: "All numeric operations (except for numeric comparison) with NaN as an operand produce NaN as a result."
 
   - description: "Any value of any floating-point type may be cast to or from any numeric type."
+    test_files:
+      - 'Casting.java'
 
   - description: "There are no casts between floating-point types and the type `boolean`."
