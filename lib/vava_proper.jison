@@ -54,8 +54,13 @@ EXPO              ([Ee][+-]?{Ds})
 "String"              {return 'STRING_TYPE';}
 
 
+"<="                  {return 'OPERATOR_LESS_THAN_EQUAL';}
+"<"                   {return 'OPERATOR_LESS_THAN';}
 "=="                  {return 'OPERATOR_EQUAL';}
+">="                  {return 'OPERATOR_GREATER_THAN_EQUAL';}
+">"                   {return 'OPERATOR_GREATER_THAN';}
 "!="                  {return 'OPERATOR_NOT_EQUAL';}
+"||"                  {return 'OPERATOR_LOGICAL_OR';}
 "="                   {return 'OPERATOR_ASSIGNMENT';}
 "+"                   {return 'OPERATOR_ADDITION';}
 "-"                   {return 'OPERATOR_SUBTRACTION';}
@@ -451,8 +456,8 @@ conditional_expression
 conditional_or_expression
   : conditional_and_expression
     { $$ = $1; }
-  | conditional_or_expression || conditional_and_expression
-    { $$ = new yy.OrOrExpression($1, $3); }
+  | conditional_or_expression OPERATOR_LOGICAL_OR conditional_and_expression
+    { $$ = new yy.LogicalOr($1, $3); }
   ;
 
 conditional_and_expression
@@ -487,6 +492,14 @@ equality_expression
 relational_expression
   : shift_expression
     { $$ = $1; }
+  | relational_expression OPERATOR_LESS_THAN shift_expression
+    { $$ = new yy.LessThan($1, $3); }
+  | relational_expression OPERATOR_LESS_THAN_EQUAL shift_expression
+    { $$ = new yy.LogicalOr(new yy.LessThan($1, $3), new yy.Equals($1, $3)); }
+  | relational_expression OPERATOR_GREATER_THAN shift_expression
+    { $$ = new yy.GreaterThan($1, $3); }
+  | relational_expression OPERATOR_GREATER_THAN_EQUAL shift_expression
+    { $$ = new yy.LogicalOr(new yy.GreaterThan($1, $3), new yy.Equals($1, $3)); }
   ;
 
 shift_expression

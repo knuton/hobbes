@@ -51,7 +51,7 @@ ASTNode.prototype.checkChild = function (node) {
  * Compiles the node with all its children
  */
 ASTNode.prototype.compile = function (indent) {
-  return this.compileNode(indent);
+  return this.__compiled || (this.__compiled = this.compileNode(indent));
 }
 
 /**
@@ -79,6 +79,7 @@ ASTNode.prototype.isVavaType = function (vavaType) {
 ASTNode.prototype.assembleSignature = function () {
   var sigStr = '<' + this.getType();
   var signature = this.getSignature && this.getSignature() || {};
+  if (!signature.vavaType && this.vavaType) signature.vavaType = this.vavaType;
   for (prop in signature) {
     sigStr += ' ' + prop + ': ' + signature[prop];
   }
@@ -995,6 +996,36 @@ Modulo.prototype.compileNode = function (indent) {
 }
 
 /**
+ * Creates a node for less than comparison.
+ *
+ * @param a First value to be compared
+ * @param b Second value to be compared
+ */
+var LessThan = exports.LessThan = function (a, b) {
+  this.type = 'LessThan';
+  this.vavaType = 'boolean';
+  this.children = [];
+  if (!a || !b) {
+    throw new TypeError('Expected two values to compare (lt).');
+  }
+  this.appendChild(a);
+  this.appendChild(b);
+};
+
+LessThan.inherits(ASTNode);
+
+LessThan.prototype.compileNode = function (indent) {
+  return utils.indent(
+    builder.functionCall(
+      'this.__env.BooleanValue.intern',
+      [builder.functionCall('(' + this.children[0].compile() + ').isLessThan', [this.children[1].compile()], false)],
+      false
+    ),
+    indent
+  );
+};
+
+/**
  * Creates a node for an equality comparison.
  *
  * @param a First value to be compared
@@ -1017,6 +1048,36 @@ Equals.prototype.compileNode = function (indent) {
 };
 
 /**
+ * Creates a node for a greater than comparison.
+ *
+ * @param a First value to be compared
+ * @param b Second value to be compared
+ */
+var GreaterThan = exports.GreaterThan = function (a, b) {
+  this.type = 'GreaterThan';
+  this.vavaType = 'boolean';
+  this.children = [];
+  if (!a || !b) {
+    throw new TypeError('Expected two values to compare (gt).');
+  }
+  this.appendChild(a);
+  this.appendChild(b);
+};
+
+GreaterThan.inherits(ASTNode);
+
+GreaterThan.prototype.compileNode = function (indent) {
+  return utils.indent(
+    builder.functionCall(
+      'this.__env.BooleanValue.intern',
+      [builder.functionCall('(' + this.children[0].compile() + ').isGreaterThan', [this.children[1].compile()], false)],
+      false
+    ),
+    indent
+  );
+};
+
+/**
  * Creates a node for an inequality comparison.
  *
  * @param a First value to be compared
@@ -1036,6 +1097,30 @@ NotEquals.inherits(ASTNode);
 
 NotEquals.prototype.compileNode = function (indent) {
   return utils.indent('this.__env.BooleanValue.intern(' + this.children[0].compile() + ' !== ' + this.children[1].compile() + ')', indent);
+};
+
+/**
+ * Creates a node for a logical OR.
+ *
+ * @param boolA First truth value
+ * @param boolB Second truth value
+ */
+var LogicalOr = exports.LogicalOr = function (boolA, boolB) {
+  this.type = 'LogicalOr';
+  this.vavaType = 'boolean';
+  this.children = [];
+  this.appendChild(boolA);
+  this.appendChild(boolB);
+}
+
+LogicalOr.inherits(ASTNode);
+
+LogicalOr.prototype.compileNode = function (indent) {
+  return builder.functionCall(
+    'this.__env.BooleanValue.intern',
+    [this.children[0].compile() + '.get() || ' + this.children[1].compile() + '.get()'],
+    false
+  );
 };
 
 /**

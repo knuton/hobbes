@@ -253,6 +253,14 @@ NumberValue.prototype.inverse = function () {
   return this.constructor.intern(this.get() * -1);
 };
 
+NumberValue.prototype.isLessThan = function (other) {
+  return this.get() < other.get();
+};
+
+NumberValue.prototype.isGreaterThan = function (other) {
+  return this.get() > other.get();
+};
+
 /**
  * Used to intern values for efficiency and object identity.
  *

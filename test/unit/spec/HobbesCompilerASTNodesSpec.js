@@ -11,6 +11,7 @@ describe('Compiler', function () {
     function mockASTNode(properties) {
       properties = properties || {};
       var mockNode = new astNodes.ASTNode();
+      mockNode.compileNode = function () { return 'MOCK'; }
       for (key in properties) {
         mockNode[key] = properties[key];
       }
@@ -63,7 +64,6 @@ describe('Compiler', function () {
       
       it('should turn itself into a string', function () {
         testNode.vavaPackage = 'java.util';
-        testNode.vavaType = {vavaClassName: "Test" };
         expect(testNode.toString()).toBe('- <CompilationUnit vavaPackage: java.util>\n');
       });
       
@@ -482,6 +482,28 @@ describe('Compiler', function () {
       
     }); // end Modulo spec
     
+    describe('LessThan', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.LessThan(mockASTNode(), mockASTNode());
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `LessThan`', function () {
+        expect(testNode.getType()).toBe('LessThan');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <LessThan vavaType: boolean>\n  - <ASTNode>\n  - <ASTNode>\n');
+      });
+
+      it('should compile itself', function () {
+        expect(testNode.compile()).toBe('this.__env.BooleanValue.intern((MOCK).isLessThan(MOCK))');
+      });
+      
+    }); // end LessThan spec
+    
     describe('Equals', function () {
       
       beforeEach(function () {
@@ -500,6 +522,28 @@ describe('Compiler', function () {
       
     }); // end Equals spec
     
+    describe('GreaterThan', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.GreaterThan(mockASTNode(), mockASTNode());
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `GreaterThan`', function () {
+        expect(testNode.getType()).toBe('GreaterThan');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <GreaterThan vavaType: boolean>\n  - <ASTNode>\n  - <ASTNode>\n');
+      });
+
+      it('should compile itself', function () {
+        expect(testNode.compile()).toBe('this.__env.BooleanValue.intern((MOCK).isGreaterThan(MOCK))');
+      });
+      
+    }); // end GreaterThan spec
+    
     describe('NotEquals', function () {
       
       beforeEach(function () {
@@ -517,6 +561,28 @@ describe('Compiler', function () {
       });
       
     }); // end NotEquals spec
+    
+    describe('LogicalOr', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.LogicalOr(mockASTNode({vavaType: 'boolean'}), mockASTNode({vavaType: 'boolean'}));
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `LogicalOr`', function () {
+        expect(testNode.getType()).toBe('LogicalOr');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <LogicalOr vavaType: boolean>\n  - <ASTNode vavaType: boolean>\n  - <ASTNode vavaType: boolean>\n');
+      });
+      
+      it('should compile itself', function () {
+        expect(testNode.compile()).toBe('this.__env.BooleanValue.intern(MOCK.get() || MOCK.get())');
+      });
+      
+    }); // end LogicalOr spec
     
     describe('IfThen', function () {
       
