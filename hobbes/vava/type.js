@@ -68,6 +68,16 @@ TypedVariable.prototype._setAdjusted = function (typedValue) {
 };
 
 /**
+ * Checks if variable is of given type.
+ *
+ * @param vavaType Type to check for
+ */
+TypedVariable.prototype.isVavaType = function (vavaType) {
+  return this.getVavaType() === vavaType;
+}
+
+
+/**
  * Checks if variable is of native type.
  *
  * That is, whether it is one of {boolean, byte, short, int, long, char, float, double}.
@@ -202,6 +212,7 @@ TypedValue.prototype.to = function (vavaType) {
   return TypedValue.constructorFor(vavaType).intern(this.get());
 };
 
+TypedValue.prototype.isVavaType = TypedVariable.prototype.isVavaType;
 TypedValue.prototype.isPrimitive = TypedVariable.prototype.isPrimitive;
 TypedValue.prototype.isIntegral = TypedVariable.prototype.isIntegral;
 TypedValue.prototype.isFloatingPoint = TypedVariable.prototype.isFloatingPoint;
@@ -346,22 +357,70 @@ IntegralValue.checkedValue = function (rawValue) {
       return parseInt(rawValue);
     } else {
       // Dual representation cut to length of type
-      var dual = parseInt(rawValue).toString(2).substr(-this.BITS,this.BITS);
+      var dual = this.twosComplement(parseInt(rawValue));
       // Leading bit determines sign (numspace is divided into positive and negative half)
-      var leadingBitNum = -(parseInt(dual.charAt(0), 2) * Math.pow(2, this.BITS-1));
+      var mostSignificantBit = parseInt(dual.charAt(0), 2);
       // Resulting number is -(2^(BITS-1)) + decimal without leading bit
-      // or decimals without leading bit, if leading bit is 0
-      return leadingBitNum + parseInt(dual.substr(1), 2);
+      // or decimals without leading bit, if leading bit is 0.
+      return (-mostSignificantBit) * Math.pow(2, this.BITS-1) + parseInt(dual.substr(1), 2);
     }
   }
   else return 0;
 };
 
+IntegralValue.addLeadingZeros = function (dualString) {
+  for (var i = dualString.length; i < this.BITS; i++) dualString = '0' + dualString;
+  return dualString;
+};
+
+IntegralValue.twosComplement = function (num) {
+  if (num >= 0) {
+    var dual = num.toString(2).substr(-this.BITS,this.BITS);
+  } else {
+    num = -num;
+    var dual = '',
+        i = this.BITS,
+        carry = 1,
+        bit;
+    // Compute, invert, add 1 in one loop
+    while (num != 0 || i > 0) {
+      if (num % 2 === 0) {
+        //               _ 1 + 1 = 0, carry = 1, if carry was 1
+        //              /
+        // 0 -invert-> 1 
+        //              \_ 1 + 0 = 1, carry = 0, if carry was 0
+        if (carry) {
+          bit = '0';
+          carry = 1;
+        } else {
+          bit = '1';
+          carry = 0;
+        }
+        dual = bit + dual;
+      } else {
+        //               _ 0 + 1 = 1, carry = 0, if carry was 1
+        //              /
+        // 1 -invert-> 0
+        //              \_ 0 + 0 = 0, carry = 0, if carry was 0
+        dual = (carry ? '1': '0') + dual;
+        carry = 0;
+      }
+      num = this.integerDivision(num,2);
+      i--;
+    }
+  }
+  return this.addLeadingZeros(dual);
+};
+
+IntegralValue.integerDivision = function (a, b) {
+  var remainder = a % b;
+  return (a - remainder) / b;
+};
+
 // ARITHMETIC
-// TODO Is to('int') a. necessary, b. causing problems with long?
 IntegralValue.prototype.add = function (other) {
   if (other.isIntegral())
-    return IntValue.intern(this.to('int').get() + other.to('int').get());
+    return (other.isVavaType('long') || this.isVavaType('long') ? LongValue : IntValue).intern(this.get() + other.get());
   else
     return other.add(this);
 };
@@ -370,31 +429,31 @@ IntegralValue.prototype.subtract = function (other) {
   if (other.isIntegral())
     return this.add(other.inverse());
   else
-    return other.constructor.intern(this.to('int').get() - other.get());
+    return other.constructor.intern(this.get() - other.get());
 };
 
 IntegralValue.prototype.times = function (other) {
   if (other.isIntegral())
-    return IntValue.intern(this.to('int').get() * other.to('int').get());
+    return (other.isVavaType('long') || this.isVavaType('long') ? LongValue : IntValue).intern(this.get() * other.get());
   else
     return other.times(this);
 };
 
 IntegralValue.prototype.divide = function (other) {
   if (other.isIntegral()) {
-    var thisRaw = this.to('int').get(),
-        otherRaw = other.to('int').get();
+    var thisRaw = this.get(),
+        otherRaw = other.get();
     var remainder = thisRaw % otherRaw;
-    return IntValue.intern((thisRaw - remainder) / otherRaw);
+    return (other.isVavaType('long') || this.isVavaType('long') ? LongValue : IntValue).intern((thisRaw - remainder) / otherRaw);
   } else {
     // TODO What about negative/positive zero/infinity?
-    return other.constructor.intern(this.to('int').get() / other.get());
+    return other.constructor.intern(this.get() / other.get());
   }
 };
 
 IntegralValue.prototype.modulo = function (other) {
   if (other.isIntegral())
-    return IntValue.intern(this.to('int').get() % other.to('int').get());
+    return (other.isVavaType('long') || this.isVavaType('long') ? LongValue : IntValue).intern(this.get() % other.get());
   else
     return other.constructor.intern(this.get() % other.get());
 };

@@ -64,13 +64,20 @@ describe('Vava Types', function () {
         expect(testValue.getVavaType()).toBe('byte');
       });
 
+      it('should compute twos complement', function () {
+        expect(type.ByteValue.twosComplement(2)).toBe('00000010');
+        expect(type.ByteValue.twosComplement(-127)).toBe('10000001');
+        expect(type.ByteValue.twosComplement(128)).toBe('10000000');
+        expect(type.ByteValue.twosComplement(-128)).toBe('10000000');
+      });
+    
       it('should overflow Java style', function () {
         testValue = new type.ByteValue(128);
         expect(testValue.get()).toBe(-128);
       });
 
     });
-    
+
     describe('IntValue', function () {
       
       beforeEach(function () {
