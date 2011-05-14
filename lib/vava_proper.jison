@@ -62,6 +62,11 @@ EXPO              ([Ee][+-]?{Ds})
 ">"                   {return 'OPERATOR_GREATER_THAN';}
 "!="                  {return 'OPERATOR_NOT_EQUAL';}
 "||"                  {return 'OPERATOR_LOGICAL_OR';}
+"|"                   {return 'OPERATOR_INCLUSIVE_OR';}
+"^"                   {return 'OPERATOR_XOR';}
+"&&"                  {return 'OPERATOR_LOGICAL_AND';}
+"&"                   {return 'OPERATOR_INCLUSIVE_AND';}
+"!"                   {return 'OPERATOR_NEGATION';}
 "="                   {return 'OPERATOR_ASSIGNMENT';}
 "++"                  {return 'OPERATOR_INCREMENT';}
 "+"                   {return 'OPERATOR_ADDITION';}
@@ -466,21 +471,29 @@ conditional_or_expression
 conditional_and_expression
   : inclusive_or_expression
     { $$ = $1; }
+  | conditional_and_expression OPERATOR_LOGICAL_AND inclusive_or_expression
+    { $$ = new yy.LogicalAnd($1, $3); }
   ;
 
 inclusive_or_expression
   : exclusive_or_expression
     { $$ = $1; }
+  | inclusive_or_expression OPERATOR_INCLUSIVE_OR exclusive_or_expression
+    { $$ = new yy.InclusiveOr($1, $3); }
   ;
 
 exclusive_or_expression
   : and_expression
     { $$ = $1; }
+  | exclusive_or_expression OPERATOR_XOR and_expression
+    { $$ = new yy.ExclusiveOr($1, $3); }
   ;
 
 and_expression
   : equality_expression
     { $$ = $1; }
+  | and_expression OPERATOR_INCLUSIVE_AND equality_expression
+    { $$ = new yy.InclusiveAnd($1, $3); }
   ;
 
 equality_expression
@@ -577,6 +590,8 @@ post_decrement_expression
 unary_expression_not_plus_minus
   : postfix_expression
     { $$ = $1; }
+  | OPERATOR_NEGATION unary_expression
+    { $$ = new yy.Negation($2); }
   | cast_expression
     { $$ = $1; }
   ;

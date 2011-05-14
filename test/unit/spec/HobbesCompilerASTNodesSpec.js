@@ -648,6 +648,28 @@ describe('Compiler', function () {
       
     }); // end NotEquals spec
     
+    describe('LogicalAnd', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.LogicalAnd(mockASTNode({vavaType: 'boolean'}), mockASTNode({vavaType: 'boolean'}));
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `LogicalAnd`', function () {
+        expect(testNode.getType()).toBe('LogicalAnd');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <LogicalAnd vavaType: boolean>\n  - <ASTNode vavaType: boolean>\n  - <ASTNode vavaType: boolean>\n');
+      });
+      
+      it('should compile itself', function () {
+        expect(testNode.compile()).toBe('this.__env.BooleanValue.intern(MOCK.get() && MOCK.get())');
+      });
+      
+    }); // end LogicalAnd spec
+    
     describe('LogicalOr', function () {
       
       beforeEach(function () {
@@ -669,6 +691,94 @@ describe('Compiler', function () {
       });
       
     }); // end LogicalOr spec
+
+    describe('InclusiveAnd', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.InclusiveAnd(mockASTNode({vavaType: 'boolean'}), mockASTNode({vavaType: 'boolean'}));
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `InclusiveAnd`', function () {
+        expect(testNode.getType()).toBe('InclusiveAnd');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <InclusiveAnd vavaType: boolean>\n  - <ASTNode vavaType: boolean>\n  - <ASTNode vavaType: boolean>\n');
+      });
+      
+      it('should compile itself', function () {
+        expect(testNode.compile()).toBe('MOCK.and(MOCK)');
+      });
+      
+    }); // end InclusiveAnd spec
+
+    describe('InclusiveOr', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.InclusiveOr(mockASTNode({vavaType: 'boolean'}), mockASTNode({vavaType: 'boolean'}));
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `InclusiveOr`', function () {
+        expect(testNode.getType()).toBe('InclusiveOr');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <InclusiveOr vavaType: boolean>\n  - <ASTNode vavaType: boolean>\n  - <ASTNode vavaType: boolean>\n');
+      });
+      
+      it('should compile itself', function () {
+        expect(testNode.compile()).toBe('MOCK.or(MOCK)');
+      });
+      
+    }); // end InclusiveOr spec
+
+    describe('ExclusiveOr', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.ExclusiveOr(mockASTNode({vavaType: 'boolean'}), mockASTNode({vavaType: 'boolean'}));
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `ExclusiveOr`', function () {
+        expect(testNode.getType()).toBe('ExclusiveOr');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <ExclusiveOr vavaType: boolean>\n  - <ASTNode vavaType: boolean>\n  - <ASTNode vavaType: boolean>\n');
+      });
+      
+      it('should compile itself', function () {
+        expect(testNode.compile()).toBe('MOCK.xor(MOCK)');
+      });
+      
+    }); // end ExclusiveOr spec
+
+    describe('Negation', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.Negation(mockASTNode({vavaType: 'boolean'}));
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `Negation`', function () {
+        expect(testNode.getType()).toBe('Negation');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <Negation vavaType: boolean>\n  - <ASTNode vavaType: boolean>\n');
+      });
+      
+      it('should compile itself', function () {
+        expect(testNode.compile()).toBe('MOCK.not()');
+      });
+      
+    }); // end Negation spec
     
     describe('IfThen', function () {
       

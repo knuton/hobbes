@@ -1176,6 +1176,30 @@ NotEquals.prototype.compileNode = function (indent) {
 };
 
 /**
+ * Creates a node for a logical AND.
+ *
+ * @param boolA First truth value
+ * @param boolB Second truth value
+ */
+var LogicalAnd = exports.LogicalAnd = function (boolA, boolB) {
+  this.type = 'LogicalAnd';
+  this.vavaType = 'boolean';
+  this.children = [];
+  this.appendChild(boolA);
+  this.appendChild(boolB);
+}
+
+LogicalAnd.inherits(ASTNode);
+
+LogicalAnd.prototype.compileNode = function (indent) {
+  return builder.functionCall(
+    'this.__env.BooleanValue.intern',
+    [this.children[0].compile() + '.get() && ' + this.children[1].compile() + '.get()'],
+    false
+  );
+};
+
+/**
  * Creates a node for a logical OR.
  *
  * @param boolA First truth value
@@ -1197,6 +1221,99 @@ LogicalOr.prototype.compileNode = function (indent) {
     [this.children[0].compile() + '.get() || ' + this.children[1].compile() + '.get()'],
     false
   );
+};
+
+/**
+ * Creates a node for an inclusive logical AND.
+ *
+ * @param a First value
+ * @param b Second value
+ */
+var InclusiveAnd = exports.InclusiveAnd = function (a, b) {
+  this.type = 'InclusiveAnd';
+  // TODO depends on args
+  this.vavaType = 'boolean';
+  this.children = [];
+  this.appendChild(a);
+  this.appendChild(b);
+}
+
+InclusiveAnd.inherits(ASTNode);
+
+InclusiveAnd.prototype.compileNode = function (indent) {
+  return builder.functionCall(
+    this.children[0].compile() + '.and',
+    [this.children[1].compile()],
+    false
+  );
+};
+
+/**
+ * Creates a node for an inclusive logical OR.
+ *
+ * @param a First value
+ * @param b Second value
+ */
+var InclusiveOr = exports.InclusiveOr = function (a, b) {
+  this.type = 'InclusiveOr';
+  // TODO depends on args
+  this.vavaType = 'boolean';
+  this.children = [];
+  this.appendChild(a);
+  this.appendChild(b);
+}
+
+InclusiveOr.inherits(ASTNode);
+
+InclusiveOr.prototype.compileNode = function (indent) {
+  return builder.functionCall(
+    this.children[0].compile() + '.or',
+    [this.children[1].compile()],
+    false
+  );
+};
+
+/**
+ * Creates a node for an exclusive logical OR.
+ *
+ * @param a First value
+ * @param b Second value
+ */
+var ExclusiveOr = exports.ExclusiveOr = function (a, b) {
+  this.type = 'ExclusiveOr';
+  // TODO depends on args
+  this.vavaType = 'boolean';
+  this.children = [];
+  this.appendChild(a);
+  this.appendChild(b);
+}
+
+ExclusiveOr.inherits(ASTNode);
+
+ExclusiveOr.prototype.compileNode = function (indent) {
+  return builder.functionCall(
+    this.children[0].compile() + '.xor',
+    [this.children[1].compile()],
+    false
+  );
+};
+
+/**
+ * Creates a node for a logical negation.
+ *
+ * @param boolA Expression of boolean type
+ */
+var Negation = exports.Negation = function (boolA) {
+  this.type = 'Negation';
+  this.vavaType = 'boolean';
+  this.children = [];
+  this.appendChild(boolA);
+}
+
+Negation.inherits(ASTNode);
+
+Negation.prototype.compileNode = function (indent) {
+  return this.children[0].compile() + '.not()';
 };
 
 /**

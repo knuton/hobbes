@@ -273,15 +273,19 @@ BooleanValue.defaultValue = function () {
 
 // LOGICAL OPERATIONS
 BooleanValue.prototype.not = function () {
-  return BooleanValue[String(!this.get())];
+  return BooleanValue.intern(!this.get());
 };
 
 BooleanValue.prototype.and = function (other) {
-  return BooleanValue[String(this.get() && other.get())];
+  return BooleanValue.intern(this.get() && other.get());
 };
 
 BooleanValue.prototype.or = function (other) {
-  return BooleanValue[String(this.get() || other.get())];
+  return BooleanValue.intern(this.get() || other.get());
+};
+
+BooleanValue.prototype.xor = function (other) {
+  return BooleanValue.intern(!!(this.get() ^ other.get()));
 };
 
 //// NUMBER TYPES
