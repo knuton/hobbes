@@ -504,6 +504,10 @@ FloatingPointValue.prototype.divide = function (other) {
   return this.constructor.intern(this.get() / other.get());
 };
 
+FloatingPointValue.prototype.modulo = function (other) {
+  return this.constructor.intern(this.get() % other.get());
+};
+
 FloatingPointValue.prototype.toString = function () {
   var value = this.get();
   return parseInt(value) === value ? value.toFixed(1) : value;

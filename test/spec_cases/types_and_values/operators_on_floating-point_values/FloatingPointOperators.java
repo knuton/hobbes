@@ -25,7 +25,7 @@ public class FloatingPointOperators {
     System.out.println(5f + 3f);
     System.out.println(5f - 3f);
     System.out.println(5f * 3f);
-    System.out.println(5f / 3f);
+    System.out.println(5f / 2f);
     System.out.println(5f % 3f);
 
     // Increment and decrement

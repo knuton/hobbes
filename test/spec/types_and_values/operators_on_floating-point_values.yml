@@ -3,6 +3,9 @@ section: 3
 specifications:
   
   - description: "Vava provides a number of operators that act on floating-point values, including numerical comparison (which results in a value of type `boolean`), arithmetic operators, increment and decrement, and numeric cast."
+    test_files:
+      - 'FloatingPointOperators.java'
+
   - description: "If at least one of the operands to a binary operator is of floating-point type, then the operation is a floating-point operation, even if the other operand is integral."
 
   - description: "Operands of certain unary and binary operators are subject to numeric promotion."
