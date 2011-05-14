@@ -62,6 +62,18 @@ ASTNode.prototype.getType = function () {
 }
 
 /**
+ * Checks whether node is of provided Vava type.
+ *
+ * Some, but not all nodes possess a Vava type, that can be known at compile
+ * time either directly or through recursive computation.
+ *
+ * @param vavaType Type to compare with
+ */
+ASTNode.prototype.isVavaType = function (vavaType) {
+  return this.vavaType === vavaType;
+};
+
+/**
  * Returns a string signature containing information about the node.
  */
 ASTNode.prototype.assembleSignature = function () {
@@ -716,25 +728,22 @@ var FloatingPointLiteral = exports.FloatingPointLiteral = function (numString) {
     this.prePoint = Number(parts[1]);
     this.postPoint = (parts[2] && Number(parts[2])) || 0;
     this.exponent = (parts[4] || 0) * (parts[3] === '-' ? -1 : 1);
-    // TODO Is f the default?
-    this.vavaType = (parts[5] && parts[5].toLowerCase()) || 'd';
+    this.vavaType = (parts[5] && parts[5].toLowerCase()) === 'f' ? 'float' : 'double';
   } else if (parts = numString.match(/\.([1-9][0-9]*)(?:[Ee]([+-])?([1-9][0-9]*))?([fFdD])?/)) {
     this.prePoint = 0;
     this.postPoint = Number(parts[1]);
     this.exponent = (parts[3] || 0) * (parts[2] === '-' ? -1 : 1);
-    // TODO Is f the default?
-    this.vavaType = (parts[4] && parts[4].toLowerCase()) || 'd';
+    this.vavaType = (parts[4] && parts[4].toLowerCase()) === 'f' ? 'float' : 'double';
   } else if (parts = numString.match(/(0|[1-9][0-9]*)(?:[Ee]([+-])?([1-9][0-9]*))([fFdD])?/)) {
     this.prePoint = Number(parts[1]);
     this.postPoint = 0;
     this.exponent = parts[3] * (parts[2] === '-' ? -1 : 1);
-    // TODO Is f the default?
-    this.vavaType = (parts[4] && parts[4].toLowerCase()) || 'd';
+    this.vavaType = (parts[4] && parts[4].toLowerCase()) === 'f' ? 'float' : 'double';
   } else if (parts = numString.match(/(0|[1-9][0-9]*)(?:[Ee]([+-])?([1-9][0-9]*))?([fFdD])/)) {
     this.prePoint = Number(parts[1]);
     this.postPoint = 0;
     this.exponent = (parts[3] || 0) * (parts[2] === '-' ? -1 : 1);
-    this.vavaType = parts[4].toLowerCase();
+    this.vavaType = parts[4].toLowerCase() === 'f' ? 'float' : 'double';
   } else {
     throw new Error("Invalid floating point format: " + numString);
   }
@@ -752,7 +761,7 @@ FloatingPointLiteral.prototype.getSignature = function () {
 
 FloatingPointLiteral.prototype.compileNode = function (indent) {
   var num = (this.prePoint + this.postPoint/Math.pow(10,this.postPoint.toString(10).length)) * Math.pow(10, this.exponent);
-  if (this.vavaType === 'f') {
+  if (this.isVavaType('float')) {
     return builder.functionCall('this.__env.FloatValue.intern', [num], false);
   } else {
     return builder.functionCall('this.__env.DoubleValue.intern', [num], false);

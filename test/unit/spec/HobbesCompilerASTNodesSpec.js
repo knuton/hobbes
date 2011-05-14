@@ -23,6 +23,7 @@ describe('Compiler', function () {
       expect(astNodes.ASTNodeInterface.check(testNode)).not.toBeDefined();
       // it should have children of its own
       expect(testNode.hasOwnProperty('children')).toBe(true);
+      expect(typeof testNode.isVavaType).toBe('function');
     };
     
     describe('ASTNode', function () {
@@ -296,7 +297,7 @@ describe('Compiler', function () {
       });
 
       it('should turn itself into a string', function () {
-        expect(testNode.toString()).toBe('- <FloatingPointLiteral prePoint: 0 postPoint: 0 exponent: 0 vavaType: f>\n');
+        expect(testNode.toString()).toBe('- <FloatingPointLiteral prePoint: 0 postPoint: 0 exponent: 0 vavaType: float>\n');
       });
       
     }); // end FloatingPointLiteral spec
