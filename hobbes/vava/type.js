@@ -342,7 +342,7 @@ IntegralValue.checkedValue = function (rawValue) {
     if (isNaN(rawValue)) {
       throw new Error('Not a number!');
     }
-    if (rawValue > this.MIN_VALUE && rawValue < this.MAX_VALUE) {
+    if (rawValue >= this.MIN_VALUE && rawValue <= this.MAX_VALUE) {
       return parseInt(rawValue);
     } else {
       // Dual representation cut to length of type
@@ -393,7 +393,10 @@ IntegralValue.prototype.divide = function (other) {
 };
 
 IntegralValue.prototype.modulo = function (other) {
-  return IntValue.intern(this.to('int').get() % other.to('int').get());
+  if (other.isIntegral())
+    return IntValue.intern(this.to('int').get() % other.to('int').get());
+  else
+    return other.constructor.intern(this.get() % other.get());
 };
 
 IntegralValue.prototype.and = function (other) {

@@ -10,6 +10,7 @@ specifications:
 
   - description: "The built-in integer operators do not indicate overflow or underflow in any way; they wrap around on overflow or underflow. The only integer operators that can throw an exception are the integer divide and integer remainder operators, which can throw an ArithmeticException if the right-hand operand is zero."
     test_files:
+      # TODO ArithemticExceptions
       - 'WrapAround.java'
 
   - description: "Any value of any integral type may be cast to or from any numeric type."
