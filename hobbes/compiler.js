@@ -17,4 +17,4 @@ exports.run = function (vavaSrc) {
   // TODO How does the import of `java.lang` happen in Java?
   var scope = new vava.scope.Scope({__env : vava.env}).__add(stdlib).__add(stdlib.java.lang);
   runner.call(scope);
-}
+};

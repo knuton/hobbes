@@ -34,7 +34,7 @@ ASTNode.prototype.appendChild = function (node) {
   this.checkChild(node);
   this.children.push(node);
   return node;
-}
+};
 
 /**
  * Checks wether child is acceptable.
@@ -52,14 +52,14 @@ ASTNode.prototype.checkChild = function (node) {
  */
 ASTNode.prototype.compile = function (indent) {
   return this.__compiled || (this.__compiled = this.compileNode(indent));
-}
+};
 
 /**
  * Returns the type of node.
  */
 ASTNode.prototype.getType = function () {
   return this.type;
-}
+};
 
 /**
  * Checks whether node is of provided Vava type.
@@ -103,7 +103,7 @@ ASTNode.prototype.toString = function (indent) {
   });
   
   return str;
-}
+};
 
 /**
  * Creates a node for a compilation unit, the root node of a Vava AST.
@@ -208,7 +208,7 @@ var ClassDeclaration = exports.ClassDeclaration = function (name, classBody) {
   this.type = 'ClassDeclaration';
   this.vavaClassName = name;
   this.children = classBody;
-}
+};
 
 ClassDeclaration.inherits(ASTNode);
 
@@ -435,7 +435,7 @@ var MethodDeclaration = exports.MethodDeclaration = function (vavaHeader, vavaBl
     throw new TypeError('Expected Vava block to be Block.');
   }
   this.appendChild(vavaBlock);
-}
+};
 
 MethodDeclaration.inherits(ASTNode);
 
@@ -462,7 +462,7 @@ MethodDeclaration.prototype.getSignature = function () {
     vavaType: this.vavaType,
     vavaIdentifier: this.vavaIdentifier
   };
-}
+};
 
 /**
  * Creates a node for a FormalParameter, containing type and identifier.
@@ -492,7 +492,7 @@ FormalParameter.prototype.getSignature = function () {
     vavaType: this.vavaType,
     vavaIdentifier: this.vavaIdentifier
   };
-}
+};
 
 /**
  * Creates a node for a method invocation.
@@ -550,7 +550,7 @@ var Block = exports.Block = function (vavaStatements) {
   for (var i = 0; i < vavaStatements.length; i++) {
     this.appendChild(vavaStatements[i]);
   }
-}
+};
 
 Block.inherits(ASTNode);
 
@@ -653,7 +653,7 @@ BooleanLiteral.inherits(ASTNode);
 
 BooleanLiteral.prototype.getSignature = function () {
   return {value : this.value};
-}
+};
 
 BooleanLiteral.prototype.compileNode = function (indent) {
   return 'this.__env.BooleanValue.intern(' + this.value + ')';
@@ -873,7 +873,7 @@ PostIncrement.prototype.compileNode = function (indent) {
   return builder.functionCall(
     this.children[0].compileNode('set') + '.postInc', [], false
   );
-}
+};
 
 /**
  * Creates a node for post decrementing.
@@ -893,7 +893,7 @@ PostDecrement.prototype.compileNode = function (indent) {
   return builder.functionCall(
     this.children[0].compileNode('set') + '.postDec', [], false
   );
-}
+};
 
 /**
  * Creates a node for pre incrementing.
@@ -913,7 +913,7 @@ PreIncrement.prototype.compileNode = function (indent) {
   return builder.functionCall(
     this.children[0].compileNode('set') + '.preInc', [], false
   );
-}
+};
 
 /**
  * Creates a node for pre decrementing.
@@ -933,7 +933,7 @@ PreDecrement.prototype.compileNode = function (indent) {
   return builder.functionCall(
     this.children[0].compileNode('set') + '.preDec', [], false
   );
-}
+};
 
 /**
  * Creates a node for a cast expression.
@@ -971,13 +971,13 @@ var Addition = exports.Addition = function (numA, numB) {
   }
   this.appendChild(numA);
   this.appendChild(numB);
-}
+};
 
 Addition.inherits(ASTNode);
 
 Addition.prototype.compileNode = function (indent) {
   return utils.indent(this.children[0].compile() + '.add(' + this.children[1].compile() + ')', indent);
-}
+};
 
 /**
  * Creates a node for an subtraction operation.
@@ -994,13 +994,13 @@ var Subtraction = exports.Subtraction = function (numA, numB) {
   }
   this.appendChild(numA);
   this.appendChild(numB);
-}
+};
 
 Subtraction.inherits(ASTNode);
 
 Subtraction.prototype.compileNode = function (indent) {
   return utils.indent(this.children[0].compile() + '.subtract(' + this.children[1].compile() + ')', indent);
-}
+};
 
 /**
  * Creates a node for a multiplication operation.
@@ -1017,13 +1017,13 @@ var Multiplication = exports.Multiplication = function (numA, numB) {
   }
   this.appendChild(numA);
   this.appendChild(numB);
-}
+};
 
 Multiplication.inherits(ASTNode);
 
 Multiplication.prototype.compileNode = function (indent) {
   return utils.indent(this.children[0].compile() + '.times(' + this.children[1].compile() + ')', indent);
-}
+};
 
 /**
  * Creates a node for a division operation.
@@ -1040,13 +1040,13 @@ var Division = exports.Division = function (numA, numB) {
   }
   this.appendChild(numA);
   this.appendChild(numB);
-}
+};
 
 Division.inherits(ASTNode);
 
 Division.prototype.compileNode = function (indent) {
   return utils.indent(this.children[0].compile() + '.divide(' + this.children[1].compile() + ')', indent);
-}
+};
 
 /**
  * Creates a node for a modulo operation.
@@ -1063,13 +1063,13 @@ var Modulo = exports.Modulo = function (numA, numB) {
   }
   this.appendChild(numA);
   this.appendChild(numB);
-}
+};
 
 Modulo.inherits(ASTNode);
 
 Modulo.prototype.compileNode = function (indent) {
   return utils.indent(this.children[0].compile() + '.modulo(' + this.children[1].compile() + ')', indent);
-}
+};
 
 /**
  * Creates a node for less than comparison.
@@ -1187,7 +1187,7 @@ var LogicalAnd = exports.LogicalAnd = function (boolA, boolB) {
   this.children = [];
   this.appendChild(boolA);
   this.appendChild(boolB);
-}
+};
 
 LogicalAnd.inherits(ASTNode);
 
@@ -1211,7 +1211,7 @@ var LogicalOr = exports.LogicalOr = function (boolA, boolB) {
   this.children = [];
   this.appendChild(boolA);
   this.appendChild(boolB);
-}
+};
 
 LogicalOr.inherits(ASTNode);
 
@@ -1236,7 +1236,7 @@ var InclusiveAnd = exports.InclusiveAnd = function (a, b) {
   this.children = [];
   this.appendChild(a);
   this.appendChild(b);
-}
+};
 
 InclusiveAnd.inherits(ASTNode);
 
@@ -1261,7 +1261,7 @@ var InclusiveOr = exports.InclusiveOr = function (a, b) {
   this.children = [];
   this.appendChild(a);
   this.appendChild(b);
-}
+};
 
 InclusiveOr.inherits(ASTNode);
 
@@ -1286,7 +1286,7 @@ var ExclusiveOr = exports.ExclusiveOr = function (a, b) {
   this.children = [];
   this.appendChild(a);
   this.appendChild(b);
-}
+};
 
 ExclusiveOr.inherits(ASTNode);
 
@@ -1308,7 +1308,7 @@ var Negation = exports.Negation = function (boolA) {
   this.vavaType = 'boolean';
   this.children = [];
   this.appendChild(boolA);
-}
+};
 
 Negation.inherits(ASTNode);
 
@@ -1327,7 +1327,7 @@ var BitwiseNegation = exports.BitwiseNegation = function (num) {
   this.children = [];
   // TODO Check condition
   this.appendChild(num);
-}
+};
 
 BitwiseNegation.inherits(ASTNode);
 
@@ -1371,7 +1371,7 @@ var RightShift = exports.RightShift = function (a, b) {
   this.children = [];
   this.appendChild(a);
   this.appendChild(b);
-}
+};
 
 RightShift.inherits(ASTNode);
 
@@ -1395,7 +1395,7 @@ var ZeroFillRightShift = exports.ZeroFillRightShift = function (a, b) {
   this.children = [];
   this.appendChild(a);
   this.appendChild(b);
-}
+};
 
 ZeroFillRightShift.inherits(ASTNode);
 
