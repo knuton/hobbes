@@ -1,8 +1,8 @@
 var hobbes = function (exports) {
   var require = 'lol', hobbes = exports;
   /**
-   * hobbes.js -- a Java subset interpreter in JavaScript
-   * (c) 2010 Johannes Emerich (jemerich@uos.de)
+   * hobbes -- a Java subset interpreter in JavaScript
+   * (c) 2011 Johannes Emerich (jemerich@uos.de)
    * v0.1
    */
   
@@ -1177,7 +1177,7 @@ var hobbes = function (exports) {
   
   // Based on Crockford's http://javascript.crockford.com/inheritance.html
   if (!Function.prototype.inherits) {
-    Function.prototype.inherits = function (parent) {
+    Function.prototype.inherits = function (parent, constructorMembers) {
       // Use new instance of parent as prototype
       var d = {}, p = (this.prototype = new parent());
       this.prototype['uber'] = function (name) {
@@ -1202,9 +1202,22 @@ var hobbes = function (exports) {
         d[name] -= 1;
         return r;
       };
+      // copy constructor members
+      for (var prop in parent) {
+        if (parent.hasOwnProperty(prop)) {
+          this[prop] = parent[prop];
+        }
+      }
+      // prefill constructor members
+      if (constructorMembers) {
+        for (var prop in constructorMembers) this[prop] = constructorMembers[prop];
+      }
+      // fix constructor reference
+      this.prototype.constructor = this;
       return this;
     }
   }
+  
   exports.utils    = function (exports) {
   /**
    * Contains a collection of utils to use all around hobbes.
@@ -1486,6 +1499,8 @@ var hobbes = function (exports) {
   
   }({});
   exports.vava     = function (exports) {
+  var utils = (typeof hobbes !== 'undefined' && hobbes.utils);
+  
   var vavaClass = function (exports) {
     var VavaClass = exports.VavaClass = function (vavaClassName, vavaClassDefinition, scope) {
       
@@ -1595,23 +1610,50 @@ var hobbes = function (exports) {
      * Returns the default value for the variable's Vava type.
      */
     TypedVariable.prototype.defaultValue = function () {
-      return TypedValue.defaults[this.vavaType] || new NullValue();
+      return TypedValue.constructorFor(this.vavaType).defaultValue();
     };
     
     /**
      * Sets the typed value of the variable.
+     *
+     * Returns the typed value.
+     *
      * @throws Error for wrong type
      */
     TypedVariable.prototype.set = function (typedValue) {
       
       if (this.isAssignmentCompatible(typedValue)) {
-        this.typedValue = typedValue;
+        this._setAdjusted(typedValue);
       } else {
         // TODO How to handle Vava errors?
         throw new Error("Vava Type error: Expected " + this.getVavaType() + ", but was " + typedValue.getVavaType() + ".");
       }
+    
+      return this.get();
       
     };
+    
+    
+    /**
+     * Sets the typed value of the variable to a potentially adjusted value
+     * computed from the provided typed value.
+     *
+     * @param typedValue The value to adjust and assign
+     */
+    TypedVariable.prototype._setAdjusted = function (typedValue) {
+      // Leave it to specific types to convert themselves
+      this.typedValue = typedValue.to(this.vavaType);
+    };
+    
+    /**
+     * Checks if variable is of given type.
+     *
+     * @param vavaType Type to check for
+     */
+    TypedVariable.prototype.isVavaType = function (vavaType) {
+      return this.getVavaType() === vavaType;
+    };
+    
     
     /**
      * Checks if variable is of native type.
@@ -1621,7 +1663,28 @@ var hobbes = function (exports) {
     TypedVariable.prototype.isPrimitive = function () {
       var vT = this.getVavaType();
       return (vT === "boolean" || vT === "byte" || vT === "short" || vT === "int" || vT === "long" || vT === "char" || vT === "float" || vT === "double");
-    }
+    };
+    
+    /**
+     * Checks if variable is of integral type.
+     *
+     * That is, whether it is one of {byte, short, int, long}.
+     * TODO Might want to add `char`
+     */
+    TypedVariable.prototype.isIntegral = function () {
+      var vT = this.getVavaType();
+      return (vT === "byte" || vT === "short" || vT === "int" || vT === "long");
+    };
+    
+    /**
+     * Checks if variable is of floating point type.
+     *
+     * That is, whether it is one of {float, double}.
+     */
+    TypedVariable.prototype.isFloatingPoint = function () {
+      var vT = this.getVavaType();
+      return (vT === "float" || vT === "double");
+    };
     
     /**
      * Checks for compatibility of own and provided type.
@@ -1632,7 +1695,9 @@ var hobbes = function (exports) {
     TypedVariable.prototype.isAssignmentCompatible = function (typedValue) {
     
       if (this.isPrimitive()) {
-        return typedValue.getVavaType() === this.getVavaType();
+        if (typedValue.getVavaType() === this.getVavaType()) return true;
+        if (this.isIntegral() && typedValue.isIntegral()) return true;
+        return this.isFloatingPoint() && typedValue.isFloatingPoint();
       } else {
         var vavaType = typedValue.getVavaType();
         return (vavaType === "null" || vavaType === this.getVavaType());
@@ -1645,6 +1710,44 @@ var hobbes = function (exports) {
     TypedVariable.prototype.get = function () {
       return this.typedValue;
     };
+    
+    /**
+     * Increments the variable's value by one, but returns the value held before
+     * incrementing.
+     */
+    TypedVariable.prototype.postInc = function () {
+      var prior = this.get();
+      this.preInc();
+      return prior;
+    };
+    
+    /**
+     * Decrements the variable's value by one, but returns the value held before
+     * decrementing.
+     */
+    TypedVariable.prototype.postDec = function () {
+      var prior = this.get();
+      this.preDec();
+      return prior;
+    };
+    
+    /**
+     * Increments the variable's value by one, then returns its value.
+     */
+    TypedVariable.prototype.preInc = function () {
+      if (!this.isPrimitive()) throw new Error("Incrementing only available for primitive types.");
+      return this.set(this.get().add(new IntValue(1)));
+    };
+    
+    /**
+     * Decrements the variable's value by one, then returns its value.
+     */
+    TypedVariable.prototype.preDec = function () {
+      if (!this.isPrimitive()) throw new Error("Decrementing only available for primtive types.");
+      return this.set(this.get().add(new IntValue(-1)));
+    };
+    
+    //// VALUES
     
     var TypedValueInterface = exports.TypedValueInterface = new utils.Interface('TypedValue', 'get', 'getVavaType');
     
@@ -1675,9 +1778,50 @@ var hobbes = function (exports) {
       return this.rawValue;
     };
     
+    /**
+     * Casts typed value to value of type `vavaType`.
+     *
+     * There is not checking here whether any such cast is in fact possible. It is
+     * expected that for primitive types this checking is done at compile time.
+     *
+     * @param vavaType The type to cast to
+     */
+    TypedValue.prototype.to = function (vavaType) {
+      return TypedValue.constructorFor(vavaType).intern(this.get());
+    };
+    
+    TypedValue.prototype.isVavaType = TypedVariable.prototype.isVavaType;
+    TypedValue.prototype.isPrimitive = TypedVariable.prototype.isPrimitive;
+    TypedValue.prototype.isIntegral = TypedVariable.prototype.isIntegral;
+    TypedValue.prototype.isFloatingPoint = TypedVariable.prototype.isFloatingPoint;
+    
+    /**
+     * Returns a string representation of the value.
+     */
+    TypedValue.prototype.toString = function () {
+      return String(this.get());
+    };
+    
+    /**
+     * Returns the default value for any value type.
+     *
+     * Overwrite for interning etc.
+     */
+    TypedValue.defaultValue = function () {
+      return new this();
+    };
+    
+    /**
+     * Returns the constructor for the given type.
+     *
+     * @param vavaType The type, e.g. `int`
+     */
+    TypedValue.constructorFor = function (vavaType) {
+      return TypedValue.constructors[vavaType] || NullValue;
+    };
+    
     // NATIVE TYPES
     
-    // TODO Document and Test!
     var BooleanValue = exports.BooleanValue = function (rawValue) {
       
       this.vavaType = 'boolean';
@@ -1709,113 +1853,358 @@ var hobbes = function (exports) {
       if (this.stored[bool])
         return this.stored[bool];
       else
-        return this.stored[bool] = new this(bool);
+        return (this.stored[bool] = new this(bool));
+    };
+    
+    BooleanValue.defaultValue = function () {
+      return this.intern(false);
     };
     
     // LOGICAL OPERATIONS
     BooleanValue.prototype.not = function () {
-      return BooleanValue[String(!this.get())];
+      return BooleanValue.intern(!this.get());
     };
     
     BooleanValue.prototype.and = function (other) {
-      return BooleanValue[String(this.get() && other.get())];
+      return BooleanValue.intern(this.get() && other.get());
     };
     
     BooleanValue.prototype.or = function (other) {
-      return BooleanValue[String(this.get() || other.get())];
+      return BooleanValue.intern(this.get() || other.get());
     };
     
-    BooleanValue['true'] = new BooleanValue(true);
-    BooleanValue['false'] = new BooleanValue(false);
-    
-    // TODO how to handle inheritance here?
-    var IntegralValue = function (rawValue) {
-      
-      this.vavaType = 'int';
-      
-      if (rawValue) {
-        // TODO More precise testing of value
-        // Next step: Add this to AST -> compile -> test with Java src files
-        if (isNaN(rawValue)) {
-          throw new Error('Not a number!');
-        }
-        this.rawValue = rawValue;
-      } else {
-        this.rawValue = 0;
-      }
-      
-    }
-    
-    IntegralValue.inherits(TypedValue);
-    
-    // ARITHMETIC
-    IntegralValue.prototype.inverse = function () {
-      return IntValue.intern(this.get() * -1);
+    BooleanValue.prototype.xor = function (other) {
+      return BooleanValue.intern(!!(this.get() ^ other.get()));
     };
     
-    IntegralValue.prototype.add = function (other) {
-      return IntValue.intern(this.toInt().get() + other.toInt().get());
+    //// NUMBER TYPES
+    
+    var NumberValue = function () {
+      this.vavaType = undefined;
     };
     
-    IntegralValue.prototype.subtract = function (other) {
-      return this.add(other.inverse());
+    NumberValue.inherits(TypedValue);
+    
+    NumberValue.prototype.inverse = function () {
+      return this.constructor.intern(this.get() * -1);
     };
     
-    IntegralValue.prototype.times = function (other) {
-      return IntValue.intern(this.toInt().get() * other.toInt().get());
+    NumberValue.prototype.isLessThan = function (other) {
+      return this.get() < other.get();
     };
     
-    IntegralValue.prototype.divide = function (other) {
-      var thisRaw = this.toInt().get(),
-          otherRaw = other.toInt().get();
-      var remainder = thisRaw % otherRaw;
-      return IntValue.intern((thisRaw - remainder) / otherRaw);
+    NumberValue.prototype.isGreaterThan = function (other) {
+      return this.get() > other.get();
     };
-    
-    IntegralValue.prototype.modulo = function (other) {
-      return IntValue.intern(this.toInt().get() % other.toInt().get());
-    };
-    
-    // TODO Overflow of long type
-    IntegralValue.prototype.toInt = function () {
-      return IntValue.intern(this.get());
-    };
-    
-    var IntValue = exports.IntValue = function (rawValue) {
-    
-      this.vavaType = 'int';
-    
-      if (rawValue) {
-        // TODO More precise testing of value
-        // Next step: Add this to AST -> compile -> test with Java src files
-        if (isNaN(rawValue)) {
-          throw new Error('Not a number!');
-        }
-        this.rawValue = rawValue;
-      } else {
-        this.rawValue = 0;
-      }
-    
-    }
-    
-    IntValue.inherits(IntegralValue);
-    
-    IntValue.stored = {};
     
     /**
-     * Used to intern IntValues for efficiency and object identity.
+     * Used to intern values for efficiency and object identity.
      *
      * Looks up the existing object for a given number and creates one if none is
      * present. The object is then returned.
      *
      * @param number The number to lookup/insert
      */
-    IntValue.intern = function (number) {
+    NumberValue.intern = function (number) {
       if (this.stored[number])
         return this.stored[number];
       else
-        return this.stored[number] = new this(number);
+        return (this.stored[number] = new this(number));
     };
+    
+    NumberValue.defaultValue = function () {
+      return this.intern(0);
+    };
+    
+    // INTEGER VALUES
+    
+    var IntegralValue = function (rawValue) {
+      
+      this.vavaType = undefined;
+      
+    };
+    
+    IntegralValue.inherits(NumberValue);
+    
+    IntegralValue.checkedValue = function (rawValue) {
+      if (rawValue) {
+        if (isNaN(rawValue)) {
+          throw new Error('Not a number!');
+        }
+        if (rawValue >= this.MIN_VALUE && rawValue <= this.MAX_VALUE) {
+          return parseInt(rawValue, 10);
+        } else {
+          // Dual representation cut to length of type
+          var dual = this.twosComplement(parseInt(rawValue, 10));
+          // Leading bit determines sign (numspace is divided into positive and negative half)
+          var mostSignificantBit = parseInt(dual.charAt(0), 2);
+          // Resulting number is -(2^(BITS-1)) + decimal without leading bit
+          // or decimals without leading bit, if leading bit is 0.
+          return (-mostSignificantBit) * Math.pow(2, this.BITS-1) + parseInt(dual.substr(1), 2);
+        }
+      }
+      else return 0;
+    };
+    
+    IntegralValue.addLeadingZeros = function (dualString) {
+      var i;
+      for (i = dualString.length; i < this.BITS; i++) { dualString = '0' + dualString; }
+      return dualString;
+    };
+    
+    IntegralValue.twosComplement = function (num) {
+      var dual = '';
+      if (num >= 0) {
+        dual = num.toString(2).substr(-this.BITS,this.BITS);
+      } else {
+        num = -num;
+        var i = this.BITS,
+            carry = 1,
+            bit;
+        // Compute, invert, add 1 in one loop
+        while (num !== 0 || i > 0) {
+          if (num % 2 === 0) {
+            //               _ 1 + 1 = 0, carry = 1, if carry was 1
+            //              /
+            // 0 -invert-> 1 
+            //              \_ 1 + 0 = 1, carry = 0, if carry was 0
+            if (carry) {
+              bit = '0';
+              carry = 1;
+            } else {
+              bit = '1';
+              carry = 0;
+            }
+            dual = bit + dual;
+          } else {
+            //               _ 0 + 1 = 1, carry = 0, if carry was 1
+            //              /
+            // 1 -invert-> 0
+            //              \_ 0 + 0 = 0, carry = 0, if carry was 0
+            dual = (carry ? '1': '0') + dual;
+            carry = 0;
+          }
+          num = this.integerDivision(num,2);
+          i--;
+        }
+      }
+      return this.addLeadingZeros(dual);
+    };
+    
+    IntegralValue.integerDivision = function (a, b) {
+      var remainder = a % b;
+      return (a - remainder) / b;
+    };
+    
+    // ARITHMETIC
+    IntegralValue.prototype.add = function (other) {
+      if (other.isIntegral())
+        return (other.isVavaType('long') || this.isVavaType('long') ? LongValue : IntValue).intern(this.get() + other.get());
+      else
+        return other.add(this);
+    };
+    
+    IntegralValue.prototype.subtract = function (other) {
+      if (other.isIntegral())
+        return this.add(other.inverse());
+      else
+        return other.constructor.intern(this.get() - other.get());
+    };
+    
+    IntegralValue.prototype.times = function (other) {
+      if (other.isIntegral())
+        return (other.isVavaType('long') || this.isVavaType('long') ? LongValue : IntValue).intern(this.get() * other.get());
+      else
+        return other.times(this);
+    };
+    
+    IntegralValue.prototype.divide = function (other) {
+      if (other.isIntegral()) {
+        var thisRaw = this.get(),
+            otherRaw = other.get();
+        var remainder = thisRaw % otherRaw;
+        return (other.isVavaType('long') || this.isVavaType('long') ? LongValue : IntValue).intern((thisRaw - remainder) / otherRaw);
+      } else {
+        // TODO What about negative/positive zero/infinity?
+        return other.constructor.intern(this.get() / other.get());
+      }
+    };
+    
+    IntegralValue.prototype.modulo = function (other) {
+      if (other.isIntegral())
+        return (other.isVavaType('long') || this.isVavaType('long') ? LongValue : IntValue).intern(this.get() % other.get());
+      else
+        return other.constructor.intern(this.get() % other.get());
+    };
+    
+    IntegralValue.prototype.and = function (other) {
+      return IntValue.intern(this.get() & other.get());
+    };
+    
+    IntegralValue.prototype.or = function (other) {
+      return IntValue.intern(this.get() | other.get());
+    };
+    
+    IntegralValue.prototype.leftshift = function (other) {
+      return IntValue.intern(this.get() << other.get());
+    };
+    
+    IntegralValue.prototype.rightshift = function (other) {
+      return IntValue.intern(this.get() >> other.get());
+    };
+    
+    IntegralValue.prototype.zerofillRightshift = function (other) {
+      return IntValue.intern(this.get() >>> other.get());
+    };
+    
+    IntegralValue.prototype.xor = function (other) {
+      return IntValue.intern(this.get() ^ other.get());
+    };
+    
+    IntegralValue.prototype.bitwiseNot = function () {
+      return IntValue.intern(~this.get());
+    };
+    
+    var ByteValue = exports.ByteValue = function (rawValue) {
+    
+      this.vavaType = 'byte';
+      this.rawValue = this.constructor.checkedValue(rawValue);
+    
+    };
+    
+    ByteValue.inherits(IntegralValue, {stored: {}, BITS: 8, MIN_VALUE: -128, MAX_VALUE: 127});
+    
+    var ShortValue = exports.ShortValue = function (rawValue) {
+    
+      this.vavaType = 'short';
+      this.rawValue = this.constructor.checkedValue(rawValue);
+    
+    };
+    
+    ShortValue.inherits(IntegralValue, {stored: {}, BITS: 16, MIN_VALUE: -32768, MAX_VALUE: 32767});
+    
+    var IntValue = exports.IntValue = function (rawValue) {
+    
+      this.vavaType = 'int';
+      this.rawValue = this.constructor.checkedValue(rawValue);
+    
+    };
+    
+    IntValue.inherits(IntegralValue, {stored: {}, BITS: 32, MIN_VALUE: -2147483648, MAX_VALUE: 2147483647});
+    
+    var LongValue = exports.LongValue = function (rawValue) {
+    
+      this.vavaType = 'long';
+      this.rawValue = this.constructor.checkedValue(rawValue);
+    
+    };
+    
+    // TODO `long` seems to be too much for JS
+    LongValue.inherits(IntegralValue, {stored: {}, BITS: 64, MIN_VALUE: -9223372036854775808, MAX_VALUE: 9223372036854775807});
+    
+    var CharValue = exports.CharValue = function (charOrCharCode) {
+    
+      var charCode = typeof charOrCharCode === 'string' ? charOrCharCode.charCodeAt(0) : charOrCharCode;
+      this.vavaType = 'char';
+      this.rawValue = this.constructor.checkedValue(charCode);
+    
+    };
+    
+    CharValue.inherits(IntegralValue, {stored: {}, BITS: 16, MIN_VALUE: 0, MAX_VALUE: 65534});
+    
+    CharValue.checkedValue = function (rawValue) {
+      if (rawValue) {
+        if (isNaN(rawValue)) {
+          throw new Error('Not a number!');
+        }
+        if (rawValue > this.MIN_VALUE && rawValue < this.MAX_VALUE) {
+          return parseInt(rawValue, 10);
+        } else {
+          // Dual representation cut to length of type
+          var dual = parseInt(rawValue, 10).toString(2).substr(-this.BITS,this.BITS);
+          return parseInt(dual, 2);
+        }
+      }
+      else return 0;
+    };
+    
+    CharValue.prototype.toString = function () {
+      return String.fromCharCode(this.rawValue);
+    };
+    
+    // FLOATING POINT TYPES
+    
+    var FloatingPointValue = function () {
+      this.vavaType = undefined;
+    };
+    
+    FloatingPointValue.inherits(NumberValue);
+    
+    FloatingPointValue.checkedValue = function (rawValue) {
+      // Actual NaN
+      if (String(rawValue) === 'NaN')
+        return NaN;
+      if (isNaN(rawValue)) {
+        throw new Error('Not a number in floating point constructor');
+      }
+      if (rawValue > this.MAX_VALUE) return Number.POSITIVE_INFINITY;
+      if (rawValue < -this.MAX_VALUE) return Number.NEGATIVE_INFINITY;
+      if (rawValue > 0 && rawValue < this.MIN_VALUE) return 1e-46;
+      if (rawValue < 0 && rawValue > -this.MIN_VALUE) return -1e-46;
+      return rawValue;
+    };
+    
+    FloatingPointValue.prototype.add = function (other) {
+      return this.constructor.intern(this.get() + other.get());
+    };
+    
+    FloatingPointValue.prototype.subtract = function (other) {
+      return this.add(other.inverse());
+    };
+    
+    FloatingPointValue.prototype.times = function (other) {
+      return this.constructor.intern(this.get() * other.get());
+    };
+    
+    FloatingPointValue.prototype.divide = function (other) {
+      var thisRaw = this.get(),
+          otherRaw = other.get();
+      if (otherRaw === 0) {
+        if (thisRaw === 0)
+          return this.constructor.intern(NaN);
+      }
+      
+      return this.constructor.intern(this.get() / other.get());
+    };
+    
+    FloatingPointValue.prototype.modulo = function (other) {
+      return this.constructor.intern(this.get() % other.get());
+    };
+    
+    FloatingPointValue.prototype.toString = function () {
+      var value = this.get();
+      return parseInt(value, 10) === value ? value.toFixed(1) : value;
+    };
+    
+    var FloatValue = exports.FloatValue = function (rawValue) {
+      
+      this.vavaType = 'float';
+      this.rawValue = this.constructor.checkedValue(rawValue);
+    
+    };
+    
+    FloatValue.inherits(FloatingPointValue, {stored: {}, MIN_VALUE: 1.40239846e-45, MAX_VALUE: 3.40282347e+38});
+    
+    var DoubleValue = exports.DoubleValue = function (rawValue) {
+      
+      this.vavaType = 'double';
+      this.rawValue = this.constructor.checkedValue(rawValue);
+    
+    };
+    
+    DoubleValue.inherits(FloatingPointValue, {stored: {}, MIN_VALUE: 4.94065645841246544e-324, MAX_VALUE: 1.79769313486231570e+308});
+    
+    //// STRING TYPE
     
     var StringValue = exports.StringValue = function (rawValue) {
       
@@ -1838,20 +2227,35 @@ var hobbes = function (exports) {
       return new StringValue(this.get() + other.get());
     };
     
-    // Reference Types
+    //// REFERENCE TYPES
+    
     var NullValue = exports.NullValue = function () {
       this.vavaType = 'null';
     
       this.rawValue = null;
-    }
+    };
     
     NullValue.inherits(TypedValue);
     
+    NullValue.intern = function () {
+      return NullValue.stored['null'];
+    };
+    
+    NullValue.stored = {
+      'null' : new NullValue()
+    };
+    
     //// NEEDS TO BE AT THE END
     // Lookup table for constructors for simple (?) types
-    TypedValue.defaults = {
-      "boolean" : BooleanValue.intern(false),
-      "int" : IntValue.intern(0)
+    TypedValue.constructors = {
+      "boolean" : BooleanValue,
+      "byte" : ByteValue,
+      "short" : ShortValue,
+      "int" : IntValue,
+      "long" : LongValue,
+      "char" : CharValue,
+      "float" : FloatValue,
+      "double" : DoubleValue
     };
   
     return exports;
@@ -1885,14 +2289,23 @@ var hobbes = function (exports) {
   
   }({});
   
-  exports.env = {
-    VavaClass  : vavaClass.VavaClass,
-    VavaMethod : vavaMethod.VavaMethod,
-    TypedVariable : vavaType.TypedVariable,
-    BooleanValue : vavaType.BooleanValue,
-    IntValue   : vavaType.IntValue,
-    StringValue : vavaType.StringValue
-  }
+  exports.env = utils.merge(
+    vavaClass,
+    vavaMethod,
+    vavaType
+  );
+  
+    return exports;
+  
+  }({});
+  exports.stdlib   = function (exports) {
+  exports.java = function (exports) {
+    // TODO That's cute! How can I make this look less stupid?
+    exports.lang = typeof require === 'function' ? require('./java/lang-node') : require('./java/lang-web');
+  
+    return exports;
+  
+  }({});
   
     return exports;
   
@@ -1900,14 +2313,15 @@ var hobbes = function (exports) {
   exports.compiler = function (exports) {
   var utils = (typeof hobbes !== 'undefined' && hobbes.utils);
   var vava = (typeof hobbes !== 'undefined' && hobbes.vava);
+  var stdlib = (typeof hobbes !== 'undefined' && hobbes.stdlib);
   var parser = exports.parser = function (exports) {
     /* Jison generated parser */
     var vava_proper = (function(){
     var parser = {trace: function trace() { },
     yy: {},
-    symbols_: {"error":2,"compilation_unit":3,"EOF":4,"package_declaration":5,"import_declarations":6,"type_declarations":7,"KEYWORD_PACKAGE":8,"IDENTIFIER":9,"LINE_TERMINATOR":10,"import_declaration":11,"KEYWORD_IMPORT":12,"name":13,"type_declaration":14,"class_declaration":15,"KEYWORD_CLASS":16,"class_body":17,"MODIFIER_PUBLIC":18,"EMBRACE":19,"class_body_declarations":20,"UNBRACE":21,"class_body_declaration":22,"class_member_declaration":23,"field_declaration":24,"method_declaration":25,"type":26,"variable_declarators":27,"method_header":28,"method_body":29,"method_declarator":30,"MODIFIER_STATIC":31,"MODIFIER_VOID":32,"LEFT_PAREN":33,"formal_parameter_list":34,"RIGHT_PAREN":35,"STRING_TYPE":36,"LEFT_BRACKET":37,"RIGHT_BRACKET":38,"formal_parameter":39,"formal_parameters":40,"COMMA":41,"variable_declarator_id":42,"block":43,"variable_declarator":44,"OPERATOR_ASSIGNMENT":45,"variable_initializer":46,"expression":47,"primitive_type":48,"numeric_type":49,"PRIMITIVE_BOOLEAN":50,"integral_type":51,"floating_point_type":52,"PRIMITIVE_INTEGER":53,"PRIMITIVE_FLOAT":54,"block_statements":55,"block_statement":56,"local_variable_declaration_statement":57,"statement":58,"local_variable_declaration":59,"statement_without_trailing_substatement":60,"if_then_else_statement":61,"if_then_statement":62,"while_statement":63,"empty_statement":64,"expression_statement":65,"KEYWORD_IF":66,"statement_no_short_if":67,"KEYWORD_ELSE":68,"labeled_statement_no_short_if":69,"if_then_else_statement_no_short_if":70,"while_statement_no_short_if":71,"for_statement_no_short_if":72,"KEYWORD_WHILE":73,"statement_expression":74,"assignment":75,"method_invocation":76,"simple_name":77,"qualified_name":78,"SEPARATOR_DOT":79,"left_hand_side":80,"conditional_expression":81,"assignment_expression":82,"conditional_or_expression":83,"conditional_and_expression":84,"inclusive_or_expression":85,"exclusive_or_expression":86,"and_expression":87,"equality_expression":88,"relational_expression":89,"OPERATOR_EQUAL":90,"OPERATOR_NOT_EQUAL":91,"shift_expression":92,"additive_expression":93,"multiplicative_expression":94,"OPERATOR_ADDITION":95,"OPERATOR_SUBTRACTION":96,"unary_expression":97,"OPERATOR_MULTIPLICATION":98,"OPERATOR_DIVISON":99,"OPERATOR_MODULO":100,"postfix_expression":101,"primary":102,"literal":103,"boolean_literal":104,"integer_literal":105,"string_literal":106,"argument_list":107,"TRUE_LITERAL":108,"FALSE_LITERAL":109,"DECIMAL_INTEGER_LITERAL":110,"STRING_LITERAL":111,"$accept":0,"$end":1},
-    terminals_: {2:"error",4:"EOF",8:"KEYWORD_PACKAGE",9:"IDENTIFIER",10:"LINE_TERMINATOR",12:"KEYWORD_IMPORT",16:"KEYWORD_CLASS",18:"MODIFIER_PUBLIC",19:"EMBRACE",21:"UNBRACE",31:"MODIFIER_STATIC",32:"MODIFIER_VOID",33:"LEFT_PAREN",35:"RIGHT_PAREN",36:"STRING_TYPE",37:"LEFT_BRACKET",38:"RIGHT_BRACKET",40:"formal_parameters",41:"COMMA",45:"OPERATOR_ASSIGNMENT",50:"PRIMITIVE_BOOLEAN",53:"PRIMITIVE_INTEGER",54:"PRIMITIVE_FLOAT",66:"KEYWORD_IF",68:"KEYWORD_ELSE",69:"labeled_statement_no_short_if",70:"if_then_else_statement_no_short_if",71:"while_statement_no_short_if",72:"for_statement_no_short_if",73:"KEYWORD_WHILE",79:"SEPARATOR_DOT",90:"OPERATOR_EQUAL",91:"OPERATOR_NOT_EQUAL",95:"OPERATOR_ADDITION",96:"OPERATOR_SUBTRACTION",98:"OPERATOR_MULTIPLICATION",99:"OPERATOR_DIVISON",100:"OPERATOR_MODULO",108:"TRUE_LITERAL",109:"FALSE_LITERAL",110:"DECIMAL_INTEGER_LITERAL",111:"STRING_LITERAL"},
-    productions_: [0,[3,1],[3,2],[3,2],[3,2],[3,3],[3,3],[3,3],[3,4],[5,3],[6,1],[6,2],[11,3],[7,1],[14,1],[15,3],[15,4],[17,3],[20,1],[20,2],[22,1],[23,1],[23,1],[24,3],[25,2],[28,2],[28,4],[30,4],[30,7],[34,1],[34,3],[39,2],[29,1],[27,1],[27,3],[44,1],[44,3],[42,1],[46,1],[26,1],[48,1],[48,1],[49,1],[49,1],[51,1],[52,1],[43,2],[43,3],[55,1],[55,2],[56,1],[56,1],[57,2],[59,2],[58,1],[58,1],[58,1],[58,1],[60,1],[60,1],[60,1],[62,5],[61,7],[67,1],[67,1],[67,1],[67,1],[67,1],[63,5],[64,1],[65,2],[74,1],[74,1],[13,1],[13,1],[77,1],[78,3],[75,3],[80,1],[47,1],[82,1],[82,1],[81,1],[83,1],[83,1],[83,0],[83,1],[84,1],[85,1],[86,1],[87,1],[88,1],[88,3],[88,3],[89,1],[92,1],[93,1],[93,3],[93,3],[94,1],[94,3],[94,3],[94,3],[97,1],[101,1],[101,1],[102,1],[102,1],[103,1],[103,1],[103,1],[76,3],[76,4],[107,1],[107,3],[104,1],[104,1],[105,1],[106,1]],
+    symbols_: {"error":2,"compilation_unit":3,"EOF":4,"package_declaration":5,"import_declarations":6,"type_declarations":7,"KEYWORD_PACKAGE":8,"IDENTIFIER":9,"LINE_TERMINATOR":10,"import_declaration":11,"KEYWORD_IMPORT":12,"name":13,"type_declaration":14,"class_declaration":15,"KEYWORD_CLASS":16,"class_body":17,"MODIFIER_PUBLIC":18,"EMBRACE":19,"class_body_declarations":20,"UNBRACE":21,"class_body_declaration":22,"class_member_declaration":23,"field_declaration":24,"method_declaration":25,"type":26,"variable_declarators":27,"method_header":28,"method_body":29,"method_declarator":30,"MODIFIER_STATIC":31,"MODIFIER_VOID":32,"LEFT_PAREN":33,"formal_parameter_list":34,"RIGHT_PAREN":35,"STRING_TYPE":36,"LEFT_BRACKET":37,"RIGHT_BRACKET":38,"formal_parameter":39,"formal_parameters":40,"COMMA":41,"variable_declarator_id":42,"block":43,"variable_declarator":44,"OPERATOR_ASSIGNMENT":45,"variable_initializer":46,"expression":47,"primitive_type":48,"numeric_type":49,"PRIMITIVE_BOOLEAN":50,"integral_type":51,"floating_point_type":52,"PRIMITIVE_BYTE":53,"PRIMITIVE_SHORT":54,"PRIMITIVE_INTEGER":55,"PRIMITIVE_LONG":56,"PRIMITIVE_CHAR":57,"PRIMITIVE_FLOAT":58,"PRIMITIVE_DOUBLE":59,"block_statements":60,"block_statement":61,"local_variable_declaration_statement":62,"statement":63,"local_variable_declaration":64,"statement_without_trailing_substatement":65,"if_then_else_statement":66,"if_then_statement":67,"while_statement":68,"empty_statement":69,"expression_statement":70,"KEYWORD_IF":71,"statement_no_short_if":72,"KEYWORD_ELSE":73,"labeled_statement_no_short_if":74,"if_then_else_statement_no_short_if":75,"while_statement_no_short_if":76,"for_statement_no_short_if":77,"KEYWORD_WHILE":78,"statement_expression":79,"assignment":80,"method_invocation":81,"simple_name":82,"qualified_name":83,"SEPARATOR_DOT":84,"left_hand_side":85,"conditional_expression":86,"assignment_expression":87,"conditional_or_expression":88,"conditional_and_expression":89,"OPERATOR_LOGICAL_OR":90,"inclusive_or_expression":91,"OPERATOR_LOGICAL_AND":92,"exclusive_or_expression":93,"OPERATOR_INCLUSIVE_OR":94,"and_expression":95,"OPERATOR_XOR":96,"equality_expression":97,"OPERATOR_INCLUSIVE_AND":98,"relational_expression":99,"OPERATOR_EQUAL":100,"OPERATOR_NOT_EQUAL":101,"shift_expression":102,"OPERATOR_LESS_THAN":103,"OPERATOR_LESS_THAN_EQUAL":104,"OPERATOR_GREATER_THAN":105,"OPERATOR_GREATER_THAN_EQUAL":106,"additive_expression":107,"OPERATOR_LEFTSHIFT":108,"OPERATOR_RIGHTSHIFT":109,"OPERATOR_ZEROFILL_RIGHTSHIFT":110,"multiplicative_expression":111,"OPERATOR_ADDITION":112,"OPERATOR_SUBTRACTION":113,"unary_expression":114,"OPERATOR_MULTIPLICATION":115,"OPERATOR_DIVISON":116,"OPERATOR_MODULO":117,"pre_increment_expression":118,"pre_decrement_expression":119,"unary_expression_not_plus_minus":120,"post_increment_expression":121,"OPERATOR_INCREMENT":122,"postfix_expression":123,"post_decrement_expression":124,"OPERATOR_DECREMENT":125,"OPERATOR_BITWISE_NEGATION":126,"OPERATOR_NEGATION":127,"cast_expression":128,"primary":129,"literal":130,"integer_literal":131,"char_literal":132,"floating_point_literal":133,"boolean_literal":134,"string_literal":135,"null_literal":136,"argument_list":137,"TRUE_LITERAL":138,"FALSE_LITERAL":139,"DECIMAL_INTEGER_LITERAL":140,"CHAR_LITERAL":141,"NULL_LITERAL":142,"FLOATING_POINT_LITERAL":143,"STRING_LITERAL":144,"$accept":0,"$end":1},
+    terminals_: {2:"error",4:"EOF",8:"KEYWORD_PACKAGE",9:"IDENTIFIER",10:"LINE_TERMINATOR",12:"KEYWORD_IMPORT",16:"KEYWORD_CLASS",18:"MODIFIER_PUBLIC",19:"EMBRACE",21:"UNBRACE",31:"MODIFIER_STATIC",32:"MODIFIER_VOID",33:"LEFT_PAREN",35:"RIGHT_PAREN",36:"STRING_TYPE",37:"LEFT_BRACKET",38:"RIGHT_BRACKET",40:"formal_parameters",41:"COMMA",45:"OPERATOR_ASSIGNMENT",50:"PRIMITIVE_BOOLEAN",53:"PRIMITIVE_BYTE",54:"PRIMITIVE_SHORT",55:"PRIMITIVE_INTEGER",56:"PRIMITIVE_LONG",57:"PRIMITIVE_CHAR",58:"PRIMITIVE_FLOAT",59:"PRIMITIVE_DOUBLE",71:"KEYWORD_IF",73:"KEYWORD_ELSE",74:"labeled_statement_no_short_if",75:"if_then_else_statement_no_short_if",76:"while_statement_no_short_if",77:"for_statement_no_short_if",78:"KEYWORD_WHILE",84:"SEPARATOR_DOT",90:"OPERATOR_LOGICAL_OR",92:"OPERATOR_LOGICAL_AND",94:"OPERATOR_INCLUSIVE_OR",96:"OPERATOR_XOR",98:"OPERATOR_INCLUSIVE_AND",100:"OPERATOR_EQUAL",101:"OPERATOR_NOT_EQUAL",103:"OPERATOR_LESS_THAN",104:"OPERATOR_LESS_THAN_EQUAL",105:"OPERATOR_GREATER_THAN",106:"OPERATOR_GREATER_THAN_EQUAL",108:"OPERATOR_LEFTSHIFT",109:"OPERATOR_RIGHTSHIFT",110:"OPERATOR_ZEROFILL_RIGHTSHIFT",112:"OPERATOR_ADDITION",113:"OPERATOR_SUBTRACTION",115:"OPERATOR_MULTIPLICATION",116:"OPERATOR_DIVISON",117:"OPERATOR_MODULO",118:"pre_increment_expression",119:"pre_decrement_expression",122:"OPERATOR_INCREMENT",125:"OPERATOR_DECREMENT",126:"OPERATOR_BITWISE_NEGATION",127:"OPERATOR_NEGATION",138:"TRUE_LITERAL",139:"FALSE_LITERAL",140:"DECIMAL_INTEGER_LITERAL",141:"CHAR_LITERAL",142:"NULL_LITERAL",143:"FLOATING_POINT_LITERAL",144:"STRING_LITERAL"},
+    productions_: [0,[3,1],[3,2],[3,2],[3,2],[3,3],[3,3],[3,3],[3,4],[5,3],[6,1],[6,2],[11,3],[7,1],[14,1],[15,3],[15,4],[17,3],[20,1],[20,2],[22,1],[23,1],[23,1],[24,3],[25,2],[28,2],[28,4],[30,4],[30,7],[34,1],[34,3],[39,2],[29,1],[27,1],[27,3],[44,1],[44,3],[42,1],[46,1],[26,1],[48,1],[48,1],[49,1],[49,1],[51,1],[51,1],[51,1],[51,1],[51,1],[52,1],[52,1],[43,2],[43,3],[60,1],[60,2],[61,1],[61,1],[62,2],[64,2],[63,1],[63,1],[63,1],[63,1],[65,1],[65,1],[65,1],[67,5],[66,7],[72,1],[72,1],[72,1],[72,1],[72,1],[68,5],[69,1],[70,2],[79,1],[79,1],[13,1],[13,1],[82,1],[83,3],[80,3],[85,1],[47,1],[87,1],[87,1],[86,1],[88,1],[88,3],[89,1],[89,3],[91,1],[91,3],[93,1],[93,3],[95,1],[95,3],[97,1],[97,3],[97,3],[99,1],[99,3],[99,3],[99,3],[99,3],[102,1],[102,3],[102,3],[102,3],[107,1],[107,3],[107,3],[111,1],[111,3],[111,3],[111,3],[114,1],[114,1],[114,2],[114,2],[114,1],[121,2],[121,2],[124,2],[124,2],[120,1],[120,2],[120,2],[120,1],[123,1],[123,1],[123,1],[123,1],[128,4],[129,1],[129,1],[130,1],[130,1],[130,1],[130,1],[130,1],[130,1],[81,3],[81,4],[137,1],[137,3],[134,1],[134,1],[131,1],[132,1],[136,1],[133,1],[135,1]],
     performAction: function anonymous(yytext,yyleng,yylineno,yy,yystate,$$,_$) {
     
     var $0 = $$.length - 1;
@@ -2002,39 +2416,39 @@ var hobbes = function (exports) {
     break;
     case 45: this.$ = $$[$0]; 
     break;
-    case 46: this.$ = new yy.Block(); 
+    case 46: this.$ = $$[$0]; 
     break;
-    case 47: this.$ = new yy.Block($$[$0-1]); 
+    case 47: this.$ = $$[$0]; 
     break;
-    case 48: this.$ = [$$[$0]]; 
+    case 48: this.$ = $$[$0]; 
     break;
-    case 49: this.$ = $$[$0-1]; this.$.push($$[$0]); 
+    case 49: this.$ = $$[$0]; 
     break;
     case 50: this.$ = $$[$0]; 
     break;
-    case 51: this.$ = $$[$0]; 
+    case 51: this.$ = new yy.Block(); 
     break;
-    case 52: this.$ = $$[$0-1]; 
+    case 52: this.$ = new yy.Block($$[$0-1]); 
     break;
-    case 53: this.$ = new yy.LocalVariableDeclaration($$[$0-1], $$[$0]); 
+    case 53: this.$ = [$$[$0]]; 
     break;
-    case 54: this.$ = $$[$0]; 
+    case 54: this.$ = $$[$0-1]; this.$.push($$[$0]); 
     break;
     case 55: this.$ = $$[$0]; 
     break;
     case 56: this.$ = $$[$0]; 
     break;
-    case 57: this.$ = $$[$0]; 
+    case 57: this.$ = $$[$0-1]; 
     break;
-    case 58: this.$ = $$[$0]; 
+    case 58: this.$ = new yy.LocalVariableDeclaration($$[$0-1], $$[$0]); 
     break;
     case 59: this.$ = $$[$0]; 
     break;
     case 60: this.$ = $$[$0]; 
     break;
-    case 61: this.$ = new yy.IfThen($$[$0-2], $$[$0]); 
+    case 61: this.$ = $$[$0]; 
     break;
-    case 62: this.$ = new yy.IfThenElse($$[$0-4], $$[$0-2], $$[$0]); 
+    case 62: this.$ = $$[$0]; 
     break;
     case 63: this.$ = $$[$0]; 
     break;
@@ -2042,112 +2456,186 @@ var hobbes = function (exports) {
     break;
     case 65: this.$ = $$[$0]; 
     break;
-    case 66: this.$ = $$[$0]; 
+    case 66: this.$ = new yy.IfThen($$[$0-2], $$[$0]); 
     break;
-    case 67: this.$ = $$[$0]; 
+    case 67: this.$ = new yy.IfThenElse($$[$0-4], $$[$0-2], $$[$0]); 
     break;
-    case 68: this.$ = new yy.WhileLoop($$[$0-2], $$[$0]); 
+    case 68: this.$ = $$[$0]; 
     break;
-    case 69: this.$ = new yy.ASTNode(); 
+    case 69: this.$ = $$[$0]; 
     break;
-    case 70: this.$ = new yy.ExpressionStatement($$[$0-1]); 
+    case 70: this.$ = $$[$0]; 
     break;
     case 71: this.$ = $$[$0]; 
     break;
     case 72: this.$ = $$[$0]; 
     break;
-    case 73: this.$ = $$[$0]; 
+    case 73: this.$ = new yy.WhileLoop($$[$0-2], $$[$0]); 
     break;
-    case 74: this.$ = $$[$0]; 
+    case 74: this.$ = new yy.ASTNode(); 
     break;
-    case 75: this.$ = new yy.Name($$[$0]); 
+    case 75: this.$ = new yy.ExpressionStatement($$[$0-1]); 
     break;
-    case 76: this.$ = new yy.Name($$[$0-2].qualified() + '.' + $$[$0]); 
+    case 76: this.$ = $$[$0]; 
     break;
-    case 77: this.$ = new yy.Assignment($$[$0-2], $$[$0]); 
+    case 77: this.$ = $$[$0]; 
     break;
     case 78: this.$ = $$[$0]; 
     break;
     case 79: this.$ = $$[$0]; 
     break;
-    case 80: this.$ = $$[$0]; 
+    case 80: this.$ = new yy.Name($$[$0]); 
     break;
-    case 81: this.$ = $$[$0]; 
+    case 81: this.$ = new yy.Name($$[$0-2].qualified() + '.' + $$[$0]); 
     break;
-    case 82: this.$ = $$[$0]; 
+    case 82: this.$ = new yy.Assignment($$[$0-2], $$[$0]); 
     break;
     case 83: this.$ = $$[$0]; 
     break;
-    case 86: this.$ = new yy.OrOrExpression($$[$0], $$[$02]); 
+    case 84: this.$ = $$[$0]; 
+    break;
+    case 85: this.$ = $$[$0]; 
+    break;
+    case 86: this.$ = $$[$0]; 
     break;
     case 87: this.$ = $$[$0]; 
     break;
     case 88: this.$ = $$[$0]; 
     break;
-    case 89: this.$ = $$[$0]; 
+    case 89: this.$ = new yy.LogicalOr($$[$0-2], $$[$0]); 
     break;
     case 90: this.$ = $$[$0]; 
     break;
-    case 91: this.$ = $$[$0]; 
+    case 91: this.$ = new yy.LogicalAnd($$[$0-2], $$[$0]); 
     break;
-    case 92: this.$ = new yy.Equals($$[$0-2], $$[$0]); 
+    case 92: this.$ = $$[$0]; 
     break;
-    case 93: this.$ = new yy.NotEquals($$[$0-2], $$[$0]); 
+    case 93: this.$ = new yy.InclusiveOr($$[$0-2], $$[$0]); 
     break;
     case 94: this.$ = $$[$0]; 
     break;
-    case 95: this.$ = $$[$0]; 
+    case 95: this.$ = new yy.ExclusiveOr($$[$0-2], $$[$0]); 
     break;
     case 96: this.$ = $$[$0]; 
     break;
-    case 97: this.$ = new yy.Addition($$[$0-2], $$[$0]); 
+    case 97: this.$ = new yy.InclusiveAnd($$[$0-2], $$[$0]); 
     break;
-    case 98: this.$ = new yy.Subtraction($$[$0-2], $$[$0]); 
+    case 98: this.$ = $$[$0]; 
     break;
-    case 99: this.$ = $$[$0]; 
+    case 99: this.$ = new yy.Equals($$[$0-2], $$[$0]); 
     break;
-    case 100: this.$ = new yy.Multiplication($$[$0-2], $$[$0]); 
+    case 100: this.$ = new yy.NotEquals($$[$0-2], $$[$0]); 
     break;
-    case 101: this.$ = new yy.Division($$[$0-2], $$[$0]); 
+    case 101: this.$ = $$[$0]; 
     break;
-    case 102: this.$ = new yy.Modulo($$[$0-2], $$[$0]); 
+    case 102: this.$ = new yy.LessThan($$[$0-2], $$[$0]); 
     break;
-    case 103: this.$ = $$[$0]; 
+    case 103: this.$ = new yy.LogicalOr(new yy.LessThan($$[$0-2], $$[$0]), new yy.Equals($$[$0-2], $$[$0])); 
     break;
-    case 104: this.$ = $$[$0]; 
+    case 104: this.$ = new yy.GreaterThan($$[$0-2], $$[$0]); 
     break;
-    case 105: this.$ = $$[$0]; 
+    case 105: this.$ = new yy.LogicalOr(new yy.GreaterThan($$[$0-2], $$[$0]), new yy.Equals($$[$0-2], $$[$0])); 
     break;
     case 106: this.$ = $$[$0]; 
     break;
-    case 107: this.$ = $$[$0]; 
+    case 107: this.$ = new yy.LeftShift($$[$0-2], $$[$0]); 
     break;
-    case 108: this.$ = $$[$0]; 
+    case 108: this.$ = new yy.RightShift($$[$0-2], $$[$0]); 
     break;
-    case 109: this.$ = $$[$0]; 
+    case 109: this.$ = new yy.ZeroFillRightShift($$[$0-2], $$[$0]); 
     break;
     case 110: this.$ = $$[$0]; 
     break;
-    case 111: this.$ = new yy.MethodInvocation($$[$0-2]); 
+    case 111: this.$ = new yy.Addition($$[$0-2], $$[$0]); 
     break;
-    case 112: this.$ = new yy.MethodInvocation($$[$0-3], $$[$0-1]); 
+    case 112: this.$ = new yy.Subtraction($$[$0-2], $$[$0]); 
     break;
-    case 113: this.$ = new yy.ArgumentList($$[$0]); 
+    case 113: this.$ = $$[$0]; 
     break;
-    case 114: $$[$0-2].appendChild($$[$0]); this.$ = $$[$0-2]; 
+    case 114: this.$ = new yy.Multiplication($$[$0-2], $$[$0]); 
     break;
-    case 115: this.$ = new yy.BooleanLiteral($$[$0]); 
+    case 115: this.$ = new yy.Division($$[$0-2], $$[$0]); 
     break;
-    case 116: this.$ = new yy.BooleanLiteral($$[$0]); 
+    case 116: this.$ = new yy.Modulo($$[$0-2], $$[$0]); 
     break;
-    case 117: this.$ = new yy.IntegerLiteral($$[$0]); 
+    case 117: this.$ = $$[$0]; 
     break;
-    case 118: this.$ = new yy.StringLiteral($$[$0]); 
+    case 118: this.$ = $$[$0]; 
+    break;
+    case 119: this.$ = new yy.UnaryMinus($$[$0]); 
+    break;
+    case 120: this.$ = new yy.UnaryPlus($$[$0]); 
+    break;
+    case 121: this.$ = $$[$0]; 
+    break;
+    case 122: this.$ = new yy.PreIncrement($$[$0]); 
+    break;
+    case 123: this.$ = new yy.PostIncrement($$[$0-1]); 
+    break;
+    case 124: this.$ = new yy.PreDecrement($$[$0]); 
+    break;
+    case 125: this.$ = new yy.PostDecrement($$[$0-1]); 
+    break;
+    case 126: this.$ = $$[$0]; 
+    break;
+    case 127: this.$ = new yy.BitwiseNegation($$[$0]); 
+    break;
+    case 128: this.$ = new yy.Negation($$[$0]); 
+    break;
+    case 129: this.$ = $$[$0]; 
+    break;
+    case 130: this.$ = $$[$0]; 
+    break;
+    case 131: this.$ = $$[$0]; 
+    break;
+    case 132: this.$ = $$[$0]; 
+    break;
+    case 133: this.$ = $$[$0]; 
+    break;
+    case 134: this.$ = new yy.CastExpression($$[$0-2], $$[$0]); 
+    break;
+    case 135: this.$ = $$[$0]; 
+    break;
+    case 136: this.$ = $$[$0]; 
+    break;
+    case 137: this.$ = $$[$0]; 
+    break;
+    case 138: this.$ = $$[$0]; 
+    break;
+    case 139: this.$ = $$[$0]; 
+    break;
+    case 140: this.$ = $$[$0]; 
+    break;
+    case 141: this.$ = $$[$0]; 
+    break;
+    case 142: this.$ = $$[$0]; 
+    break;
+    case 143: this.$ = new yy.MethodInvocation($$[$0-2]); 
+    break;
+    case 144: this.$ = new yy.MethodInvocation($$[$0-3], $$[$0-1]); 
+    break;
+    case 145: this.$ = new yy.ArgumentList($$[$0]); 
+    break;
+    case 146: $$[$0-2].appendChild($$[$0]); this.$ = $$[$0-2]; 
+    break;
+    case 147: this.$ = new yy.BooleanLiteral($$[$0]); 
+    break;
+    case 148: this.$ = new yy.BooleanLiteral($$[$0]); 
+    break;
+    case 149: this.$ = new yy.IntegerLiteral($$[$0]); 
+    break;
+    case 150: this.$ = new yy.CharLiteral($$[$0]); 
+    break;
+    case 151: this.$ = new yy.NullLiteral($$[$0]); 
+    break;
+    case 152: this.$ = new yy.FloatingPointLiteral($$[$0]); 
+    break;
+    case 153: this.$ = new yy.StringLiteral($$[$0]); 
     break;
     }
     },
-    table: [{3:1,4:[1,2],5:3,6:4,7:5,8:[1,6],11:7,12:[1,9],14:8,15:10,16:[1,11],18:[1,12]},{1:[3]},{1:[2,1]},{4:[1,13],6:14,7:15,11:7,12:[1,9],14:8,15:10,16:[1,11],18:[1,12]},{4:[1,16],7:17,11:18,12:[1,9],14:8,15:10,16:[1,11],18:[1,12]},{4:[1,19]},{9:[1,20]},{4:[2,10],12:[2,10],16:[2,10],18:[2,10]},{4:[2,13]},{9:[1,24],13:21,77:22,78:23},{4:[2,14]},{9:[1,25]},{16:[1,26]},{1:[2,2]},{4:[1,27],7:28,11:18,12:[1,9],14:8,15:10,16:[1,11],18:[1,12]},{4:[1,29]},{1:[2,3]},{4:[1,30]},{4:[2,11],12:[2,11],16:[2,11],18:[2,11]},{1:[2,4]},{10:[1,31]},{10:[1,32],79:[1,33]},{10:[2,73],33:[2,73],35:[2,73],41:[2,73],45:[2,73],79:[2,73],90:[2,73],91:[2,73],95:[2,73],96:[2,73],98:[2,73],99:[2,73],100:[2,73]},{10:[2,74],33:[2,74],35:[2,74],41:[2,74],45:[2,74],79:[2,74],90:[2,74],91:[2,74],95:[2,74],96:[2,74],98:[2,74],99:[2,74],100:[2,74]},{10:[2,75],33:[2,75],35:[2,75],41:[2,75],45:[2,75],79:[2,75],90:[2,75],91:[2,75],95:[2,75],96:[2,75],98:[2,75],99:[2,75],100:[2,75]},{17:34,19:[1,35]},{9:[1,36]},{1:[2,5]},{4:[1,37]},{1:[2,6]},{1:[2,7]},{4:[2,9],12:[2,9],16:[2,9],18:[2,9]},{4:[2,12],12:[2,12],16:[2,12],18:[2,12]},{9:[1,38]},{4:[2,15]},{18:[1,47],20:39,22:40,23:41,24:42,25:43,26:44,28:45,48:46,49:48,50:[1,49],51:50,52:51,53:[1,52],54:[1,53]},{17:54,19:[1,35]},{1:[2,8]},{10:[2,76],33:[2,76],35:[2,76],41:[2,76],45:[2,76],79:[2,76],90:[2,76],91:[2,76],95:[2,76],96:[2,76],98:[2,76],99:[2,76],100:[2,76]},{18:[1,47],21:[1,55],22:56,23:41,24:42,25:43,26:44,28:45,48:46,49:48,50:[1,49],51:50,52:51,53:[1,52],54:[1,53]},{18:[2,18],21:[2,18],50:[2,18],53:[2,18],54:[2,18]},{18:[2,20],21:[2,20],50:[2,20],53:[2,20],54:[2,20]},{18:[2,21],21:[2,21],50:[2,21],53:[2,21],54:[2,21]},{18:[2,22],21:[2,22],50:[2,22],53:[2,22],54:[2,22]},{9:[1,60],27:57,30:58,42:61,44:59},{19:[1,64],29:62,43:63},{9:[2,39]},{31:[1,65]},{9:[2,40]},{9:[2,41]},{9:[2,42]},{9:[2,43]},{9:[2,44]},{9:[2,45]},{4:[2,16]},{4:[2,17]},{18:[2,19],21:[2,19],50:[2,19],53:[2,19],54:[2,19]},{10:[1,66],41:[1,67]},{19:[2,25]},{10:[2,33],41:[2,33]},{10:[2,37],33:[1,68],41:[2,37],45:[2,37]},{10:[2,35],41:[2,35],45:[1,69]},{18:[2,24],21:[2,24],50:[2,24],53:[2,24],54:[2,24]},{18:[2,32],21:[2,32],50:[2,32],53:[2,32],54:[2,32]},{9:[1,24],10:[1,86],13:91,19:[1,64],21:[1,70],26:80,43:81,48:46,49:48,50:[1,49],51:50,52:51,53:[1,52],54:[1,53],55:71,56:72,57:73,58:74,59:75,60:76,61:77,62:78,63:79,64:82,65:83,66:[1,84],73:[1,85],74:87,75:88,76:89,77:22,78:23,80:90},{32:[1,92]},{18:[2,23],21:[2,23],50:[2,23],53:[2,23],54:[2,23]},{9:[1,94],42:61,44:93},{26:99,34:95,36:[1,96],39:97,40:[1,98],48:46,49:48,50:[1,49],51:50,52:51,53:[1,52],54:[1,53]},{9:[1,24],10:[2,85],13:116,41:[2,85],46:100,47:101,76:118,77:22,78:23,81:102,83:103,84:104,85:105,86:106,87:107,88:108,89:109,92:110,93:111,94:112,97:113,101:114,102:115,103:117,104:119,105:120,106:121,108:[1,122],109:[1,123],110:[1,124],111:[1,125]},{9:[2,46],10:[2,46],18:[2,46],19:[2,46],21:[2,46],50:[2,46],53:[2,46],54:[2,46],66:[2,46],68:[2,46],73:[2,46]},{9:[1,24],10:[1,86],13:91,19:[1,64],21:[1,126],26:80,43:81,48:46,49:48,50:[1,49],51:50,52:51,53:[1,52],54:[1,53],56:127,57:73,58:74,59:75,60:76,61:77,62:78,63:79,64:82,65:83,66:[1,84],73:[1,85],74:87,75:88,76:89,77:22,78:23,80:90},{9:[2,48],10:[2,48],19:[2,48],21:[2,48],50:[2,48],53:[2,48],54:[2,48],66:[2,48],73:[2,48]},{9:[2,50],10:[2,50],19:[2,50],21:[2,50],50:[2,50],53:[2,50],54:[2,50],66:[2,50],73:[2,50]},{9:[2,51],10:[2,51],19:[2,51],21:[2,51],50:[2,51],53:[2,51],54:[2,51],66:[2,51],73:[2,51]},{10:[1,128]},{9:[2,54],10:[2,54],19:[2,54],21:[2,54],50:[2,54],53:[2,54],54:[2,54],66:[2,54],73:[2,54]},{9:[2,55],10:[2,55],19:[2,55],21:[2,55],50:[2,55],53:[2,55],54:[2,55],66:[2,55],73:[2,55]},{9:[2,56],10:[2,56],19:[2,56],21:[2,56],50:[2,56],53:[2,56],54:[2,56],66:[2,56],73:[2,56]},{9:[2,57],10:[2,57],19:[2,57],21:[2,57],50:[2,57],53:[2,57],54:[2,57],66:[2,57],73:[2,57]},{9:[1,94],27:129,42:61,44:59},{9:[2,58],10:[2,58],19:[2,58],21:[2,58],50:[2,58],53:[2,58],54:[2,58],66:[2,58],68:[2,58],73:[2,58]},{9:[2,59],10:[2,59],19:[2,59],21:[2,59],50:[2,59],53:[2,59],54:[2,59],66:[2,59],68:[2,59],73:[2,59]},{9:[2,60],10:[2,60],19:[2,60],21:[2,60],50:[2,60],53:[2,60],54:[2,60],66:[2,60],68:[2,60],73:[2,60]},{33:[1,130]},{33:[1,131]},{9:[2,69],10:[2,69],19:[2,69],21:[2,69],50:[2,69],53:[2,69],54:[2,69],66:[2,69],68:[2,69],73:[2,69]},{10:[1,132]},{10:[2,71]},{10:[2,72]},{45:[1,133]},{33:[1,134],45:[2,78],79:[1,33]},{9:[1,136],30:135},{10:[2,34],41:[2,34]},{10:[2,37],35:[2,37],41:[2,37],45:[2,37]},{35:[1,137]},{37:[1,138]},{35:[2,29]},{41:[1,139]},{9:[1,94],42:140},{10:[2,36],41:[2,36]},{10:[2,38],41:[2,38]},{10:[2,79],35:[2,79],41:[2,79]},{10:[2,82],35:[2,82],41:[2,82]},{10:[2,83],35:[2,83],41:[2,83]},{10:[2,87],35:[2,87],41:[2,87]},{10:[2,88],35:[2,88],41:[2,88]},{10:[2,89],35:[2,89],41:[2,89]},{10:[2,90],35:[2,90],41:[2,90],90:[1,141],91:[1,142]},{10:[2,91],35:[2,91],41:[2,91],90:[2,91],91:[2,91]},{10:[2,94],35:[2,94],41:[2,94],90:[2,94],91:[2,94]},{10:[2,95],35:[2,95],41:[2,95],90:[2,95],91:[2,95],95:[1,143],96:[1,144]},{10:[2,96],35:[2,96],41:[2,96],90:[2,96],91:[2,96],95:[2,96],96:[2,96],98:[1,145],99:[1,146],100:[1,147]},{10:[2,99],35:[2,99],41:[2,99],90:[2,99],91:[2,99],95:[2,99],96:[2,99],98:[2,99],99:[2,99],100:[2,99]},{10:[2,103],35:[2,103],41:[2,103],90:[2,103],91:[2,103],95:[2,103],96:[2,103],98:[2,103],99:[2,103],100:[2,103]},{10:[2,104],35:[2,104],41:[2,104],90:[2,104],91:[2,104],95:[2,104],96:[2,104],98:[2,104],99:[2,104],100:[2,104]},{10:[2,105],33:[1,134],35:[2,105],41:[2,105],79:[1,33],90:[2,105],91:[2,105],95:[2,105],96:[2,105],98:[2,105],99:[2,105],100:[2,105]},{10:[2,106],35:[2,106],41:[2,106],90:[2,106],91:[2,106],95:[2,106],96:[2,106],98:[2,106],99:[2,106],100:[2,106]},{10:[2,107],35:[2,107],41:[2,107],90:[2,107],91:[2,107],95:[2,107],96:[2,107],98:[2,107],99:[2,107],100:[2,107]},{10:[2,108],35:[2,108],41:[2,108],90:[2,108],91:[2,108],95:[2,108],96:[2,108],98:[2,108],99:[2,108],100:[2,108]},{10:[2,109],35:[2,109],41:[2,109],90:[2,109],91:[2,109],95:[2,109],96:[2,109],98:[2,109],99:[2,109],100:[2,109]},{10:[2,110],35:[2,110],41:[2,110],90:[2,110],91:[2,110],95:[2,110],96:[2,110],98:[2,110],99:[2,110],100:[2,110]},{10:[2,115],35:[2,115],41:[2,115],90:[2,115],91:[2,115],95:[2,115],96:[2,115],98:[2,115],99:[2,115],100:[2,115]},{10:[2,116],35:[2,116],41:[2,116],90:[2,116],91:[2,116],95:[2,116],96:[2,116],98:[2,116],99:[2,116],100:[2,116]},{10:[2,117],35:[2,117],41:[2,117],90:[2,117],91:[2,117],95:[2,117],96:[2,117],98:[2,117],99:[2,117],100:[2,117]},{10:[2,118],35:[2,118],41:[2,118],90:[2,118],91:[2,118],95:[2,118],96:[2,118],98:[2,118],99:[2,118],100:[2,118]},{9:[2,47],10:[2,47],18:[2,47],19:[2,47],21:[2,47],50:[2,47],53:[2,47],54:[2,47],66:[2,47],68:[2,47],73:[2,47]},{9:[2,49],10:[2,49],19:[2,49],21:[2,49],50:[2,49],53:[2,49],54:[2,49],66:[2,49],73:[2,49]},{9:[2,52],10:[2,52],19:[2,52],21:[2,52],50:[2,52],53:[2,52],54:[2,52],66:[2,52],73:[2,52]},{10:[2,53],41:[1,67]},{9:[1,24],13:116,35:[2,85],47:148,76:118,77:22,78:23,81:102,83:103,84:104,85:105,86:106,87:107,88:108,89:109,92:110,93:111,94:112,97:113,101:114,102:115,103:117,104:119,105:120,106:121,108:[1,122],109:[1,123],110:[1,124],111:[1,125]},{9:[1,24],13:116,35:[2,85],47:149,76:118,77:22,78:23,81:102,83:103,84:104,85:105,86:106,87:107,88:108,89:109,92:110,93:111,94:112,97:113,101:114,102:115,103:117,104:119,105:120,106:121,108:[1,122],109:[1,123],110:[1,124],111:[1,125]},{9:[2,70],10:[2,70],19:[2,70],21:[2,70],50:[2,70],53:[2,70],54:[2,70],66:[2,70],68:[2,70],73:[2,70]},{9:[1,24],10:[2,85],13:116,76:118,77:22,78:23,81:150,83:103,84:104,85:105,86:106,87:107,88:108,89:109,92:110,93:111,94:112,97:113,101:114,102:115,103:117,104:119,105:120,106:121,108:[1,122],109:[1,123],110:[1,124],111:[1,125]},{9:[1,24],13:116,35:[1,151],41:[2,85],47:153,76:118,77:22,78:23,81:102,83:103,84:104,85:105,86:106,87:107,88:108,89:109,92:110,93:111,94:112,97:113,101:114,102:115,103:117,104:119,105:120,106:121,107:152,108:[1,122],109:[1,123],110:[1,124],111:[1,125]},{19:[2,26]},{33:[1,68]},{19:[2,27]},{38:[1,154]},{26:99,39:155,48:46,49:48,50:[1,49],51:50,52:51,53:[1,52],54:[1,53]},{35:[2,31]},{9:[1,24],13:116,76:118,77:22,78:23,89:156,92:110,93:111,94:112,97:113,101:114,102:115,103:117,104:119,105:120,106:121,108:[1,122],109:[1,123],110:[1,124],111:[1,125]},{9:[1,24],13:116,76:118,77:22,78:23,89:157,92:110,93:111,94:112,97:113,101:114,102:115,103:117,104:119,105:120,106:121,108:[1,122],109:[1,123],110:[1,124],111:[1,125]},{9:[1,24],13:116,76:118,77:22,78:23,94:158,97:113,101:114,102:115,103:117,104:119,105:120,106:121,108:[1,122],109:[1,123],110:[1,124],111:[1,125]},{9:[1,24],13:116,76:118,77:22,78:23,94:159,97:113,101:114,102:115,103:117,104:119,105:120,106:121,108:[1,122],109:[1,123],110:[1,124],111:[1,125]},{9:[1,24],13:116,76:118,77:22,78:23,97:160,101:114,102:115,103:117,104:119,105:120,106:121,108:[1,122],109:[1,123],110:[1,124],111:[1,125]},{9:[1,24],13:116,76:118,77:22,78:23,97:161,101:114,102:115,103:117,104:119,105:120,106:121,108:[1,122],109:[1,123],110:[1,124],111:[1,125]},{9:[1,24],13:116,76:118,77:22,78:23,97:162,101:114,102:115,103:117,104:119,105:120,106:121,108:[1,122],109:[1,123],110:[1,124],111:[1,125]},{35:[1,163]},{35:[1,164]},{10:[2,77]},{10:[2,111],35:[2,111],41:[2,111],90:[2,111],91:[2,111],95:[2,111],96:[2,111],98:[2,111],99:[2,111],100:[2,111]},{35:[1,165],41:[1,166]},{35:[2,113],41:[2,113]},{9:[1,167]},{35:[2,30]},{10:[2,92],35:[2,92],41:[2,92],90:[2,92],91:[2,92]},{10:[2,93],35:[2,93],41:[2,93],90:[2,93],91:[2,93]},{10:[2,97],35:[2,97],41:[2,97],90:[2,97],91:[2,97],95:[2,97],96:[2,97],98:[1,145],99:[1,146],100:[1,147]},{10:[2,98],35:[2,98],41:[2,98],90:[2,98],91:[2,98],95:[2,98],96:[2,98],98:[1,145],99:[1,146],100:[1,147]},{10:[2,100],35:[2,100],41:[2,100],90:[2,100],91:[2,100],95:[2,100],96:[2,100],98:[2,100],99:[2,100],100:[2,100]},{10:[2,101],35:[2,101],41:[2,101],90:[2,101],91:[2,101],95:[2,101],96:[2,101],98:[2,101],99:[2,101],100:[2,101]},{10:[2,102],35:[2,102],41:[2,102],90:[2,102],91:[2,102],95:[2,102],96:[2,102],98:[2,102],99:[2,102],100:[2,102]},{9:[1,24],10:[1,86],13:91,19:[1,64],43:81,58:169,60:170,61:77,62:78,63:79,64:82,65:83,66:[1,84],67:168,69:[1,171],70:[1,172],71:[1,173],72:[1,174],73:[1,85],74:87,75:88,76:89,77:22,78:23,80:90},{9:[1,24],10:[1,86],13:91,19:[1,64],43:81,58:175,60:76,61:77,62:78,63:79,64:82,65:83,66:[1,84],73:[1,85],74:87,75:88,76:89,77:22,78:23,80:90},{10:[2,112],35:[2,112],41:[2,112],90:[2,112],91:[2,112],95:[2,112],96:[2,112],98:[2,112],99:[2,112],100:[2,112]},{9:[1,24],13:116,35:[2,85],41:[2,85],47:176,76:118,77:22,78:23,81:102,83:103,84:104,85:105,86:106,87:107,88:108,89:109,92:110,93:111,94:112,97:113,101:114,102:115,103:117,104:119,105:120,106:121,108:[1,122],109:[1,123],110:[1,124],111:[1,125]},{35:[1,177]},{68:[1,178]},{9:[2,61],10:[2,61],19:[2,61],21:[2,61],50:[2,61],53:[2,61],54:[2,61],66:[2,61],73:[2,61]},{9:[2,63],10:[2,63],19:[2,63],21:[2,63],50:[2,63],53:[2,63],54:[2,63],66:[2,63],68:[2,63],73:[2,63]},{68:[2,64]},{68:[2,65]},{68:[2,66]},{68:[2,67]},{9:[2,68],10:[2,68],19:[2,68],21:[2,68],50:[2,68],53:[2,68],54:[2,68],66:[2,68],73:[2,68]},{35:[2,114],41:[2,114]},{19:[2,28]},{9:[1,24],10:[1,86],13:91,19:[1,64],43:81,58:179,60:76,61:77,62:78,63:79,64:82,65:83,66:[1,84],73:[1,85],74:87,75:88,76:89,77:22,78:23,80:90},{9:[2,62],10:[2,62],19:[2,62],21:[2,62],50:[2,62],53:[2,62],54:[2,62],66:[2,62],73:[2,62]}],
-    defaultActions: {2:[2,1],8:[2,13],10:[2,14],13:[2,2],16:[2,3],19:[2,4],27:[2,5],29:[2,6],30:[2,7],34:[2,15],37:[2,8],46:[2,39],48:[2,40],49:[2,41],50:[2,42],51:[2,43],52:[2,44],53:[2,45],54:[2,16],55:[2,17],58:[2,25],88:[2,71],89:[2,72],97:[2,29],135:[2,26],137:[2,27],140:[2,31],150:[2,77],155:[2,30],171:[2,64],172:[2,65],173:[2,66],174:[2,67],177:[2,28]},
+    table: [{3:1,4:[1,2],5:3,6:4,7:5,8:[1,6],11:7,12:[1,9],14:8,15:10,16:[1,11],18:[1,12]},{1:[3]},{1:[2,1]},{4:[1,13],6:14,7:15,11:7,12:[1,9],14:8,15:10,16:[1,11],18:[1,12]},{4:[1,16],7:17,11:18,12:[1,9],14:8,15:10,16:[1,11],18:[1,12]},{4:[1,19]},{9:[1,20]},{4:[2,10],12:[2,10],16:[2,10],18:[2,10]},{4:[2,13]},{9:[1,24],13:21,82:22,83:23},{4:[2,14]},{9:[1,25]},{16:[1,26]},{1:[2,2]},{4:[1,27],7:28,11:18,12:[1,9],14:8,15:10,16:[1,11],18:[1,12]},{4:[1,29]},{1:[2,3]},{4:[1,30]},{4:[2,11],12:[2,11],16:[2,11],18:[2,11]},{1:[2,4]},{10:[1,31]},{10:[1,32],84:[1,33]},{10:[2,78],33:[2,78],35:[2,78],41:[2,78],45:[2,78],84:[2,78],90:[2,78],92:[2,78],94:[2,78],96:[2,78],98:[2,78],100:[2,78],101:[2,78],103:[2,78],104:[2,78],105:[2,78],106:[2,78],108:[2,78],109:[2,78],110:[2,78],112:[2,78],113:[2,78],115:[2,78],116:[2,78],117:[2,78],122:[2,78],125:[2,78]},{10:[2,79],33:[2,79],35:[2,79],41:[2,79],45:[2,79],84:[2,79],90:[2,79],92:[2,79],94:[2,79],96:[2,79],98:[2,79],100:[2,79],101:[2,79],103:[2,79],104:[2,79],105:[2,79],106:[2,79],108:[2,79],109:[2,79],110:[2,79],112:[2,79],113:[2,79],115:[2,79],116:[2,79],117:[2,79],122:[2,79],125:[2,79]},{10:[2,80],33:[2,80],35:[2,80],41:[2,80],45:[2,80],84:[2,80],90:[2,80],92:[2,80],94:[2,80],96:[2,80],98:[2,80],100:[2,80],101:[2,80],103:[2,80],104:[2,80],105:[2,80],106:[2,80],108:[2,80],109:[2,80],110:[2,80],112:[2,80],113:[2,80],115:[2,80],116:[2,80],117:[2,80],122:[2,80],125:[2,80]},{17:34,19:[1,35]},{9:[1,36]},{1:[2,5]},{4:[1,37]},{1:[2,6]},{1:[2,7]},{4:[2,9],12:[2,9],16:[2,9],18:[2,9]},{4:[2,12],12:[2,12],16:[2,12],18:[2,12]},{9:[1,38]},{4:[2,15]},{18:[1,47],20:39,22:40,23:41,24:42,25:43,26:44,28:45,48:46,49:48,50:[1,49],51:50,52:51,53:[1,52],54:[1,53],55:[1,54],56:[1,55],57:[1,56],58:[1,57],59:[1,58]},{17:59,19:[1,35]},{1:[2,8]},{10:[2,81],33:[2,81],35:[2,81],41:[2,81],45:[2,81],84:[2,81],90:[2,81],92:[2,81],94:[2,81],96:[2,81],98:[2,81],100:[2,81],101:[2,81],103:[2,81],104:[2,81],105:[2,81],106:[2,81],108:[2,81],109:[2,81],110:[2,81],112:[2,81],113:[2,81],115:[2,81],116:[2,81],117:[2,81],122:[2,81],125:[2,81]},{18:[1,47],21:[1,60],22:61,23:41,24:42,25:43,26:44,28:45,48:46,49:48,50:[1,49],51:50,52:51,53:[1,52],54:[1,53],55:[1,54],56:[1,55],57:[1,56],58:[1,57],59:[1,58]},{18:[2,18],21:[2,18],50:[2,18],53:[2,18],54:[2,18],55:[2,18],56:[2,18],57:[2,18],58:[2,18],59:[2,18]},{18:[2,20],21:[2,20],50:[2,20],53:[2,20],54:[2,20],55:[2,20],56:[2,20],57:[2,20],58:[2,20],59:[2,20]},{18:[2,21],21:[2,21],50:[2,21],53:[2,21],54:[2,21],55:[2,21],56:[2,21],57:[2,21],58:[2,21],59:[2,21]},{18:[2,22],21:[2,22],50:[2,22],53:[2,22],54:[2,22],55:[2,22],56:[2,22],57:[2,22],58:[2,22],59:[2,22]},{9:[1,65],27:62,30:63,42:66,44:64},{19:[1,69],29:67,43:68},{9:[2,39]},{31:[1,70]},{9:[2,40],35:[2,40]},{9:[2,41],35:[2,41]},{9:[2,42],35:[2,42]},{9:[2,43],35:[2,43]},{9:[2,44],35:[2,44]},{9:[2,45],35:[2,45]},{9:[2,46],35:[2,46]},{9:[2,47],35:[2,47]},{9:[2,48],35:[2,48]},{9:[2,49],35:[2,49]},{9:[2,50],35:[2,50]},{4:[2,16]},{4:[2,17]},{18:[2,19],21:[2,19],50:[2,19],53:[2,19],54:[2,19],55:[2,19],56:[2,19],57:[2,19],58:[2,19],59:[2,19]},{10:[1,71],41:[1,72]},{19:[2,25]},{10:[2,33],41:[2,33]},{10:[2,37],33:[1,73],41:[2,37],45:[2,37]},{10:[2,35],41:[2,35],45:[1,74]},{18:[2,24],21:[2,24],50:[2,24],53:[2,24],54:[2,24],55:[2,24],56:[2,24],57:[2,24],58:[2,24],59:[2,24]},{18:[2,32],21:[2,32],50:[2,32],53:[2,32],54:[2,32],55:[2,32],56:[2,32],57:[2,32],58:[2,32],59:[2,32]},{9:[1,24],10:[1,91],13:96,19:[1,69],21:[1,75],26:85,43:86,48:46,49:48,50:[1,49],51:50,52:51,53:[1,52],54:[1,53],55:[1,54],56:[1,55],57:[1,56],58:[1,57],59:[1,58],60:76,61:77,62:78,63:79,64:80,65:81,66:82,67:83,68:84,69:87,70:88,71:[1,89],78:[1,90],79:92,80:93,81:94,82:22,83:23,85:95},{32:[1,97]},{18:[2,23],21:[2,23],50:[2,23],53:[2,23],54:[2,23],55:[2,23],56:[2,23],57:[2,23],58:[2,23],59:[2,23]},{9:[1,99],42:66,44:98},{26:104,34:100,36:[1,101],39:102,40:[1,103],48:46,49:48,50:[1,49],51:50,52:51,53:[1,52],54:[1,53],55:[1,54],56:[1,55],57:[1,56],58:[1,57],59:[1,58]},{9:[1,24],13:129,33:[1,132],46:105,47:106,81:134,82:22,83:23,86:107,88:108,89:109,91:110,93:111,95:112,97:113,99:114,102:115,107:116,111:117,112:[1,122],113:[1,121],114:118,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{9:[2,51],10:[2,51],18:[2,51],19:[2,51],21:[2,51],50:[2,51],53:[2,51],54:[2,51],55:[2,51],56:[2,51],57:[2,51],58:[2,51],59:[2,51],71:[2,51],73:[2,51],78:[2,51]},{9:[1,24],10:[1,91],13:96,19:[1,69],21:[1,150],26:85,43:86,48:46,49:48,50:[1,49],51:50,52:51,53:[1,52],54:[1,53],55:[1,54],56:[1,55],57:[1,56],58:[1,57],59:[1,58],61:151,62:78,63:79,64:80,65:81,66:82,67:83,68:84,69:87,70:88,71:[1,89],78:[1,90],79:92,80:93,81:94,82:22,83:23,85:95},{9:[2,53],10:[2,53],19:[2,53],21:[2,53],50:[2,53],53:[2,53],54:[2,53],55:[2,53],56:[2,53],57:[2,53],58:[2,53],59:[2,53],71:[2,53],78:[2,53]},{9:[2,55],10:[2,55],19:[2,55],21:[2,55],50:[2,55],53:[2,55],54:[2,55],55:[2,55],56:[2,55],57:[2,55],58:[2,55],59:[2,55],71:[2,55],78:[2,55]},{9:[2,56],10:[2,56],19:[2,56],21:[2,56],50:[2,56],53:[2,56],54:[2,56],55:[2,56],56:[2,56],57:[2,56],58:[2,56],59:[2,56],71:[2,56],78:[2,56]},{10:[1,152]},{9:[2,59],10:[2,59],19:[2,59],21:[2,59],50:[2,59],53:[2,59],54:[2,59],55:[2,59],56:[2,59],57:[2,59],58:[2,59],59:[2,59],71:[2,59],78:[2,59]},{9:[2,60],10:[2,60],19:[2,60],21:[2,60],50:[2,60],53:[2,60],54:[2,60],55:[2,60],56:[2,60],57:[2,60],58:[2,60],59:[2,60],71:[2,60],78:[2,60]},{9:[2,61],10:[2,61],19:[2,61],21:[2,61],50:[2,61],53:[2,61],54:[2,61],55:[2,61],56:[2,61],57:[2,61],58:[2,61],59:[2,61],71:[2,61],78:[2,61]},{9:[2,62],10:[2,62],19:[2,62],21:[2,62],50:[2,62],53:[2,62],54:[2,62],55:[2,62],56:[2,62],57:[2,62],58:[2,62],59:[2,62],71:[2,62],78:[2,62]},{9:[1,99],27:153,42:66,44:64},{9:[2,63],10:[2,63],19:[2,63],21:[2,63],50:[2,63],53:[2,63],54:[2,63],55:[2,63],56:[2,63],57:[2,63],58:[2,63],59:[2,63],71:[2,63],73:[2,63],78:[2,63]},{9:[2,64],10:[2,64],19:[2,64],21:[2,64],50:[2,64],53:[2,64],54:[2,64],55:[2,64],56:[2,64],57:[2,64],58:[2,64],59:[2,64],71:[2,64],73:[2,64],78:[2,64]},{9:[2,65],10:[2,65],19:[2,65],21:[2,65],50:[2,65],53:[2,65],54:[2,65],55:[2,65],56:[2,65],57:[2,65],58:[2,65],59:[2,65],71:[2,65],73:[2,65],78:[2,65]},{33:[1,154]},{33:[1,155]},{9:[2,74],10:[2,74],19:[2,74],21:[2,74],50:[2,74],53:[2,74],54:[2,74],55:[2,74],56:[2,74],57:[2,74],58:[2,74],59:[2,74],71:[2,74],73:[2,74],78:[2,74]},{10:[1,156]},{10:[2,76]},{10:[2,77]},{45:[1,157]},{33:[1,158],45:[2,83],84:[1,33]},{9:[1,160],30:159},{10:[2,34],41:[2,34]},{10:[2,37],35:[2,37],41:[2,37],45:[2,37]},{35:[1,161]},{37:[1,162]},{35:[2,29]},{41:[1,163]},{9:[1,99],42:164},{10:[2,36],41:[2,36]},{10:[2,38],41:[2,38]},{10:[2,84],35:[2,84],41:[2,84]},{10:[2,87],35:[2,87],41:[2,87],90:[1,165]},{10:[2,88],35:[2,88],41:[2,88],90:[2,88],92:[1,166]},{10:[2,90],35:[2,90],41:[2,90],90:[2,90],92:[2,90],94:[1,167]},{10:[2,92],35:[2,92],41:[2,92],90:[2,92],92:[2,92],94:[2,92],96:[1,168]},{10:[2,94],35:[2,94],41:[2,94],90:[2,94],92:[2,94],94:[2,94],96:[2,94],98:[1,169]},{10:[2,96],35:[2,96],41:[2,96],90:[2,96],92:[2,96],94:[2,96],96:[2,96],98:[2,96],100:[1,170],101:[1,171]},{10:[2,98],35:[2,98],41:[2,98],90:[2,98],92:[2,98],94:[2,98],96:[2,98],98:[2,98],100:[2,98],101:[2,98],103:[1,172],104:[1,173],105:[1,174],106:[1,175]},{10:[2,101],35:[2,101],41:[2,101],90:[2,101],92:[2,101],94:[2,101],96:[2,101],98:[2,101],100:[2,101],101:[2,101],103:[2,101],104:[2,101],105:[2,101],106:[2,101],108:[1,176],109:[1,177],110:[1,178]},{10:[2,106],35:[2,106],41:[2,106],90:[2,106],92:[2,106],94:[2,106],96:[2,106],98:[2,106],100:[2,106],101:[2,106],103:[2,106],104:[2,106],105:[2,106],106:[2,106],108:[2,106],109:[2,106],110:[2,106],112:[1,179],113:[1,180]},{10:[2,110],35:[2,110],41:[2,110],90:[2,110],92:[2,110],94:[2,110],96:[2,110],98:[2,110],100:[2,110],101:[2,110],103:[2,110],104:[2,110],105:[2,110],106:[2,110],108:[2,110],109:[2,110],110:[2,110],112:[2,110],113:[2,110],115:[1,181],116:[1,182],117:[1,183]},{10:[2,113],35:[2,113],41:[2,113],90:[2,113],92:[2,113],94:[2,113],96:[2,113],98:[2,113],100:[2,113],101:[2,113],103:[2,113],104:[2,113],105:[2,113],106:[2,113],108:[2,113],109:[2,113],110:[2,113],112:[2,113],113:[2,113],115:[2,113],116:[2,113],117:[2,113]},{10:[2,117],35:[2,117],41:[2,117],90:[2,117],92:[2,117],94:[2,117],96:[2,117],98:[2,117],100:[2,117],101:[2,117],103:[2,117],104:[2,117],105:[2,117],106:[2,117],108:[2,117],109:[2,117],110:[2,117],112:[2,117],113:[2,117],115:[2,117],116:[2,117],117:[2,117],122:[2,117],125:[2,117]},{10:[2,118],35:[2,118],41:[2,118],90:[2,118],92:[2,118],94:[2,118],96:[2,118],98:[2,118],100:[2,118],101:[2,118],103:[2,118],104:[2,118],105:[2,118],106:[2,118],108:[2,118],109:[2,118],110:[2,118],112:[2,118],113:[2,118],115:[2,118],116:[2,118],117:[2,118],122:[2,118],125:[2,118]},{9:[1,24],13:129,33:[1,132],81:134,82:22,83:23,112:[1,122],113:[1,121],114:184,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{9:[1,24],13:129,33:[1,132],81:134,82:22,83:23,112:[1,122],113:[1,121],114:185,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{10:[2,121],35:[2,121],41:[2,121],90:[2,121],92:[2,121],94:[2,121],96:[2,121],98:[2,121],100:[2,121],101:[2,121],103:[2,121],104:[2,121],105:[2,121],106:[2,121],108:[2,121],109:[2,121],110:[2,121],112:[2,121],113:[2,121],115:[2,121],116:[2,121],117:[2,121],122:[2,121],125:[2,121]},{10:[2,126],35:[2,126],41:[2,126],90:[2,126],92:[2,126],94:[2,126],96:[2,126],98:[2,126],100:[2,126],101:[2,126],103:[2,126],104:[2,126],105:[2,126],106:[2,126],108:[2,126],109:[2,126],110:[2,126],112:[2,126],113:[2,126],115:[2,126],116:[2,126],117:[2,126],122:[1,186],125:[1,187]},{9:[1,24],13:129,33:[1,132],81:134,82:22,83:23,112:[1,122],113:[1,121],114:188,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{9:[1,24],13:129,33:[1,132],81:134,82:22,83:23,112:[1,122],113:[1,121],114:189,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{10:[2,129],35:[2,129],41:[2,129],90:[2,129],92:[2,129],94:[2,129],96:[2,129],98:[2,129],100:[2,129],101:[2,129],103:[2,129],104:[2,129],105:[2,129],106:[2,129],108:[2,129],109:[2,129],110:[2,129],112:[2,129],113:[2,129],115:[2,129],116:[2,129],117:[2,129],122:[2,129],125:[2,129]},{10:[2,130],35:[2,130],41:[2,130],90:[2,130],92:[2,130],94:[2,130],96:[2,130],98:[2,130],100:[2,130],101:[2,130],103:[2,130],104:[2,130],105:[2,130],106:[2,130],108:[2,130],109:[2,130],110:[2,130],112:[2,130],113:[2,130],115:[2,130],116:[2,130],117:[2,130],122:[2,130],125:[2,130]},{10:[2,131],33:[1,158],35:[2,131],41:[2,131],84:[1,33],90:[2,131],92:[2,131],94:[2,131],96:[2,131],98:[2,131],100:[2,131],101:[2,131],103:[2,131],104:[2,131],105:[2,131],106:[2,131],108:[2,131],109:[2,131],110:[2,131],112:[2,131],113:[2,131],115:[2,131],116:[2,131],117:[2,131],122:[2,131],125:[2,131]},{10:[2,132],35:[2,132],41:[2,132],90:[2,132],92:[2,132],94:[2,132],96:[2,132],98:[2,132],100:[2,132],101:[2,132],103:[2,132],104:[2,132],105:[2,132],106:[2,132],108:[2,132],109:[2,132],110:[2,132],112:[2,132],113:[2,132],115:[2,132],116:[2,132],117:[2,132],122:[2,132],125:[2,132]},{10:[2,133],35:[2,133],41:[2,133],90:[2,133],92:[2,133],94:[2,133],96:[2,133],98:[2,133],100:[2,133],101:[2,133],103:[2,133],104:[2,133],105:[2,133],106:[2,133],108:[2,133],109:[2,133],110:[2,133],112:[2,133],113:[2,133],115:[2,133],116:[2,133],117:[2,133],122:[2,133],125:[2,133]},{48:190,49:48,50:[1,49],51:50,52:51,53:[1,52],54:[1,53],55:[1,54],56:[1,55],57:[1,56],58:[1,57],59:[1,58]},{10:[2,135],35:[2,135],41:[2,135],90:[2,135],92:[2,135],94:[2,135],96:[2,135],98:[2,135],100:[2,135],101:[2,135],103:[2,135],104:[2,135],105:[2,135],106:[2,135],108:[2,135],109:[2,135],110:[2,135],112:[2,135],113:[2,135],115:[2,135],116:[2,135],117:[2,135],122:[2,135],125:[2,135]},{10:[2,136],35:[2,136],41:[2,136],90:[2,136],92:[2,136],94:[2,136],96:[2,136],98:[2,136],100:[2,136],101:[2,136],103:[2,136],104:[2,136],105:[2,136],106:[2,136],108:[2,136],109:[2,136],110:[2,136],112:[2,136],113:[2,136],115:[2,136],116:[2,136],117:[2,136],122:[2,136],125:[2,136]},{9:[1,24],13:129,33:[1,132],81:134,82:22,83:23,112:[1,122],113:[1,121],114:191,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{9:[1,24],13:129,33:[1,132],81:134,82:22,83:23,112:[1,122],113:[1,121],114:192,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{10:[2,137],35:[2,137],41:[2,137],90:[2,137],92:[2,137],94:[2,137],96:[2,137],98:[2,137],100:[2,137],101:[2,137],103:[2,137],104:[2,137],105:[2,137],106:[2,137],108:[2,137],109:[2,137],110:[2,137],112:[2,137],113:[2,137],115:[2,137],116:[2,137],117:[2,137],122:[2,137],125:[2,137]},{10:[2,138],35:[2,138],41:[2,138],90:[2,138],92:[2,138],94:[2,138],96:[2,138],98:[2,138],100:[2,138],101:[2,138],103:[2,138],104:[2,138],105:[2,138],106:[2,138],108:[2,138],109:[2,138],110:[2,138],112:[2,138],113:[2,138],115:[2,138],116:[2,138],117:[2,138],122:[2,138],125:[2,138]},{10:[2,139],35:[2,139],41:[2,139],90:[2,139],92:[2,139],94:[2,139],96:[2,139],98:[2,139],100:[2,139],101:[2,139],103:[2,139],104:[2,139],105:[2,139],106:[2,139],108:[2,139],109:[2,139],110:[2,139],112:[2,139],113:[2,139],115:[2,139],116:[2,139],117:[2,139],122:[2,139],125:[2,139]},{10:[2,140],35:[2,140],41:[2,140],90:[2,140],92:[2,140],94:[2,140],96:[2,140],98:[2,140],100:[2,140],101:[2,140],103:[2,140],104:[2,140],105:[2,140],106:[2,140],108:[2,140],109:[2,140],110:[2,140],112:[2,140],113:[2,140],115:[2,140],116:[2,140],117:[2,140],122:[2,140],125:[2,140]},{10:[2,141],35:[2,141],41:[2,141],90:[2,141],92:[2,141],94:[2,141],96:[2,141],98:[2,141],100:[2,141],101:[2,141],103:[2,141],104:[2,141],105:[2,141],106:[2,141],108:[2,141],109:[2,141],110:[2,141],112:[2,141],113:[2,141],115:[2,141],116:[2,141],117:[2,141],122:[2,141],125:[2,141]},{10:[2,142],35:[2,142],41:[2,142],90:[2,142],92:[2,142],94:[2,142],96:[2,142],98:[2,142],100:[2,142],101:[2,142],103:[2,142],104:[2,142],105:[2,142],106:[2,142],108:[2,142],109:[2,142],110:[2,142],112:[2,142],113:[2,142],115:[2,142],116:[2,142],117:[2,142],122:[2,142],125:[2,142]},{10:[2,149],35:[2,149],41:[2,149],90:[2,149],92:[2,149],94:[2,149],96:[2,149],98:[2,149],100:[2,149],101:[2,149],103:[2,149],104:[2,149],105:[2,149],106:[2,149],108:[2,149],109:[2,149],110:[2,149],112:[2,149],113:[2,149],115:[2,149],116:[2,149],117:[2,149],122:[2,149],125:[2,149]},{10:[2,150],35:[2,150],41:[2,150],90:[2,150],92:[2,150],94:[2,150],96:[2,150],98:[2,150],100:[2,150],101:[2,150],103:[2,150],104:[2,150],105:[2,150],106:[2,150],108:[2,150],109:[2,150],110:[2,150],112:[2,150],113:[2,150],115:[2,150],116:[2,150],117:[2,150],122:[2,150],125:[2,150]},{10:[2,152],35:[2,152],41:[2,152],90:[2,152],92:[2,152],94:[2,152],96:[2,152],98:[2,152],100:[2,152],101:[2,152],103:[2,152],104:[2,152],105:[2,152],106:[2,152],108:[2,152],109:[2,152],110:[2,152],112:[2,152],113:[2,152],115:[2,152],116:[2,152],117:[2,152],122:[2,152],125:[2,152]},{10:[2,147],35:[2,147],41:[2,147],90:[2,147],92:[2,147],94:[2,147],96:[2,147],98:[2,147],100:[2,147],101:[2,147],103:[2,147],104:[2,147],105:[2,147],106:[2,147],108:[2,147],109:[2,147],110:[2,147],112:[2,147],113:[2,147],115:[2,147],116:[2,147],117:[2,147],122:[2,147],125:[2,147]},{10:[2,148],35:[2,148],41:[2,148],90:[2,148],92:[2,148],94:[2,148],96:[2,148],98:[2,148],100:[2,148],101:[2,148],103:[2,148],104:[2,148],105:[2,148],106:[2,148],108:[2,148],109:[2,148],110:[2,148],112:[2,148],113:[2,148],115:[2,148],116:[2,148],117:[2,148],122:[2,148],125:[2,148]},{10:[2,153],35:[2,153],41:[2,153],90:[2,153],92:[2,153],94:[2,153],96:[2,153],98:[2,153],100:[2,153],101:[2,153],103:[2,153],104:[2,153],105:[2,153],106:[2,153],108:[2,153],109:[2,153],110:[2,153],112:[2,153],113:[2,153],115:[2,153],116:[2,153],117:[2,153],122:[2,153],125:[2,153]},{10:[2,151],35:[2,151],41:[2,151],90:[2,151],92:[2,151],94:[2,151],96:[2,151],98:[2,151],100:[2,151],101:[2,151],103:[2,151],104:[2,151],105:[2,151],106:[2,151],108:[2,151],109:[2,151],110:[2,151],112:[2,151],113:[2,151],115:[2,151],116:[2,151],117:[2,151],122:[2,151],125:[2,151]},{9:[2,52],10:[2,52],18:[2,52],19:[2,52],21:[2,52],50:[2,52],53:[2,52],54:[2,52],55:[2,52],56:[2,52],57:[2,52],58:[2,52],59:[2,52],71:[2,52],73:[2,52],78:[2,52]},{9:[2,54],10:[2,54],19:[2,54],21:[2,54],50:[2,54],53:[2,54],54:[2,54],55:[2,54],56:[2,54],57:[2,54],58:[2,54],59:[2,54],71:[2,54],78:[2,54]},{9:[2,57],10:[2,57],19:[2,57],21:[2,57],50:[2,57],53:[2,57],54:[2,57],55:[2,57],56:[2,57],57:[2,57],58:[2,57],59:[2,57],71:[2,57],78:[2,57]},{10:[2,58],41:[1,72]},{9:[1,24],13:129,33:[1,132],47:193,81:134,82:22,83:23,86:107,88:108,89:109,91:110,93:111,95:112,97:113,99:114,102:115,107:116,111:117,112:[1,122],113:[1,121],114:118,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{9:[1,24],13:129,33:[1,132],47:194,81:134,82:22,83:23,86:107,88:108,89:109,91:110,93:111,95:112,97:113,99:114,102:115,107:116,111:117,112:[1,122],113:[1,121],114:118,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{9:[2,75],10:[2,75],19:[2,75],21:[2,75],50:[2,75],53:[2,75],54:[2,75],55:[2,75],56:[2,75],57:[2,75],58:[2,75],59:[2,75],71:[2,75],73:[2,75],78:[2,75]},{9:[1,24],13:129,33:[1,132],81:134,82:22,83:23,86:195,88:108,89:109,91:110,93:111,95:112,97:113,99:114,102:115,107:116,111:117,112:[1,122],113:[1,121],114:118,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{9:[1,24],13:129,33:[1,132],35:[1,196],47:198,81:134,82:22,83:23,86:107,88:108,89:109,91:110,93:111,95:112,97:113,99:114,102:115,107:116,111:117,112:[1,122],113:[1,121],114:118,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,137:197,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{19:[2,26]},{33:[1,73]},{19:[2,27]},{38:[1,199]},{26:104,39:200,48:46,49:48,50:[1,49],51:50,52:51,53:[1,52],54:[1,53],55:[1,54],56:[1,55],57:[1,56],58:[1,57],59:[1,58]},{35:[2,31]},{9:[1,24],13:129,33:[1,132],81:134,82:22,83:23,89:201,91:110,93:111,95:112,97:113,99:114,102:115,107:116,111:117,112:[1,122],113:[1,121],114:118,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{9:[1,24],13:129,33:[1,132],81:134,82:22,83:23,91:202,93:111,95:112,97:113,99:114,102:115,107:116,111:117,112:[1,122],113:[1,121],114:118,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{9:[1,24],13:129,33:[1,132],81:134,82:22,83:23,93:203,95:112,97:113,99:114,102:115,107:116,111:117,112:[1,122],113:[1,121],114:118,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{9:[1,24],13:129,33:[1,132],81:134,82:22,83:23,95:204,97:113,99:114,102:115,107:116,111:117,112:[1,122],113:[1,121],114:118,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{9:[1,24],13:129,33:[1,132],81:134,82:22,83:23,97:205,99:114,102:115,107:116,111:117,112:[1,122],113:[1,121],114:118,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{9:[1,24],13:129,33:[1,132],81:134,82:22,83:23,99:206,102:115,107:116,111:117,112:[1,122],113:[1,121],114:118,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{9:[1,24],13:129,33:[1,132],81:134,82:22,83:23,99:207,102:115,107:116,111:117,112:[1,122],113:[1,121],114:118,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{9:[1,24],13:129,33:[1,132],81:134,82:22,83:23,102:208,107:116,111:117,112:[1,122],113:[1,121],114:118,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{9:[1,24],13:129,33:[1,132],81:134,82:22,83:23,102:209,107:116,111:117,112:[1,122],113:[1,121],114:118,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{9:[1,24],13:129,33:[1,132],81:134,82:22,83:23,102:210,107:116,111:117,112:[1,122],113:[1,121],114:118,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{9:[1,24],13:129,33:[1,132],81:134,82:22,83:23,102:211,107:116,111:117,112:[1,122],113:[1,121],114:118,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{9:[1,24],13:129,33:[1,132],81:134,82:22,83:23,107:212,111:117,112:[1,122],113:[1,121],114:118,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{9:[1,24],13:129,33:[1,132],81:134,82:22,83:23,107:213,111:117,112:[1,122],113:[1,121],114:118,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{9:[1,24],13:129,33:[1,132],81:134,82:22,83:23,107:214,111:117,112:[1,122],113:[1,121],114:118,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{9:[1,24],13:129,33:[1,132],81:134,82:22,83:23,111:215,112:[1,122],113:[1,121],114:118,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{9:[1,24],13:129,33:[1,132],81:134,82:22,83:23,111:216,112:[1,122],113:[1,121],114:118,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{9:[1,24],13:129,33:[1,132],81:134,82:22,83:23,112:[1,122],113:[1,121],114:217,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{9:[1,24],13:129,33:[1,132],81:134,82:22,83:23,112:[1,122],113:[1,121],114:218,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{9:[1,24],13:129,33:[1,132],81:134,82:22,83:23,112:[1,122],113:[1,121],114:219,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{10:[2,119],35:[2,119],41:[2,119],90:[2,119],92:[2,119],94:[2,119],96:[2,119],98:[2,119],100:[2,119],101:[2,119],103:[2,119],104:[2,119],105:[2,119],106:[2,119],108:[2,119],109:[2,119],110:[2,119],112:[2,119],113:[2,119],115:[2,119],116:[2,119],117:[2,119],122:[2,119],125:[2,119]},{10:[2,120],35:[2,120],41:[2,120],90:[2,120],92:[2,120],94:[2,120],96:[2,120],98:[2,120],100:[2,120],101:[2,120],103:[2,120],104:[2,120],105:[2,120],106:[2,120],108:[2,120],109:[2,120],110:[2,120],112:[2,120],113:[2,120],115:[2,120],116:[2,120],117:[2,120],122:[2,120],125:[2,120]},{10:[2,123],35:[2,123],41:[2,123],90:[2,123],92:[2,123],94:[2,123],96:[2,123],98:[2,123],100:[2,123],101:[2,123],103:[2,123],104:[2,123],105:[2,123],106:[2,123],108:[2,123],109:[2,123],110:[2,123],112:[2,123],113:[2,123],115:[2,123],116:[2,123],117:[2,123],122:[2,123],125:[2,123]},{10:[2,125],35:[2,125],41:[2,125],90:[2,125],92:[2,125],94:[2,125],96:[2,125],98:[2,125],100:[2,125],101:[2,125],103:[2,125],104:[2,125],105:[2,125],106:[2,125],108:[2,125],109:[2,125],110:[2,125],112:[2,125],113:[2,125],115:[2,125],116:[2,125],117:[2,125],122:[2,125],125:[2,125]},{10:[2,127],35:[2,127],41:[2,127],90:[2,127],92:[2,127],94:[2,127],96:[2,127],98:[2,127],100:[2,127],101:[2,127],103:[2,127],104:[2,127],105:[2,127],106:[2,127],108:[2,127],109:[2,127],110:[2,127],112:[2,127],113:[2,127],115:[2,127],116:[2,127],117:[2,127],122:[2,127],125:[2,127]},{10:[2,128],35:[2,128],41:[2,128],90:[2,128],92:[2,128],94:[2,128],96:[2,128],98:[2,128],100:[2,128],101:[2,128],103:[2,128],104:[2,128],105:[2,128],106:[2,128],108:[2,128],109:[2,128],110:[2,128],112:[2,128],113:[2,128],115:[2,128],116:[2,128],117:[2,128],122:[2,128],125:[2,128]},{35:[1,220]},{10:[2,122],35:[2,122],41:[2,122],90:[2,122],92:[2,122],94:[2,122],96:[2,122],98:[2,122],100:[2,122],101:[2,122],103:[2,122],104:[2,122],105:[2,122],106:[2,122],108:[2,122],109:[2,122],110:[2,122],112:[2,122],113:[2,122],115:[2,122],116:[2,122],117:[2,122],122:[2,122],125:[2,122]},{10:[2,124],35:[2,124],41:[2,124],90:[2,124],92:[2,124],94:[2,124],96:[2,124],98:[2,124],100:[2,124],101:[2,124],103:[2,124],104:[2,124],105:[2,124],106:[2,124],108:[2,124],109:[2,124],110:[2,124],112:[2,124],113:[2,124],115:[2,124],116:[2,124],117:[2,124],122:[2,124],125:[2,124]},{35:[1,221]},{35:[1,222]},{10:[2,82]},{10:[2,143],35:[2,143],41:[2,143],90:[2,143],92:[2,143],94:[2,143],96:[2,143],98:[2,143],100:[2,143],101:[2,143],103:[2,143],104:[2,143],105:[2,143],106:[2,143],108:[2,143],109:[2,143],110:[2,143],112:[2,143],113:[2,143],115:[2,143],116:[2,143],117:[2,143],122:[2,143],125:[2,143]},{35:[1,223],41:[1,224]},{35:[2,145],41:[2,145]},{9:[1,225]},{35:[2,30]},{10:[2,89],35:[2,89],41:[2,89],90:[2,89],92:[1,166]},{10:[2,91],35:[2,91],41:[2,91],90:[2,91],92:[2,91],94:[1,167]},{10:[2,93],35:[2,93],41:[2,93],90:[2,93],92:[2,93],94:[2,93],96:[1,168]},{10:[2,95],35:[2,95],41:[2,95],90:[2,95],92:[2,95],94:[2,95],96:[2,95],98:[1,169]},{10:[2,97],35:[2,97],41:[2,97],90:[2,97],92:[2,97],94:[2,97],96:[2,97],98:[2,97],100:[1,170],101:[1,171]},{10:[2,99],35:[2,99],41:[2,99],90:[2,99],92:[2,99],94:[2,99],96:[2,99],98:[2,99],100:[2,99],101:[2,99],103:[1,172],104:[1,173],105:[1,174],106:[1,175]},{10:[2,100],35:[2,100],41:[2,100],90:[2,100],92:[2,100],94:[2,100],96:[2,100],98:[2,100],100:[2,100],101:[2,100],103:[1,172],104:[1,173],105:[1,174],106:[1,175]},{10:[2,102],35:[2,102],41:[2,102],90:[2,102],92:[2,102],94:[2,102],96:[2,102],98:[2,102],100:[2,102],101:[2,102],103:[2,102],104:[2,102],105:[2,102],106:[2,102],108:[1,176],109:[1,177],110:[1,178]},{10:[2,103],35:[2,103],41:[2,103],90:[2,103],92:[2,103],94:[2,103],96:[2,103],98:[2,103],100:[2,103],101:[2,103],103:[2,103],104:[2,103],105:[2,103],106:[2,103],108:[1,176],109:[1,177],110:[1,178]},{10:[2,104],35:[2,104],41:[2,104],90:[2,104],92:[2,104],94:[2,104],96:[2,104],98:[2,104],100:[2,104],101:[2,104],103:[2,104],104:[2,104],105:[2,104],106:[2,104],108:[1,176],109:[1,177],110:[1,178]},{10:[2,105],35:[2,105],41:[2,105],90:[2,105],92:[2,105],94:[2,105],96:[2,105],98:[2,105],100:[2,105],101:[2,105],103:[2,105],104:[2,105],105:[2,105],106:[2,105],108:[1,176],109:[1,177],110:[1,178]},{10:[2,107],35:[2,107],41:[2,107],90:[2,107],92:[2,107],94:[2,107],96:[2,107],98:[2,107],100:[2,107],101:[2,107],103:[2,107],104:[2,107],105:[2,107],106:[2,107],108:[2,107],109:[2,107],110:[2,107],112:[1,179],113:[1,180]},{10:[2,108],35:[2,108],41:[2,108],90:[2,108],92:[2,108],94:[2,108],96:[2,108],98:[2,108],100:[2,108],101:[2,108],103:[2,108],104:[2,108],105:[2,108],106:[2,108],108:[2,108],109:[2,108],110:[2,108],112:[1,179],113:[1,180]},{10:[2,109],35:[2,109],41:[2,109],90:[2,109],92:[2,109],94:[2,109],96:[2,109],98:[2,109],100:[2,109],101:[2,109],103:[2,109],104:[2,109],105:[2,109],106:[2,109],108:[2,109],109:[2,109],110:[2,109],112:[1,179],113:[1,180]},{10:[2,111],35:[2,111],41:[2,111],90:[2,111],92:[2,111],94:[2,111],96:[2,111],98:[2,111],100:[2,111],101:[2,111],103:[2,111],104:[2,111],105:[2,111],106:[2,111],108:[2,111],109:[2,111],110:[2,111],112:[2,111],113:[2,111],115:[1,181],116:[1,182],117:[1,183]},{10:[2,112],35:[2,112],41:[2,112],90:[2,112],92:[2,112],94:[2,112],96:[2,112],98:[2,112],100:[2,112],101:[2,112],103:[2,112],104:[2,112],105:[2,112],106:[2,112],108:[2,112],109:[2,112],110:[2,112],112:[2,112],113:[2,112],115:[1,181],116:[1,182],117:[1,183]},{10:[2,114],35:[2,114],41:[2,114],90:[2,114],92:[2,114],94:[2,114],96:[2,114],98:[2,114],100:[2,114],101:[2,114],103:[2,114],104:[2,114],105:[2,114],106:[2,114],108:[2,114],109:[2,114],110:[2,114],112:[2,114],113:[2,114],115:[2,114],116:[2,114],117:[2,114]},{10:[2,115],35:[2,115],41:[2,115],90:[2,115],92:[2,115],94:[2,115],96:[2,115],98:[2,115],100:[2,115],101:[2,115],103:[2,115],104:[2,115],105:[2,115],106:[2,115],108:[2,115],109:[2,115],110:[2,115],112:[2,115],113:[2,115],115:[2,115],116:[2,115],117:[2,115]},{10:[2,116],35:[2,116],41:[2,116],90:[2,116],92:[2,116],94:[2,116],96:[2,116],98:[2,116],100:[2,116],101:[2,116],103:[2,116],104:[2,116],105:[2,116],106:[2,116],108:[2,116],109:[2,116],110:[2,116],112:[2,116],113:[2,116],115:[2,116],116:[2,116],117:[2,116]},{9:[1,24],13:129,33:[1,132],81:134,82:22,83:23,112:[1,122],113:[1,121],114:226,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{9:[1,24],10:[1,91],13:96,19:[1,69],43:86,63:228,65:229,66:82,67:83,68:84,69:87,70:88,71:[1,89],72:227,74:[1,230],75:[1,231],76:[1,232],77:[1,233],78:[1,90],79:92,80:93,81:94,82:22,83:23,85:95},{9:[1,24],10:[1,91],13:96,19:[1,69],43:86,63:234,65:81,66:82,67:83,68:84,69:87,70:88,71:[1,89],78:[1,90],79:92,80:93,81:94,82:22,83:23,85:95},{10:[2,144],35:[2,144],41:[2,144],90:[2,144],92:[2,144],94:[2,144],96:[2,144],98:[2,144],100:[2,144],101:[2,144],103:[2,144],104:[2,144],105:[2,144],106:[2,144],108:[2,144],109:[2,144],110:[2,144],112:[2,144],113:[2,144],115:[2,144],116:[2,144],117:[2,144],122:[2,144],125:[2,144]},{9:[1,24],13:129,33:[1,132],47:235,81:134,82:22,83:23,86:107,88:108,89:109,91:110,93:111,95:112,97:113,99:114,102:115,107:116,111:117,112:[1,122],113:[1,121],114:118,118:[1,119],119:[1,120],120:123,121:130,122:[1,135],123:124,124:131,125:[1,136],126:[1,125],127:[1,126],128:127,129:128,130:133,131:137,132:138,133:139,134:140,135:141,136:142,138:[1,146],139:[1,147],140:[1,143],141:[1,144],142:[1,149],143:[1,145],144:[1,148]},{35:[1,236]},{10:[2,134],35:[2,134],41:[2,134],90:[2,134],92:[2,134],94:[2,134],96:[2,134],98:[2,134],100:[2,134],101:[2,134],103:[2,134],104:[2,134],105:[2,134],106:[2,134],108:[2,134],109:[2,134],110:[2,134],112:[2,134],113:[2,134],115:[2,134],116:[2,134],117:[2,134],122:[2,134],125:[2,134]},{73:[1,237]},{9:[2,66],10:[2,66],19:[2,66],21:[2,66],50:[2,66],53:[2,66],54:[2,66],55:[2,66],56:[2,66],57:[2,66],58:[2,66],59:[2,66],71:[2,66],78:[2,66]},{9:[2,68],10:[2,68],19:[2,68],21:[2,68],50:[2,68],53:[2,68],54:[2,68],55:[2,68],56:[2,68],57:[2,68],58:[2,68],59:[2,68],71:[2,68],73:[2,68],78:[2,68]},{73:[2,69]},{73:[2,70]},{73:[2,71]},{73:[2,72]},{9:[2,73],10:[2,73],19:[2,73],21:[2,73],50:[2,73],53:[2,73],54:[2,73],55:[2,73],56:[2,73],57:[2,73],58:[2,73],59:[2,73],71:[2,73],78:[2,73]},{35:[2,146],41:[2,146]},{19:[2,28]},{9:[1,24],10:[1,91],13:96,19:[1,69],43:86,63:238,65:81,66:82,67:83,68:84,69:87,70:88,71:[1,89],78:[1,90],79:92,80:93,81:94,82:22,83:23,85:95},{9:[2,67],10:[2,67],19:[2,67],21:[2,67],50:[2,67],53:[2,67],54:[2,67],55:[2,67],56:[2,67],57:[2,67],58:[2,67],59:[2,67],71:[2,67],78:[2,67]}],
+    defaultActions: {2:[2,1],8:[2,13],10:[2,14],13:[2,2],16:[2,3],19:[2,4],27:[2,5],29:[2,6],30:[2,7],34:[2,15],37:[2,8],46:[2,39],59:[2,16],60:[2,17],63:[2,25],93:[2,76],94:[2,77],102:[2,29],159:[2,26],161:[2,27],164:[2,31],195:[2,82],200:[2,30],230:[2,69],231:[2,70],232:[2,71],233:[2,72],236:[2,28]},
     parseError: function parseError(str, hash) {
         throw new Error(str);
     },
@@ -2169,6 +2657,8 @@ var hobbes = function (exports) {
         this.lexer.setInput(input);
         this.lexer.yy = this.yy;
         this.yy.lexer = this.lexer;
+        if (typeof this.lexer.yylloc == 'undefined')
+            this.lexer.yylloc = {};
         var yyloc = this.lexer.yylloc;
         lstack.push(yyloc);
     
@@ -2253,7 +2743,7 @@ var hobbes = function (exports) {
                     popStack(1);
                     state = stack[stack.length-1];
                 }
-                
+    
                 preErrorSymbol = symbol; // save the lookahead token
                 symbol = TERROR;         // insert generic error symbol as new lookahead
                 state = stack[stack.length-1];
@@ -2301,7 +2791,7 @@ var hobbes = function (exports) {
                         first_line: lstack[lstack.length-(len||1)].first_line,
                         last_line: lstack[lstack.length-1].last_line,
                         first_column: lstack[lstack.length-(len||1)].first_column,
-                        last_column: lstack[lstack.length-1].last_column,
+                        last_column: lstack[lstack.length-1].last_column
                     };
                     r = this.performAction.call(yyval, yytext, yyleng, yylineno, this.yy, action[1], vstack, lstack);
     
@@ -2407,7 +2897,7 @@ var hobbes = function (exports) {
                     this.yylloc = {first_line: this.yylloc.last_line,
                                    last_line: this.yylineno+1,
                                    first_column: this.yylloc.last_column,
-                                   last_column: lines ? lines[lines.length-1].length-1 : this.yylloc.last_column + match.length}
+                                   last_column: lines ? lines[lines.length-1].length-1 : this.yylloc.last_column + match[0].length}
                     this.yytext += match[0];
                     this.match += match[0];
                     this.matches = match;
@@ -2448,96 +2938,144 @@ var hobbes = function (exports) {
     
     var YYSTATE=YY_START
     switch($avoiding_name_collisions) {
-    case 0:/* skip whitespace */
+    case 0:/* skip comments */
     break;
-    case 1:return 19; /* Basic Syntax */
+    case 1:/* skip comments */
     break;
-    case 2:return 21;
+    case 2:/* skip whitespace */
     break;
-    case 3:return 33;
+    case 3:return 19; /* Basic Syntax */
     break;
-    case 4:return 35;
+    case 4:return 21;
     break;
-    case 5:return 37;
+    case 5:return 33;
     break;
-    case 6:return 38;
+    case 6:return 35;
     break;
-    case 7:return 41;
+    case 7:return 37;
     break;
-    case 8:return 10;
+    case 8:return 38;
     break;
-    case 9:return 18; /* Modifier */
+    case 9:return 41;
     break;
-    case 10:return 'MODIFIER_PRIVATE';
+    case 10:return 10;
     break;
-    case 11:return 'MODIFIER_PROTECTED';
+    case 11:return 18; /* Modifier */
     break;
-    case 12:return 31;
+    case 12:return 'MODIFIER_PRIVATE';
     break;
-    case 13:return 32;
+    case 13:return 'MODIFIER_PROTECTED';
     break;
-    case 14:return 'MODIFIER_FINAL';
+    case 14:return 31;
     break;
-    case 15:return 8; /* Keywords */
+    case 15:return 32;
     break;
-    case 16:return 12;
+    case 16:return 'MODIFIER_FINAL';
     break;
-    case 17:return 66;
+    case 17:return 8; /* Keywords */
     break;
-    case 18:return 68;
+    case 18:return 12;
     break;
-    case 19:return 73;
+    case 19:return 71;
     break;
-    case 20:return 108;
+    case 20:return 73;
     break;
-    case 21:return 109;
+    case 21:return 78;
     break;
-    case 22:return 16;
+    case 22:return 138;
     break;
-    case 23:return 50;
+    case 23:return 139;
     break;
-    case 24:return 53;
+    case 24:return 16;
     break;
-    case 25:return 54;
+    case 25:return 50;
     break;
-    case 26:return 36;
+    case 26:return 53;
     break;
-    case 27:return 90;
+    case 27:return 54;
     break;
-    case 28:return 91;
+    case 28:return 55;
     break;
-    case 29:return 45;
+    case 29:return 56;
     break;
-    case 30:return 95;
+    case 30:return 57;
     break;
-    case 31:return 96;
+    case 31:return 58;
     break;
-    case 32:return 98;
+    case 32:return 59;
     break;
-    case 33:return 99;
+    case 33:return 36;
     break;
-    case 34:return 100;
+    case 34:return 108;
     break;
-    case 35:return 79;
+    case 35:return 110;
     break;
-    case 36:return 9; /* Varying form */
+    case 36:return 109;
     break;
-    case 37:return 110;
+    case 37:return 104;
     break;
-    case 38:return 'FLOAT_EXPRESSION';
+    case 38:return 103;
     break;
-    case 39:return 111;
+    case 39:return 100;
     break;
-    case 40:/*skip comments*/
+    case 40:return 106;
     break;
-    case 41:return 4;
+    case 41:return 105;
     break;
-    case 42:return 'INVALID';
+    case 42:return 101;
+    break;
+    case 43:return 90;
+    break;
+    case 44:return 94;
+    break;
+    case 45:return 96;
+    break;
+    case 46:return 92;
+    break;
+    case 47:return 98;
+    break;
+    case 48:return 126;
+    break;
+    case 49:return 127;
+    break;
+    case 50:return 45;
+    break;
+    case 51:return 122;
+    break;
+    case 52:return 112;
+    break;
+    case 53:return 125;
+    break;
+    case 54:return 113;
+    break;
+    case 55:return 115;
+    break;
+    case 56:return 116;
+    break;
+    case 57:return 117;
+    break;
+    case 58:return 142;
+    break;
+    case 59:return 9; /* Varying form */
+    break;
+    case 60:return 143;
+    break;
+    case 61:return 140;
+    break;
+    case 62:return 144;
+    break;
+    case 63:return 141;
+    break;
+    case 64:return 84;
+    break;
+    case 65:return 4;
+    break;
+    case 66:return 'INVALID';
     break;
     }
     };
-    lexer.rules = [/^\s+/,/^\{/,/^\}/,/^\(/,/^\)/,/^\[/,/^\]/,/^,/,/^;/,/^public\b/,/^private\b/,/^protected\b/,/^static\b/,/^void\b/,/^final\b/,/^package\b/,/^import\b/,/^if\b/,/^else\b/,/^while\b/,/^true\b/,/^false\b/,/^class\b/,/^boolean\b/,/^int\b/,/^float\b/,/^String\b/,/^==/,/^!=/,/^=/,/^\+/,/^-/,/^\*/,/^\//,/^%/,/^\./,/^[a-zA-Z][a-zA-Z0-9_]*/,/^[0-9]+/,/^[0-9]+.[0-9]*/,/^".*"/,/^\/\/./,/^$/,/^./];
-    lexer.conditions = {"INITIAL":{"rules":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42],"inclusive":true}};return lexer;})()
+    lexer.rules = [/^\/\/.*/,/^\/\*(.|\n)*\*\//,/^\s+/,/^\{/,/^\}/,/^\(/,/^\)/,/^\[/,/^\]/,/^,/,/^;/,/^public\b/,/^private\b/,/^protected\b/,/^static\b/,/^void\b/,/^final\b/,/^package\b/,/^import\b/,/^if\b/,/^else\b/,/^while\b/,/^true\b/,/^false\b/,/^class\b/,/^boolean\b/,/^byte\b/,/^short\b/,/^int\b/,/^long\b/,/^char\b/,/^float\b/,/^double\b/,/^String\b/,/^<</,/^>>>/,/^>>/,/^<=/,/^</,/^==/,/^>=/,/^>/,/^!=/,/^\|\|/,/^\|/,/^\^/,/^&&/,/^&/,/^~/,/^!/,/^=/,/^\+\+/,/^\+/,/^--/,/^-/,/^\*/,/^\//,/^%/,/^null\b/,/^[a-zA-Z][a-zA-Z0-9_]*/,/^((0|[1-9][0-9]*)\.(0|[1-9][0-9]*)?([Ee][+-]?(0|[1-9][0-9]*))?[fFdD]?|\.(0|[1-9][0-9]*)([Ee][+-]?(0|[1-9][0-9]*))?[fFdD]?|(0|[1-9][0-9]*)([Ee][+-]?(0|[1-9][0-9]*))[fFdD]?|(0|[1-9][0-9]*)([Ee][+-]?(0|[1-9][0-9]*))?[fFdD])(?=([^\w]|$))/,/^(0|[1-9][0-9]*)[lL]?\b\b/,/^".*"/,/^'.'/,/^\./,/^$/,/^./];
+    lexer.conditions = {"INITIAL":{"rules":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66],"inclusive":true}};return lexer;})()
     parser.lexer = lexer;
     return parser;
     })();
@@ -2616,7 +3154,7 @@ var hobbes = function (exports) {
      * Compiles the node with all its children
      */
     ASTNode.prototype.compile = function (indent) {
-      return this.compileNode(indent);
+      return this.__compiled || (this.__compiled = this.compileNode(indent));
     }
     
     /**
@@ -2627,11 +3165,24 @@ var hobbes = function (exports) {
     }
     
     /**
+     * Checks whether node is of provided Vava type.
+     *
+     * Some, but not all nodes possess a Vava type, that can be known at compile
+     * time either directly or through recursive computation.
+     *
+     * @param vavaType Type to compare with
+     */
+    ASTNode.prototype.isVavaType = function (vavaType) {
+      return this.vavaType === vavaType;
+    };
+    
+    /**
      * Returns a string signature containing information about the node.
      */
     ASTNode.prototype.assembleSignature = function () {
       var sigStr = '<' + this.getType();
       var signature = this.getSignature && this.getSignature() || {};
+      if (!signature.vavaType && this.vavaType) signature.vavaType = this.vavaType;
       for (prop in signature) {
         sigStr += ' ' + prop + ': ' + signature[prop];
       }
@@ -2664,7 +3215,6 @@ var hobbes = function (exports) {
       this.type = 'CompilationUnit';
       this.children = [];
       this.vavaPackage = null;
-      this.vavaImports = [];
     };
     
     CompilationUnit.inherits(ASTNode);
@@ -3209,7 +3759,7 @@ var hobbes = function (exports) {
     }
     
     BooleanLiteral.prototype.compileNode = function (indent) {
-      return 'this.__env.BooleanValue["' + this.value + '"]';
+      return 'this.__env.BooleanValue.intern(' + this.value + ')';
     };
     
     /**
@@ -3220,6 +3770,12 @@ var hobbes = function (exports) {
     var IntegerLiteral = exports.IntegerLiteral = function (num) {
       this.type = 'IntegerLiteral';
       this.children = [];
+      if (/l$/i.test(num)) {
+        this.vavaType = 'long';
+        num = num.substr(0, num.length - 1);
+      } else {
+        this.vavaType = 'int';
+      }
       // TODO Octal and hexal numbers
       if ((parseFloat(num) === parseInt(num)) && !isNaN(num)) {
         this.value = num;
@@ -3231,12 +3787,106 @@ var hobbes = function (exports) {
     IntegerLiteral.inherits(ASTNode);
     
     IntegerLiteral.prototype.getSignature = function () {
-      return {value : this.value};
+      return {value : this.value, vavaType : this.vavaType};
     };
     
     IntegerLiteral.prototype.compileNode = function (indent) {
-      return builder.functionCall('this.__env.IntValue.intern', [this.value], false);
+      if (this.vavaType === 'long') {
+        return builder.functionCall('this.__env.LongValue.intern', [this.value], false);
+      } else {
+        return builder.functionCall('this.__env.IntValue.intern', [this.value], false);
+      }
     };
+    
+    /**
+     * Creates a node for a char literal.
+     *
+     * @param character The character
+     */
+    var CharLiteral = exports.CharLiteral = function (character) {
+      this.type = 'CharLiteral';
+      this.children = [];
+      this.character = character.substr(1,1);
+    };
+    
+    CharLiteral.inherits(ASTNode);
+    
+    CharLiteral.prototype.getSignature = function () {
+      return {character : this.character};
+    };
+    
+    CharLiteral.prototype.compileNode = function (indent) {
+      return builder.functionCall('this.__env.CharValue.intern', [builder.string(this.character)], false);
+    };
+    
+    /**
+     * Creates a node for a FloatingPoint literal.
+     *
+     * @param numString The string describing the number
+     */
+    var FloatingPointLiteral = exports.FloatingPointLiteral = function (numString) {
+      this.type = 'FloatingPointLiteral';
+      this.children = [];
+      var parts;
+      if (parts = numString.match(/^(0|[1-9][0-9]*)\.([1-9][0-9]*)?(?:[Ee]([+-])?([1-9][0-9]*))?([fFdD])?/)) {
+        this.prePoint = Number(parts[1]);
+        this.postPoint = (parts[2] && Number(parts[2])) || 0;
+        this.exponent = (parts[4] || 0) * (parts[3] === '-' ? -1 : 1);
+        this.vavaType = (parts[5] && parts[5].toLowerCase()) === 'f' ? 'float' : 'double';
+      } else if (parts = numString.match(/\.([1-9][0-9]*)(?:[Ee]([+-])?([1-9][0-9]*))?([fFdD])?/)) {
+        this.prePoint = 0;
+        this.postPoint = Number(parts[1]);
+        this.exponent = (parts[3] || 0) * (parts[2] === '-' ? -1 : 1);
+        this.vavaType = (parts[4] && parts[4].toLowerCase()) === 'f' ? 'float' : 'double';
+      } else if (parts = numString.match(/(0|[1-9][0-9]*)(?:[Ee]([+-])?([1-9][0-9]*))([fFdD])?/)) {
+        this.prePoint = Number(parts[1]);
+        this.postPoint = 0;
+        this.exponent = parts[3] * (parts[2] === '-' ? -1 : 1);
+        this.vavaType = (parts[4] && parts[4].toLowerCase()) === 'f' ? 'float' : 'double';
+      } else if (parts = numString.match(/(0|[1-9][0-9]*)(?:[Ee]([+-])?([1-9][0-9]*))?([fFdD])/)) {
+        this.prePoint = Number(parts[1]);
+        this.postPoint = 0;
+        this.exponent = (parts[3] || 0) * (parts[2] === '-' ? -1 : 1);
+        this.vavaType = parts[4].toLowerCase() === 'f' ? 'float' : 'double';
+      } else {
+        throw new Error("Invalid floating point format: " + numString);
+      }
+    
+    };
+    
+    FloatingPointLiteral.inherits(ASTNode);
+    
+    FloatingPointLiteral.prototype.getSignature = function () {
+      return {
+        prePoint : this.prePoint, postPoint : this.postPoint,
+        exponent : this.exponent, vavaType : this.vavaType
+      };
+    };
+    
+    FloatingPointLiteral.prototype.compileNode = function (indent) {
+      var num = (this.prePoint + this.postPoint/Math.pow(10,this.postPoint.toString(10).length)) * Math.pow(10, this.exponent);
+      if (this.isVavaType('float')) {
+        return builder.functionCall('this.__env.FloatValue.intern', [num], false);
+      } else {
+        return builder.functionCall('this.__env.DoubleValue.intern', [num], false);
+      }
+    };
+    
+    /**
+     * Creates a node for a null literal.
+     *
+     */
+    var NullLiteral = exports.NullLiteral = function () {
+      this.type = 'NullLiteral';
+      this.children = [];
+    };
+    
+    NullLiteral.inherits(ASTNode);
+    
+    NullLiteral.prototype.compileNode = function (indent) {
+      return 'this.__env.NullValue.intern()';
+    };
+    
     
     /**
      * Creates a node for a String literal.
@@ -3255,11 +3905,160 @@ var hobbes = function (exports) {
       return {value : this.value};
     };
     
+    // TODO Interned strings
     StringLiteral.prototype.compileNode = function (indent) {
       return builder.constructorCall('this.__env.StringValue', [this.value], false);
     };
     
     //// Operations
+    
+    // Unary
+    
+    /**
+     * Creates a node for a unary minus expression.
+     *
+     * @param unaryExpressoin The operand
+     */
+    var UnaryMinus = exports.UnaryMinus = function (unaryExpression) {
+      this.type = 'UnaryMinus';
+      this.children = [];
+    
+      this.appendChild(unaryExpression);
+    };
+    
+    UnaryMinus.inherits(ASTNode);
+    
+    UnaryMinus.prototype.getSignature = function () {
+      return {};
+    };
+    
+    UnaryMinus.prototype.compileNode = function (indent) {
+      return builder.functionCall(this.children[0].compile() + '.inverse', [], false);
+    };
+    
+    /**
+     * Creates a node for a unary plus expression.
+     *
+     * @param unaryExpression The operand
+     */
+    var UnaryPlus = exports.UnaryPlus = function (unaryExpression) {
+      this.type = 'UnaryPlus';
+      this.children = [];
+    
+      this.appendChild(unaryExpression);
+    };
+    
+    UnaryPlus.inherits(ASTNode);
+    
+    UnaryPlus.prototype.getSignature = function () {
+      return {};
+    };
+    
+    UnaryPlus.prototype.compileNode = function (indent) {
+      return this.children[0].compile();
+    };
+    
+    /**
+     * Creates a node for post incrementing.
+     *
+     * @param variable The variable to increment
+     */
+    var PostIncrement = exports.PostIncrement = function (variable) {
+      this.type = 'PostIncrement';
+      this.children = [];
+      this.vavaType = 'int';
+      this.appendChild(variable);
+    };
+    
+    PostIncrement.inherits(ASTNode);
+    
+    PostIncrement.prototype.compileNode = function (indent) {
+      return builder.functionCall(
+        this.children[0].compileNode('set') + '.postInc', [], false
+      );
+    }
+    
+    /**
+     * Creates a node for post decrementing.
+     *
+     * @param variable The variable to decrement
+     */
+    var PostDecrement = exports.PostDecrement = function (variable) {
+      this.type = 'PostDecrement';
+      this.children = [];
+      this.vavaType = 'int';
+      this.appendChild(variable);
+    };
+    
+    PostDecrement.inherits(ASTNode);
+    
+    PostDecrement.prototype.compileNode = function (indent) {
+      return builder.functionCall(
+        this.children[0].compileNode('set') + '.postDec', [], false
+      );
+    }
+    
+    /**
+     * Creates a node for pre incrementing.
+     *
+     * @param variable The variable to increment
+     */
+    var PreIncrement = exports.PreIncrement = function (variable) {
+      this.type = 'PreIncrement';
+      this.children = [];
+      this.vavaType = 'int';
+      this.appendChild(variable);
+    };
+    
+    PreIncrement.inherits(ASTNode);
+    
+    PreIncrement.prototype.compileNode = function (indent) {
+      return builder.functionCall(
+        this.children[0].compileNode('set') + '.preInc', [], false
+      );
+    }
+    
+    /**
+     * Creates a node for pre decrementing.
+     *
+     * @param variable The variable to decrement
+     */
+    var PreDecrement = exports.PreDecrement = function (variable) {
+      this.type = 'PreDecrement';
+      this.children = [];
+      this.vavaType = 'int';
+      this.appendChild(variable);
+    };
+    
+    PreDecrement.inherits(ASTNode);
+    
+    PreDecrement.prototype.compileNode = function (indent) {
+      return builder.functionCall(
+        this.children[0].compileNode('set') + '.preDec', [], false
+      );
+    }
+    
+    /**
+     * Creates a node for a cast expression.
+     *
+     * @param vavaType The type to cast to
+     * @param unaryExpression The expression whose value to cast
+     */
+    var CastExpression = exports.CastExpression = function (vavaType, unaryExpression) {
+      this.type = 'CastExpression';
+      this.children = [];
+      this.vavaType = vavaType;
+      this.appendChild(unaryExpression);
+    };
+    
+    CastExpression.inherits(ASTNode);
+    
+    CastExpression.prototype.compileNode = function (indent) {
+      return builder.functionCall('(' + this.children[0].compile() + ').to', [builder.string(this.vavaType)], false);
+    };
+    
+    // Binary
+    
     /**
      * Creates a node for an addition operation.
      *
@@ -3376,6 +4175,36 @@ var hobbes = function (exports) {
     }
     
     /**
+     * Creates a node for less than comparison.
+     *
+     * @param a First value to be compared
+     * @param b Second value to be compared
+     */
+    var LessThan = exports.LessThan = function (a, b) {
+      this.type = 'LessThan';
+      this.vavaType = 'boolean';
+      this.children = [];
+      if (!a || !b) {
+        throw new TypeError('Expected two values to compare (lt).');
+      }
+      this.appendChild(a);
+      this.appendChild(b);
+    };
+    
+    LessThan.inherits(ASTNode);
+    
+    LessThan.prototype.compileNode = function (indent) {
+      return utils.indent(
+        builder.functionCall(
+          'this.__env.BooleanValue.intern',
+          [builder.functionCall('(' + this.children[0].compile() + ').isLessThan', [this.children[1].compile()], false)],
+          false
+        ),
+        indent
+      );
+    };
+    
+    /**
      * Creates a node for an equality comparison.
      *
      * @param a First value to be compared
@@ -3394,7 +4223,37 @@ var hobbes = function (exports) {
     Equals.inherits(ASTNode);
     
     Equals.prototype.compileNode = function (indent) {
-      return utils.indent('this.__env.BooleanValue[String(' + this.children[0].compile() + ' === ' + this.children[1].compile() + ')]', indent);
+      return utils.indent('this.__env.BooleanValue.intern(' + this.children[0].compile() + ' === ' + this.children[1].compile() + ')', indent);
+    };
+    
+    /**
+     * Creates a node for a greater than comparison.
+     *
+     * @param a First value to be compared
+     * @param b Second value to be compared
+     */
+    var GreaterThan = exports.GreaterThan = function (a, b) {
+      this.type = 'GreaterThan';
+      this.vavaType = 'boolean';
+      this.children = [];
+      if (!a || !b) {
+        throw new TypeError('Expected two values to compare (gt).');
+      }
+      this.appendChild(a);
+      this.appendChild(b);
+    };
+    
+    GreaterThan.inherits(ASTNode);
+    
+    GreaterThan.prototype.compileNode = function (indent) {
+      return utils.indent(
+        builder.functionCall(
+          'this.__env.BooleanValue.intern',
+          [builder.functionCall('(' + this.children[0].compile() + ').isGreaterThan', [this.children[1].compile()], false)],
+          false
+        ),
+        indent
+      );
     };
     
     /**
@@ -3416,7 +4275,239 @@ var hobbes = function (exports) {
     NotEquals.inherits(ASTNode);
     
     NotEquals.prototype.compileNode = function (indent) {
-      return utils.indent('this.__env.BooleanValue[String(' + this.children[0].compile() + ' !== ' + this.children[1].compile() + ')]', indent);
+      return utils.indent('this.__env.BooleanValue.intern(' + this.children[0].compile() + ' !== ' + this.children[1].compile() + ')', indent);
+    };
+    
+    /**
+     * Creates a node for a logical AND.
+     *
+     * @param boolA First truth value
+     * @param boolB Second truth value
+     */
+    var LogicalAnd = exports.LogicalAnd = function (boolA, boolB) {
+      this.type = 'LogicalAnd';
+      this.vavaType = 'boolean';
+      this.children = [];
+      this.appendChild(boolA);
+      this.appendChild(boolB);
+    }
+    
+    LogicalAnd.inherits(ASTNode);
+    
+    LogicalAnd.prototype.compileNode = function (indent) {
+      return builder.functionCall(
+        'this.__env.BooleanValue.intern',
+        [this.children[0].compile() + '.get() && ' + this.children[1].compile() + '.get()'],
+        false
+      );
+    };
+    
+    /**
+     * Creates a node for a logical OR.
+     *
+     * @param boolA First truth value
+     * @param boolB Second truth value
+     */
+    var LogicalOr = exports.LogicalOr = function (boolA, boolB) {
+      this.type = 'LogicalOr';
+      this.vavaType = 'boolean';
+      this.children = [];
+      this.appendChild(boolA);
+      this.appendChild(boolB);
+    }
+    
+    LogicalOr.inherits(ASTNode);
+    
+    LogicalOr.prototype.compileNode = function (indent) {
+      return builder.functionCall(
+        'this.__env.BooleanValue.intern',
+        [this.children[0].compile() + '.get() || ' + this.children[1].compile() + '.get()'],
+        false
+      );
+    };
+    
+    /**
+     * Creates a node for an inclusive logical AND.
+     *
+     * @param a First value
+     * @param b Second value
+     */
+    var InclusiveAnd = exports.InclusiveAnd = function (a, b) {
+      this.type = 'InclusiveAnd';
+      // TODO depends on args
+      this.vavaType = 'boolean';
+      this.children = [];
+      this.appendChild(a);
+      this.appendChild(b);
+    }
+    
+    InclusiveAnd.inherits(ASTNode);
+    
+    InclusiveAnd.prototype.compileNode = function (indent) {
+      return builder.functionCall(
+        this.children[0].compile() + '.and',
+        [this.children[1].compile()],
+        false
+      );
+    };
+    
+    /**
+     * Creates a node for an inclusive logical OR.
+     *
+     * @param a First value
+     * @param b Second value
+     */
+    var InclusiveOr = exports.InclusiveOr = function (a, b) {
+      this.type = 'InclusiveOr';
+      // TODO depends on args
+      this.vavaType = 'boolean';
+      this.children = [];
+      this.appendChild(a);
+      this.appendChild(b);
+    }
+    
+    InclusiveOr.inherits(ASTNode);
+    
+    InclusiveOr.prototype.compileNode = function (indent) {
+      return builder.functionCall(
+        this.children[0].compile() + '.or',
+        [this.children[1].compile()],
+        false
+      );
+    };
+    
+    /**
+     * Creates a node for an exclusive logical OR.
+     *
+     * @param a First value
+     * @param b Second value
+     */
+    var ExclusiveOr = exports.ExclusiveOr = function (a, b) {
+      this.type = 'ExclusiveOr';
+      // TODO depends on args
+      this.vavaType = 'boolean';
+      this.children = [];
+      this.appendChild(a);
+      this.appendChild(b);
+    }
+    
+    ExclusiveOr.inherits(ASTNode);
+    
+    ExclusiveOr.prototype.compileNode = function (indent) {
+      return builder.functionCall(
+        this.children[0].compile() + '.xor',
+        [this.children[1].compile()],
+        false
+      );
+    };
+    
+    /**
+     * Creates a node for a logical negation.
+     *
+     * @param boolA Expression of boolean type
+     */
+    var Negation = exports.Negation = function (boolA) {
+      this.type = 'Negation';
+      this.vavaType = 'boolean';
+      this.children = [];
+      this.appendChild(boolA);
+    }
+    
+    Negation.inherits(ASTNode);
+    
+    Negation.prototype.compileNode = function (indent) {
+      return this.children[0].compile() + '.not()';
+    };
+    
+    /**
+     * Creates a node for a bitwise negation.
+     *
+     * @param num Expression of integral type
+     */
+    var BitwiseNegation = exports.BitwiseNegation = function (num) {
+      this.type = 'BitwiseNegation';
+      this.vavaType = 'int';
+      this.children = [];
+      // TODO Check condition
+      this.appendChild(num);
+    }
+    
+    BitwiseNegation.inherits(ASTNode);
+    
+    BitwiseNegation.prototype.compileNode = function (indent) {
+      return this.children[0].compile() + '.bitwiseNot()';
+    };
+    
+    /**
+     * Creates a node for a leftshift operation.
+     *
+     * @param a First value
+     * @param b Second value
+     */
+    var LeftShift = exports.LeftShift = function (a, b) {
+      this.type = 'LeftShift';
+      this.vavaType = 'int';
+      this.children = [];
+      this.appendChild(a);
+      this.appendChild(b);
+    }
+    
+    LeftShift.inherits(ASTNode);
+    
+    LeftShift.prototype.compileNode = function (indent) {
+      return builder.functionCall(
+        this.children[0].compile() + '.leftshift',
+        [this.children[1].compile()],
+        false
+      );
+    };
+    
+    /**
+     * Creates a node for a rightshift operation.
+     *
+     * @param a First value
+     * @param b Second value
+     */
+    var RightShift = exports.RightShift = function (a, b) {
+      this.type = 'RightShift';
+      this.vavaType = 'int';
+      this.children = [];
+      this.appendChild(a);
+      this.appendChild(b);
+    }
+    
+    RightShift.inherits(ASTNode);
+    
+    RightShift.prototype.compileNode = function (indent) {
+      return builder.functionCall(
+        this.children[0].compile() + '.rightshift',
+        [this.children[1].compile()],
+        false
+      );
+    };
+    
+    /**
+     * Creates a node for a zero-filling rightshift operation.
+     *
+     * @param a First value
+     * @param b Second value
+     */
+    var ZeroFillRightShift = exports.ZeroFillRightShift = function (a, b) {
+      this.type = 'ZeroFillRightShift';
+      this.vavaType = 'int';
+      this.children = [];
+      this.appendChild(a);
+      this.appendChild(b);
+    }
+    
+    ZeroFillRightShift.inherits(ASTNode);
+    
+    ZeroFillRightShift.prototype.compileNode = function (indent) {
+      return builder.functionCall(
+        this.children[0].compile() + '.zerofillRightshift',
+        [this.children[1].compile()],
+        false
+      );
     };
     
     /**
@@ -3438,7 +4529,7 @@ var hobbes = function (exports) {
     IfThen.inherits(ASTNode);
     
     IfThen.prototype.compileNode = function (indent) {
-      var js = 'if (this.__env.BooleanValue.true === ';
+      var js = 'if (this.__env.BooleanValue.intern(true) === ';
       js += this.children[0].compileNode() + ') {\n';
       js += this.children[1].compileNode(2);
       return utils.indent(js + '\n}\n', indent);
@@ -3465,7 +4556,7 @@ var hobbes = function (exports) {
     IfThenElse.inherits(ASTNode);
     
     IfThenElse.prototype.compileNode = function (indent) {
-      var js = utils.indent('if (this.__env.BooleanValue.true === ', indent);
+      var js = utils.indent('if (this.__env.BooleanValue.intern(true) === ', indent);
       js += this.children[0].compileNode() + ') {\n';
       js += this.children[1].compileNode(indent + 2) + '\n';
       js += utils.indent('} else {\n', indent);
@@ -3493,7 +4584,7 @@ var hobbes = function (exports) {
     WhileLoop.inherits(ASTNode);
     
     WhileLoop.prototype.compileNode = function (indent) {
-      var js = utils.indent('while (this.__env.BooleanValue.true === ', indent);
+      var js = utils.indent('while (this.__env.BooleanValue.intern(true) === ', indent);
       js += this.children[0].compileNode() + ') {\n';
       js += this.children[1].compileNode(indent + 2) + '\n';
       js += utils.indent('}\n', indent);
@@ -3506,25 +4597,6 @@ var hobbes = function (exports) {
   }({});
   parser.yy.utils = utils.yyUtils;
   
-  var AlgoTools = {
-    IO : new vava.env.VavaClass('IO', {
-      methods : {
-        println : new vava.env.VavaMethod(
-          'println',
-          'void',
-          [{identifier: 'str', vavaType: 'int'}],
-          function () { alert(this.str.get()); }
-        ),
-        readInt : new vava.env.VavaMethod(
-          'readInt',
-          'int',
-          [{identifier: 'str', vavaType: 'int'}],
-          function () { return new vava.env.IntValue(Number(prompt(this.str.get()))); }
-        )
-      }
-    }, new vava.scope.Scope({__env : vava.env}))
-  };
-  
   // Simple interface for now
   exports.run = function (vavaSrc) {
     if (typeof vavaSrc !== 'string') {
@@ -3534,14 +4606,14 @@ var hobbes = function (exports) {
     var compilation = vavaAST.compile();
     
     var runner = new Function (compilation);
-    var scope = new vava.scope.Scope({__env : vava.env, AlgoTools : AlgoTools});
+    // TODO How does the import of `java.lang` happen in Java?
+    var scope = new vava.scope.Scope({__env : vava.env}).__add(stdlib).__add(stdlib.java.lang);
     runner.call(scope);
   }
   
     return exports;
   
   }({});
-  
 
   return exports;
 }({});

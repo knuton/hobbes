@@ -34,14 +34,10 @@ namespace :build do
       end
     end
 
-    # Expects uglify-js to be somewhere in node's include path.
     desc 'Minify the browser version'
     task :min, :needs => 'hobbes-web.js' do
-      if `lib/uglifyjs --version 2>&1`.include? "Cannot find module 'uglify-js'"
-        abort "Please install UglifyJS."
-      end
       before = `ls -lh hobbes-web.js | awk '{print $5}'`.chomp
-      status = `lib/uglifyjs hobbes-web.js > hobbes-web.min.js`
+      status = `java -jar lib/gcl/compiler.jar --js=hobbes-web.js --js_output_file=hobbes-web.min.js`
       if $?.to_i == 0
         after = `ls -lh hobbes-web.min.js | awk '{print $5}'`.chomp
         puts "Went from #{before} to #{after}."
