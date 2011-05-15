@@ -476,7 +476,13 @@ parse: function parse(input) {
                     first_column: lstack[lstack.length-(len||1)].first_column,
                     last_column: lstack[lstack.length-1].last_column
                 };
-                r = this.performAction.call(yyval, yytext, yyleng, yylineno, this.yy, action[1], vstack, lstack);
+                try {
+                  r = this.performAction.call(yyval, yytext, yyleng, yylineno, this.yy, action[1], vstack, lstack);
+                } catch (e) {
+                  console.log((this.lexer.matched + this.lexer._input).split('\n')[yylineno]);
+                  console.log((function (col, spaces) { for (var i = 0; i < col; i++) spaces = ' ' + spaces; return spaces; })(this.lexer.prevyylloc.first_column, '') + '^');
+                  throw e;
+                }
 
                 if (typeof r !== 'undefined') {
                     return r;
@@ -577,6 +583,7 @@ next:function () {
             if (match) {
                 lines = match[0].match(/\n.*/g);
                 if (lines) this.yylineno += lines.length;
+                var prevyylloc = this.yylloc;
                 this.yylloc = {first_line: this.yylloc.last_line,
                                last_line: this.yylineno+1,
                                first_column: this.yylloc.last_column,
@@ -589,6 +596,10 @@ next:function () {
                 this._input = this._input.slice(match[0].length);
                 this.matched += match[0];
                 token = this.performAction.call(this, this.yy, this, rules[i],this.conditionStack[this.conditionStack.length-1]);
+                if (this.lastToken) {
+                  this.prevyylloc = prevyylloc;
+                }
+                this.lastToken = token;
                 if (token) return token;
                 else return;
             }

@@ -723,6 +723,7 @@ CharLiteral.prototype.compileNode = function (indent) {
  */
 var FloatingPointLiteral = exports.FloatingPointLiteral = function (numString) {
   this.type = 'FloatingPointLiteral';
+  throw new Error("I AM PISSED");
   this.children = [];
   var parts;
   if (parts = numString.match(/^(0|[1-9][0-9]*)\.([1-9][0-9]*)?(?:[Ee]([+-])?([1-9][0-9]*))?([fFdD])?/)) {
