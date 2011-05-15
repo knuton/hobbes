@@ -74,7 +74,7 @@ TypedVariable.prototype._setAdjusted = function (typedValue) {
  */
 TypedVariable.prototype.isVavaType = function (vavaType) {
   return this.getVavaType() === vavaType;
-}
+};
 
 
 /**
@@ -85,7 +85,7 @@ TypedVariable.prototype.isVavaType = function (vavaType) {
 TypedVariable.prototype.isPrimitive = function () {
   var vT = this.getVavaType();
   return (vT === "boolean" || vT === "byte" || vT === "short" || vT === "int" || vT === "long" || vT === "char" || vT === "float" || vT === "double");
-}
+};
 
 /**
  * Checks if variable is of integral type.
@@ -275,12 +275,12 @@ BooleanValue.intern = function (bool) {
   if (this.stored[bool])
     return this.stored[bool];
   else
-    return this.stored[bool] = new this(bool);
+    return (this.stored[bool] = new this(bool));
 };
 
 BooleanValue.defaultValue = function () {
   return this.intern(false);
-}
+};
 
 // LOGICAL OPERATIONS
 BooleanValue.prototype.not = function () {
@@ -331,12 +331,12 @@ NumberValue.intern = function (number) {
   if (this.stored[number])
     return this.stored[number];
   else
-    return this.stored[number] = new this(number);
+    return (this.stored[number] = new this(number));
 };
 
 NumberValue.defaultValue = function () {
   return this.intern(0);
-}
+};
 
 // INTEGER VALUES
 
@@ -344,7 +344,7 @@ var IntegralValue = function (rawValue) {
   
   this.vavaType = undefined;
   
-}
+};
 
 IntegralValue.inherits(NumberValue);
 
@@ -354,10 +354,10 @@ IntegralValue.checkedValue = function (rawValue) {
       throw new Error('Not a number!');
     }
     if (rawValue >= this.MIN_VALUE && rawValue <= this.MAX_VALUE) {
-      return parseInt(rawValue);
+      return parseInt(rawValue, 10);
     } else {
       // Dual representation cut to length of type
-      var dual = this.twosComplement(parseInt(rawValue));
+      var dual = this.twosComplement(parseInt(rawValue, 10));
       // Leading bit determines sign (numspace is divided into positive and negative half)
       var mostSignificantBit = parseInt(dual.charAt(0), 2);
       // Resulting number is -(2^(BITS-1)) + decimal without leading bit
@@ -369,21 +369,22 @@ IntegralValue.checkedValue = function (rawValue) {
 };
 
 IntegralValue.addLeadingZeros = function (dualString) {
-  for (var i = dualString.length; i < this.BITS; i++) dualString = '0' + dualString;
+  var i;
+  for (i = dualString.length; i < this.BITS; i++) { dualString = '0' + dualString; }
   return dualString;
 };
 
 IntegralValue.twosComplement = function (num) {
+  var dual = '';
   if (num >= 0) {
-    var dual = num.toString(2).substr(-this.BITS,this.BITS);
+    dual = num.toString(2).substr(-this.BITS,this.BITS);
   } else {
     num = -num;
-    var dual = '',
-        i = this.BITS,
+    var i = this.BITS,
         carry = 1,
         bit;
     // Compute, invert, add 1 in one loop
-    while (num != 0 || i > 0) {
+    while (num !== 0 || i > 0) {
       if (num % 2 === 0) {
         //               _ 1 + 1 = 0, carry = 1, if carry was 1
         //              /
@@ -509,7 +510,7 @@ var IntValue = exports.IntValue = function (rawValue) {
   this.vavaType = 'int';
   this.rawValue = this.constructor.checkedValue(rawValue);
 
-}
+};
 
 IntValue.inherits(IntegralValue, {stored: {}, BITS: 32, MIN_VALUE: -2147483648, MAX_VALUE: 2147483647});
 
@@ -539,10 +540,10 @@ CharValue.checkedValue = function (rawValue) {
       throw new Error('Not a number!');
     }
     if (rawValue > this.MIN_VALUE && rawValue < this.MAX_VALUE) {
-      return parseInt(rawValue);
+      return parseInt(rawValue, 10);
     } else {
       // Dual representation cut to length of type
-      var dual = parseInt(rawValue).toString(2).substr(-this.BITS,this.BITS);
+      var dual = parseInt(rawValue, 10).toString(2).substr(-this.BITS,this.BITS);
       return parseInt(dual, 2);
     }
   }
@@ -604,7 +605,7 @@ FloatingPointValue.prototype.modulo = function (other) {
 
 FloatingPointValue.prototype.toString = function () {
   var value = this.get();
-  return parseInt(value) === value ? value.toFixed(1) : value;
+  return parseInt(value, 10) === value ? value.toFixed(1) : value;
 };
 
 var FloatValue = exports.FloatValue = function (rawValue) {
@@ -654,13 +655,13 @@ var NullValue = exports.NullValue = function () {
   this.vavaType = 'null';
 
   this.rawValue = null;
-}
+};
 
 NullValue.inherits(TypedValue);
 
 NullValue.intern = function () {
   return NullValue.stored['null'];
-}
+};
 
 NullValue.stored = {
   'null' : new NullValue()
