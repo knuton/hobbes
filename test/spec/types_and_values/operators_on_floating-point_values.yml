@@ -11,6 +11,8 @@ specifications:
       - 'IntegralsWithFloatOperators.java'
 
   - description: "Operands of certain unary and binary operators are subject to numeric promotion."
+    test_files:
+      - 'NumericPromotion.java'
 
   # It is not yet clear, whether Vava will be able to follow this specification.
   - description: "Operators on floating-point numbers behave exactly as specified by IEEE 754."
@@ -22,19 +24,27 @@ specifications:
   - description: "Inexact results must be rounded to the representable value nearest to the infinitely precise result; if the two nearest representable values are equally near, the one with its least significant bit zero is chosen. This is the IEEE 754 standard's default rounding mode known as round-to-nearest."
 
   - description: "Vava uses round-towards-zero mode when converting a floating-point value to an integer. Round-towards-zero mode acts as though the number were truncated, discarding the mantissa bits. Round-towards-zero chooses as its result the format's value closest to and no greater in magnitude than the infinitely precise result."
+    test_files:
+      - 'RoundTowardsZero.java'
 
   - description: "Vava floating-point operators produce no exceptions."
 
-  - description: "An operation that overflows produces a signed infinity."
-
-  - description: "An operation that underflows produces a signed zero."
+  - description: "An operation that overflows produces a signed infinity. An operation that underflows produces a signed zero."
+    test_files:
+      - 'OverflowInfinity.java'
 
   - description: "An operation that has no mathematically definite result produces NaN."
+    test_files:
+      - 'ProducingNaN.java'
 
   - description: "All numeric operations (except for numeric comparison) with NaN as an operand produce NaN as a result."
+    test_files:
+      - 'NaNCalculations.java'
 
   - description: "Any value of any floating-point type may be cast to or from any numeric type."
     test_files:
       - 'Casting.java'
 
   - description: "There are no casts between floating-point types and the type `boolean`."
+    test_files:
+      - 'NoBooleanFloats.java'

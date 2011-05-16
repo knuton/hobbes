@@ -578,22 +578,28 @@ var FloatingPointValue = function () {
 
 FloatingPointValue.inherits(NumberValue);
 
-FloatingPointValue.checkedValue = function (rawValue) {
+FloatingPointValue.prototype.checkedValue = function (rawValue, sign) {
   // Actual NaN
   if (String(rawValue) === 'NaN')
-    return NaN;
+    return this.rawValue = NaN;
   if (isNaN(rawValue)) {
-    throw new Error('Not a number in floating point constructor');
+    throw new Error('Not a number in floating point constructor: ' + rawValue);
   }
-  if (rawValue > this.MAX_VALUE) return Number.POSITIVE_INFINITY;
-  if (rawValue < -this.MAX_VALUE) return Number.NEGATIVE_INFINITY;
-  if (rawValue > 0 && rawValue < this.MIN_VALUE) return 1e-46;
-  if (rawValue < 0 && rawValue > -this.MIN_VALUE) return -1e-46;
-  return rawValue;
+  if (rawValue > this.constructor.MAX_VALUE) return this.rawValue = Number.POSITIVE_INFINITY;
+  if (rawValue < -this.constructor.MAX_VALUE) return this.rawValue = Number.NEGATIVE_INFINITY;
+  if (rawValue > 0 && rawValue < this.constructor.MIN_VALUE) {
+    this._sign = 1;
+    return this.rawValue = 0;
+  }
+  if (rawValue < 0 && rawValue > -this.constructor.MIN_VALUE) {
+    this._sign = -1;
+    return this.rawValue = 0;
+  }
+  return this.rawValue = rawValue;
 };
 
 FloatingPointValue.prototype.add = function (other) {
-  return this.constructor.intern(this.get() + other.get());
+  return (other.isVavaType('double') ? other : this).constructor.intern(this.get() + other.get());
 };
 
 FloatingPointValue.prototype.subtract = function (other) {
@@ -601,7 +607,7 @@ FloatingPointValue.prototype.subtract = function (other) {
 };
 
 FloatingPointValue.prototype.times = function (other) {
-  return this.constructor.intern(this.get() * other.get());
+  return (other.isVavaType('double') ? other : this).constructor.intern(this.get() * other.get());
 };
 
 FloatingPointValue.prototype.divide = function (other) {
@@ -609,34 +615,42 @@ FloatingPointValue.prototype.divide = function (other) {
       otherRaw = other.get();
   if (otherRaw === 0) {
     if (thisRaw === 0)
-      return this.constructor.intern(NaN);
+      return (other.isVavaType('double') ? other : this).constructor.intern(NaN);
   }
   
-  return this.constructor.intern(this.get() / other.get());
+  return (other.isVavaType('double') ? other : this).constructor.intern(this.get() / other.get());
 };
 
 FloatingPointValue.prototype.modulo = function (other) {
-  return this.constructor.intern(this.get() % other.get());
+  return (other.isVavaType('double') ? other : this).constructor.intern(this.get() % other.get());
+};
+
+FloatingPointValue.prototype.sign = function () {
+  return this._sign || this.rawValue / Math.abs(this.rawValue);
+};
+
+FloatingPointValue.prototype.signSymbol = function () {
+  return this._sign < 0 ? '-' : '';
 };
 
 FloatingPointValue.prototype.toString = function () {
   var value = this.get();
-  return parseInt(value, 10) === value ? value.toFixed(1) : value;
+  return this.signSymbol() + (parseInt(value, 10) === value ? value.toFixed(1) : value);
 };
 
-var FloatValue = exports.FloatValue = function (rawValue) {
+var FloatValue = exports.FloatValue = function (rawValue, sign) {
   
   this.vavaType = 'float';
-  this.rawValue = this.constructor.checkedValue(rawValue);
+  this.checkedValue(rawValue, sign);
 
 };
 
 FloatValue.inherits(FloatingPointValue, {stored: {}, MIN_VALUE: 1.40239846e-45, MAX_VALUE: 3.40282347e+38});
 
-var DoubleValue = exports.DoubleValue = function (rawValue) {
+var DoubleValue = exports.DoubleValue = function (rawValue, sign) {
   
   this.vavaType = 'double';
-  this.rawValue = this.constructor.checkedValue(rawValue);
+  this.checkedValue(rawValue, sign);
 
 };
 
