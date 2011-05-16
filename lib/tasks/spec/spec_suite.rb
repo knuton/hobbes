@@ -39,6 +39,7 @@ class SpecSuite
       passed = hobbes == expected
 
       unless passed
+        puts " --- #{file_path} --- "
         underlined "Expected"
         puts expected
         newline

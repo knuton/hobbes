@@ -635,6 +635,14 @@ FloatingPointValue.prototype.signSymbol = function () {
 
 FloatingPointValue.prototype.toString = function () {
   var value = this.get();
+  // remove sign, fix to precision 15, remove pre-point digits, remove exponent
+  //var valueFixedToFifteen = Math.abs(value).toFixed(15).split('.').pop().split(/e/i).shift(),
+  //    postPointDigits;
+  //for (postPointDigits = 15; postPointDigits > 0 && valueFixedToFifteen.charAt(postPointDigits - 1) === '0'; postPointDigits--) {
+  //  console.log('pp', postPointDigits);
+  //}
+  // sign symbol for signed zero, post-point zero for whole numbers, at least 15 digit precision unless less non-zero digits
+  //return this.signSymbol() + (parseInt(value, 10) === value ? value.toFixed(1) : value.toPrecision(postPointDigits < 15 ? postPointDigits : 15));
   return this.signSymbol() + (parseInt(value, 10) === value ? value.toFixed(1) : value);
 };
 

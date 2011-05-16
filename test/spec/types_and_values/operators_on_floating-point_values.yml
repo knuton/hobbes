@@ -28,6 +28,8 @@ specifications:
       - 'RoundTowardsZero.java'
 
   - description: "Vava floating-point operators produce no exceptions."
+    test_files:
+      - 'NoExceptions.java'
 
   - description: "An operation that overflows produces a signed infinity. An operation that underflows produces a signed zero."
     test_files:
