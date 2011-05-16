@@ -7,9 +7,10 @@
  */
 
 var utils = (typeof hobbes !== 'undefined' && hobbes.utils) || require('../utils');
+var vava = (typeof hobbes !== 'undefined' && hobbes.vava) || require('../vava');
 var builder = utils.builder;
 
-var ASTNodeInterface = exports.ASTNodeInterface = new utils.Interface('ASTNode', 'appendChild', 'compile', 'getType', 'toString');
+var ASTNodeInterface = exports.ASTNodeInterface = new utils.Interface('ASTNode', 'appendChild', 'compile', 'getType', 'setLoc', 'toString');
 
 /**
  * @constructor
@@ -18,10 +19,11 @@ var ASTNodeInterface = exports.ASTNodeInterface = new utils.Interface('ASTNode',
  * Inheritants need to make sure they have children of their own!
  */
 var ASTNode = exports.ASTNode = function ASTNode () {
-  // Lists the node's child nodes
-  this.children = [];
   // Node type
   this.type = 'ASTNode';
+  this.setLoc();
+  // Lists the node's child nodes
+  this.children = [];
 };
 
 /**
@@ -51,8 +53,16 @@ ASTNode.prototype.checkChild = function (node) {
  * Compiles the node with all its children
  */
 ASTNode.prototype.compile = function (indent) {
+  this.compileTimeCheck();
   return this.__compiled || (this.__compiled = this.compileNode(indent));
 };
+
+/**
+ * Implement in each node to check for compile time errors.
+ *
+ * @throws CompileTimeError via `throwError`
+ */
+ASTNode.prototype.compileTimeCheck = function () {};
 
 /**
  * Returns the type of node.
@@ -62,15 +72,24 @@ ASTNode.prototype.getType = function () {
 };
 
 /**
- * Checks whether node is of provided Vava type.
+ * Sets location information.
  *
- * Some, but not all nodes possess a Vava type, that can be known at compile
- * time either directly or through recursive computation.
+ * Any node may be passed location information as the last argument to its
+ * constructor, revealing the location of the corresponding code fragment
+ * in the source code.
  *
- * @param vavaType Type to compare with
+ * @params locHash Hash containing the location information
  */
-ASTNode.prototype.isVavaType = function (vavaType) {
-  return this.vavaType === vavaType;
+ASTNode.prototype.setLoc = function (locHash) {
+  this.loc = locHash || {};
+};
+
+ASTNode.prototype.throwError = function (message, description, loc) {
+  var err = new Error(message);
+  err.type = 'CompileTimeError';
+  err.description = description;
+  err.loc = loc || this.loc;
+  throw err;
 };
 
 /**
@@ -105,11 +124,14 @@ ASTNode.prototype.toString = function (indent) {
   return str;
 };
 
+vava.mixins.TypeChecking.mixInto(ASTNode);
+
 /**
  * Creates a node for a compilation unit, the root node of a Vava AST.
  */
 var CompilationUnit = exports.CompilationUnit = function CompilationUnit () {
   this.type = 'CompilationUnit';
+  this.setLoc();
   this.children = [];
   this.vavaPackage = null;
 };
@@ -145,6 +167,7 @@ CompilationUnit.prototype.getSignature = function () {
 var ImportDeclarations = exports.ImportDeclarations = function (importDeclaration) {
   this.type = 'ImportDeclarations';
   this.children = [];
+  this.setLoc(arguments[arguments.length-1]);
 
   if (importDeclaration) this.appendChild(importDeclaration);
 };
@@ -179,6 +202,7 @@ ImportDeclarations.prototype.getSignature = function () {
 var ImportDeclaration = exports.ImportDeclaration = function (name) {
   this.type = 'ImportDeclaration';
   this.children = [];
+  this.setLoc(arguments[arguments.length-1]);
   this.appendChild(name);
 };
 
@@ -207,6 +231,7 @@ var ClassDeclaration = exports.ClassDeclaration = function (name, classBody) {
   }
   this.type = 'ClassDeclaration';
   this.vavaClassName = name;
+  this.setLoc(arguments[arguments.length-1]);
   this.children = classBody;
 };
 
@@ -263,6 +288,7 @@ var FieldDeclaration = exports.FieldDeclaration = function (vavaType, variableDe
     throw new TypeError('Expected one or more variable declarators.');
   }
   this.type  = 'FieldDeclaration';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   this.vavaType = vavaType;
 
@@ -295,6 +321,7 @@ var LocalVariableDeclaration = exports.LocalVariableDeclaration = function (vava
     throw new TypeError('Expected one or more variable declarators.');
   }
   this.type  = 'LocalVariableDeclaration';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   this.vavaType = vavaType;
 
@@ -321,6 +348,7 @@ LocalVariableDeclaration.prototype.getSignature = function () {
  */
 var VariableDeclarators = exports.VariableDeclarators = function (variableDeclarator) {
   this.type = 'VariableDeclarators';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
 
   if (variableDeclarator) this.appendChild(variableDeclarator);
@@ -364,6 +392,11 @@ var VariableDeclarator = exports.VariableDeclarator = function (vavaIdentifier, 
   //   throw new TypeError('Expected Vava expression to be of type `Expression`.');
   // }
   this.type = 'VariableDeclarator';
+  this.setLoc(arguments[arguments.length-1]);
+  // set vavaExpression to undefined, if it is loc hash
+  if (vavaExpression && vavaExpression.first_line) {
+    vavaExpression = undefined;
+  }
   this.children = [];
   this.vavaIdentifier = vavaIdentifier;
   this.vavaInitializer = vavaExpression;
@@ -399,6 +432,7 @@ VariableDeclarator.prototype.getSignature = function () {
  */
 var Assignment = exports.Assignment = function (name, value) {
   this.type = 'Assignment';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   this.appendChild(name);
   this.appendChild(value);
@@ -418,6 +452,7 @@ Assignment.prototype.compileNode = function (indent) {
  */
 var MethodDeclaration = exports.MethodDeclaration = function (vavaHeader, vavaBlock) {
   this.type = 'MethodDeclaration';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   if (typeof vavaHeader.vavaType !== 'string') {
     throw new TypeError('Expected Vava type to be string.');
@@ -476,6 +511,7 @@ var FormalParameter = exports.FormalParameter = function (vavaType, vavaIdentifi
     throw new TypeError('Expected Vava identifier to be a string.');
   }
   this.type = 'FormalParameter';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   this.vavaType = vavaType;
   this.vavaIdentifier = vavaIdentifier;
@@ -502,6 +538,7 @@ FormalParameter.prototype.getSignature = function () {
  */
 var MethodInvocation = exports.MethodInvocation = function (name, argumentList) {
   this.type = 'MethodInvocation';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   this.name = name;
   this.appendChild(argumentList);
@@ -524,6 +561,7 @@ MethodInvocation.prototype.getSignature = function () {
  */
 var ArgumentList = exports.ArgumentList = function (firstArg) {
   this.type = 'ArgumentList';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   
   if (firstArg) this.appendChild(firstArg);
@@ -542,6 +580,11 @@ ArgumentList.prototype.compileNode = function () {
  */
 var Block = exports.Block = function (vavaStatements) {
   this.type = 'Block';
+  this.setLoc(arguments[arguments.length-1]);
+  // Set statements to undefined if only loc hash has been given
+  if (typeof vavaStatements === 'object' && !utils.isArray(vavaStatements)) {
+    vavaStatements = undefined;
+  }
   this.children = [];
   if (typeof vavaStatements !== 'undefined' && !utils.isArray(vavaStatements)) {
     throw new TypeError('Expected Vava statements to be undefined or array.');
@@ -570,6 +613,7 @@ Block.prototype.compileNode = function (indent) {
  */
 var ExpressionStatement = exports.ExpressionStatement = function (expression) {
   this.type = 'ExpressionStatement';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   this.appendChild(expression);
 };
@@ -587,6 +631,7 @@ ExpressionStatement.prototype.compileNode = function (indent) {
  */
 var Name = exports.Name = function (name) {
   this.type = 'Name';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   if (!name || !(/[a-zA-Z][a-zA-Z0-9_]*/.test(name))) {
     throw new TypeError('Expected name to be an identifier.');
@@ -640,6 +685,7 @@ Name.prototype.getSignature = function () {
  */
 var BooleanLiteral = exports.BooleanLiteral = function (bool) {
   this.type = 'BooleanLiteral';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   var boolString = String(bool);
   if (boolString === 'true' || boolString === 'false') {
@@ -666,6 +712,7 @@ BooleanLiteral.prototype.compileNode = function (indent) {
  */
 var IntegerLiteral = exports.IntegerLiteral = function (num) {
   this.type = 'IntegerLiteral';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   if (/l$/i.test(num)) {
     this.vavaType = 'long';
@@ -702,6 +749,7 @@ IntegerLiteral.prototype.compileNode = function (indent) {
  */
 var CharLiteral = exports.CharLiteral = function (character) {
   this.type = 'CharLiteral';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   this.character = character.substr(1,1);
 };
@@ -723,6 +771,7 @@ CharLiteral.prototype.compileNode = function (indent) {
  */
 var FloatingPointLiteral = exports.FloatingPointLiteral = function (numString) {
   this.type = 'FloatingPointLiteral';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   var parts;
   if (parts = numString.match(/^(0|[1-9][0-9]*)\.([1-9][0-9]*)?(?:[Ee]([+-])?([1-9][0-9]*))?([fFdD])?/)) {
@@ -775,6 +824,7 @@ FloatingPointLiteral.prototype.compileNode = function (indent) {
  */
 var NullLiteral = exports.NullLiteral = function () {
   this.type = 'NullLiteral';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
 };
 
@@ -792,6 +842,7 @@ NullLiteral.prototype.compileNode = function (indent) {
  */
 var StringLiteral = exports.StringLiteral = function (str) {
   this.type = 'StringLiteral';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   this.value = str;
 };
@@ -818,6 +869,7 @@ StringLiteral.prototype.compileNode = function (indent) {
  */
 var UnaryMinus = exports.UnaryMinus = function (unaryExpression) {
   this.type = 'UnaryMinus';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
 
   this.appendChild(unaryExpression);
@@ -840,6 +892,7 @@ UnaryMinus.prototype.compileNode = function (indent) {
  */
 var UnaryPlus = exports.UnaryPlus = function (unaryExpression) {
   this.type = 'UnaryPlus';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
 
   this.appendChild(unaryExpression);
@@ -862,6 +915,7 @@ UnaryPlus.prototype.compileNode = function (indent) {
  */
 var PostIncrement = exports.PostIncrement = function (variable) {
   this.type = 'PostIncrement';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   this.vavaType = 'int';
   this.appendChild(variable);
@@ -882,6 +936,7 @@ PostIncrement.prototype.compileNode = function (indent) {
  */
 var PostDecrement = exports.PostDecrement = function (variable) {
   this.type = 'PostDecrement';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   this.vavaType = 'int';
   this.appendChild(variable);
@@ -902,6 +957,7 @@ PostDecrement.prototype.compileNode = function (indent) {
  */
 var PreIncrement = exports.PreIncrement = function (variable) {
   this.type = 'PreIncrement';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   this.vavaType = 'int';
   this.appendChild(variable);
@@ -922,6 +978,7 @@ PreIncrement.prototype.compileNode = function (indent) {
  */
 var PreDecrement = exports.PreDecrement = function (variable) {
   this.type = 'PreDecrement';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   this.vavaType = 'int';
   this.appendChild(variable);
@@ -943,6 +1000,7 @@ PreDecrement.prototype.compileNode = function (indent) {
  */
 var CastExpression = exports.CastExpression = function (vavaType, unaryExpression) {
   this.type = 'CastExpression';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   this.vavaType = vavaType;
   this.appendChild(unaryExpression);
@@ -954,6 +1012,11 @@ CastExpression.prototype.compileNode = function (indent) {
   return builder.functionCall('(' + this.children[0].compile() + ').to', [builder.string(this.vavaType)], false);
 };
 
+CastExpression.prototype.compileTimeCheck = function () {
+  if (this.isVavaType('boolean') && !this.children[0].isVavaType('boolean'))
+    this.throwError('inconvertible types', 'found   : ' + this.children[0].getVavaType() + '\nrequired: boolean');
+}
+
 // Binary
 
 /**
@@ -964,6 +1027,7 @@ CastExpression.prototype.compileNode = function (indent) {
  */
 var Addition = exports.Addition = function (numA, numB) {
   this.type = 'Addition';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   // TODO Compile-time type checking
   if (!(numA) || !(numB)) {
@@ -979,6 +1043,12 @@ Addition.prototype.compileNode = function (indent) {
   return utils.indent(this.children[0].compile() + '.add(' + this.children[1].compile() + ')', indent);
 };
 
+Addition.prototype.compileTimeCheck = function () {
+  if (this.children[0].isNumber() && this.children[1].isNumber()) return true;
+  if (this.children[0].isVavaType('String') || this.children[1].isVavaType('String')) return true;
+  return false;
+};
+
 /**
  * Creates a node for an subtraction operation.
  *
@@ -987,6 +1057,7 @@ Addition.prototype.compileNode = function (indent) {
  */
 var Subtraction = exports.Subtraction = function (numA, numB) {
   this.type = 'Subtraction';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   // TODO Compile-time type checking
   if (!(numA) || !(numB)) {
@@ -1010,6 +1081,7 @@ Subtraction.prototype.compileNode = function (indent) {
  */
 var Multiplication = exports.Multiplication = function (numA, numB) {
   this.type = 'Multiplication';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   // TODO Compile-time type checking
   if (!(numA) || !(numB)) {
@@ -1033,6 +1105,7 @@ Multiplication.prototype.compileNode = function (indent) {
  */
 var Division = exports.Division = function (numA, numB) {
   this.type = 'Division';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   // TODO Compile-time type checking
   if (!(numA) || !(numB)) {
@@ -1056,6 +1129,7 @@ Division.prototype.compileNode = function (indent) {
  */
 var Modulo = exports.Modulo = function (numA, numB) {
   this.type = 'Modulo';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   // TODO Compile-time type checking
   if (!(numA) || !(numB)) {
@@ -1079,6 +1153,7 @@ Modulo.prototype.compileNode = function (indent) {
  */
 var LessThan = exports.LessThan = function (a, b) {
   this.type = 'LessThan';
+  this.setLoc(arguments[arguments.length-1]);
   this.vavaType = 'boolean';
   this.children = [];
   if (!a || !b) {
@@ -1109,6 +1184,7 @@ LessThan.prototype.compileNode = function (indent) {
  */
 var Equals = exports.Equals = function (a, b) {
   this.type = 'Equals';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   if (!a || !b) {
     throw new TypeError('Expected two values to compare for equality.');
@@ -1131,6 +1207,7 @@ Equals.prototype.compileNode = function (indent) {
  */
 var GreaterThan = exports.GreaterThan = function (a, b) {
   this.type = 'GreaterThan';
+  this.setLoc(arguments[arguments.length-1]);
   this.vavaType = 'boolean';
   this.children = [];
   if (!a || !b) {
@@ -1161,6 +1238,7 @@ GreaterThan.prototype.compileNode = function (indent) {
  */
 var NotEquals = exports.NotEquals = function (a, b) {
   this.type = 'NotEquals';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   if (!a || !b) {
     throw new TypeError('Expected two values to compare for inequality.');
@@ -1183,6 +1261,7 @@ NotEquals.prototype.compileNode = function (indent) {
  */
 var LogicalAnd = exports.LogicalAnd = function (boolA, boolB) {
   this.type = 'LogicalAnd';
+  this.setLoc(arguments[arguments.length-1]);
   this.vavaType = 'boolean';
   this.children = [];
   this.appendChild(boolA);
@@ -1207,6 +1286,7 @@ LogicalAnd.prototype.compileNode = function (indent) {
  */
 var LogicalOr = exports.LogicalOr = function (boolA, boolB) {
   this.type = 'LogicalOr';
+  this.setLoc(arguments[arguments.length-1]);
   this.vavaType = 'boolean';
   this.children = [];
   this.appendChild(boolA);
@@ -1231,6 +1311,7 @@ LogicalOr.prototype.compileNode = function (indent) {
  */
 var InclusiveAnd = exports.InclusiveAnd = function (a, b) {
   this.type = 'InclusiveAnd';
+  this.setLoc(arguments[arguments.length-1]);
   // TODO depends on args
   this.vavaType = 'boolean';
   this.children = [];
@@ -1256,6 +1337,7 @@ InclusiveAnd.prototype.compileNode = function (indent) {
  */
 var InclusiveOr = exports.InclusiveOr = function (a, b) {
   this.type = 'InclusiveOr';
+  this.setLoc(arguments[arguments.length-1]);
   // TODO depends on args
   this.vavaType = 'boolean';
   this.children = [];
@@ -1281,6 +1363,7 @@ InclusiveOr.prototype.compileNode = function (indent) {
  */
 var ExclusiveOr = exports.ExclusiveOr = function (a, b) {
   this.type = 'ExclusiveOr';
+  this.setLoc(arguments[arguments.length-1]);
   // TODO depends on args
   this.vavaType = 'boolean';
   this.children = [];
@@ -1305,6 +1388,7 @@ ExclusiveOr.prototype.compileNode = function (indent) {
  */
 var Negation = exports.Negation = function (boolA) {
   this.type = 'Negation';
+  this.setLoc(arguments[arguments.length-1]);
   this.vavaType = 'boolean';
   this.children = [];
   this.appendChild(boolA);
@@ -1323,6 +1407,7 @@ Negation.prototype.compileNode = function (indent) {
  */
 var BitwiseNegation = exports.BitwiseNegation = function (num) {
   this.type = 'BitwiseNegation';
+  this.setLoc(arguments[arguments.length-1]);
   this.vavaType = 'int';
   this.children = [];
   // TODO Check condition
@@ -1343,6 +1428,7 @@ BitwiseNegation.prototype.compileNode = function (indent) {
  */
 var LeftShift = exports.LeftShift = function (a, b) {
   this.type = 'LeftShift';
+  this.setLoc(arguments[arguments.length-1]);
   this.vavaType = 'int';
   this.children = [];
   this.appendChild(a);
@@ -1367,6 +1453,7 @@ LeftShift.prototype.compileNode = function (indent) {
  */
 var RightShift = exports.RightShift = function (a, b) {
   this.type = 'RightShift';
+  this.setLoc(arguments[arguments.length-1]);
   this.vavaType = 'int';
   this.children = [];
   this.appendChild(a);
@@ -1391,6 +1478,7 @@ RightShift.prototype.compileNode = function (indent) {
  */
 var ZeroFillRightShift = exports.ZeroFillRightShift = function (a, b) {
   this.type = 'ZeroFillRightShift';
+  this.setLoc(arguments[arguments.length-1]);
   this.vavaType = 'int';
   this.children = [];
   this.appendChild(a);
@@ -1415,6 +1503,7 @@ ZeroFillRightShift.prototype.compileNode = function (indent) {
  */
 var IfThen = exports.IfThen = function (ifExpr, thenExpr) {
   this.type = 'IfThen';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   if (!ifExpr || !thenExpr) {
     throw new TypeError('Expected condition and conditional.');
@@ -1441,6 +1530,7 @@ IfThen.prototype.compileNode = function (indent) {
  */
 var IfThenElse = exports.IfThenElse = function (condition, truthyStatement, falsyStatement) {
   this.type = 'IfThenElse';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   if (!condition || !truthyStatement || !falsyStatement) {
     throw new TypeError('Expected condition and conditionals.');
@@ -1470,6 +1560,7 @@ IfThenElse.prototype.compileNode = function (indent) {
  */
 var WhileLoop = exports.WhileLoop = function (condition, statement) {
   this.type = 'WhileLoop';
+  this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   if (!condition || !statement) {
     throw new TypeError('Expected condition and conditional.');

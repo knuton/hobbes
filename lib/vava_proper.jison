@@ -127,14 +127,14 @@ package_declaration
 
 import_declarations
   : import_declaration
-    { $$ = new yy.ImportDeclarations($1); }
+    { $$ = new yy.ImportDeclarations($1, @1); }
   | import_declarations import_declaration
     { $1.appendChild($2); $$ = $1; }
   ;
 
 import_declaration
   : KEYWORD_IMPORT name LINE_TERMINATOR
-    { $$ = new yy.ImportDeclaration($2); }
+    { $$ = new yy.ImportDeclaration($2, @$); }
   ;
 
 type_declarations
@@ -150,9 +150,9 @@ type_declaration
 /* TODO Modifiers_{opt} class Identifier Super_{opt} Interfaces_{opt} ClassBody */
 class_declaration
   : KEYWORD_CLASS IDENTIFIER class_body
-    { $$ = new yy.ClassDeclaration($2, $3); }
+    { $$ = new yy.ClassDeclaration($2, $3, @$); }
   | MODIFIER_PUBLIC KEYWORD_CLASS IDENTIFIER class_body
-    { $$ = new yy.ClassDeclaration($3, $4); }
+    { $$ = new yy.ClassDeclaration($3, $4, @$); }
   ;
 
 /*** CLASS ***/
@@ -189,12 +189,12 @@ class_member_declaration
 
 field_declaration
   : type variable_declarators LINE_TERMINATOR
-    { $$ = new yy.FieldDeclaration($1, $2); }
+    { $$ = new yy.FieldDeclaration($1, $2, @$); }
   ;
 
 method_declaration
   : method_header method_body
-    { $$ = new yy.MethodDeclaration($1, $2); }
+    { $$ = new yy.MethodDeclaration($1, $2, @$); }
   ;
 
 /*** METHOD DECLARATIONS ***/
@@ -226,7 +226,7 @@ formal_parameter_list
 
 formal_parameter
   : type variable_declarator_id
-    { $$ = new yy.FormalParameter($1, $2); }
+    { $$ = new yy.FormalParameter($1, $2, @$); }
   ;
 
 method_body
@@ -238,16 +238,16 @@ method_body
 
 variable_declarators
   : variable_declarator
-    { $$ = new yy.VariableDeclarators($1); }
+    { $$ = new yy.VariableDeclarators($1, @1); }
   | variable_declarators COMMA variable_declarator
     { $1.appendChild($3); $$ = $1; }
   ;
 
 variable_declarator
   : variable_declarator_id
-    { $$ = new yy.VariableDeclarator($1); }
+    { $$ = new yy.VariableDeclarator($1, @1); }
   | variable_declarator_id OPERATOR_ASSIGNMENT variable_initializer
-    { $$ = new yy.VariableDeclarator($1, $3); }
+    { $$ = new yy.VariableDeclarator($1, $3, @$); }
   ;
 
 variable_declarator_id
@@ -305,9 +305,9 @@ floating_point_type
 
 block
   : EMBRACE UNBRACE
-    { $$ = new yy.Block(); }
+    { $$ = new yy.Block(@$); }
   | EMBRACE block_statements UNBRACE
-    { $$ = new yy.Block($2); }
+    { $$ = new yy.Block($2, @$); }
   ;
 
 block_statements
@@ -333,7 +333,7 @@ local_variable_declaration_statement
 
 local_variable_declaration
   : type variable_declarators
-    { $$ = new yy.LocalVariableDeclaration($1, $2); }
+    { $$ = new yy.LocalVariableDeclaration($1, $2, @$); }
   ;
 
 /*** STATEMENTS ***/
@@ -362,12 +362,12 @@ statement_without_trailing_substatement
 
 if_then_statement
   : KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN statement
-    { $$ = new yy.IfThen($3, $5); }
+    { $$ = new yy.IfThen($3, $5, @$); }
   ;
 
 if_then_else_statement
   : KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN statement_no_short_if KEYWORD_ELSE statement
-    { $$ = new yy.IfThenElse($3, $5, $7); }
+    { $$ = new yy.IfThenElse($3, $5, $7, @$); }
   ;
 
 statement_no_short_if
@@ -387,7 +387,7 @@ statement_no_short_if
 
 while_statement
   : KEYWORD_WHILE LEFT_PAREN expression RIGHT_PAREN statement
-    { $$ = new yy.WhileLoop($3, $5); }
+    { $$ = new yy.WhileLoop($3, $5, @$); }
   ;
 
 /* statement_without_trailing_substatement */
@@ -399,7 +399,7 @@ empty_statement
 
 expression_statement
   : statement_expression LINE_TERMINATOR
-    { $$ = new yy.ExpressionStatement($1); }
+    { $$ = new yy.ExpressionStatement($1, @1); }
   ;
 
 /* statement_expression */
@@ -422,13 +422,13 @@ name
 
 simple_name
   : IDENTIFIER
-    { $$ = new yy.Name($1); }
+    { $$ = new yy.Name($1, @1); }
   ;
 
 qualified_name
   // TODO OMG Hacks
   : name SEPARATOR_DOT IDENTIFIER
-    { $$ = new yy.Name($1.qualified() + '.' + $3); }
+    { $$ = new yy.Name($1.qualified() + '.' + $3, @$); }
   ;
 
 /*** EXPRESSIONS ***/
@@ -436,7 +436,7 @@ qualified_name
 assignment
   // TODO Should be assignment_expression
   : left_hand_side OPERATOR_ASSIGNMENT conditional_expression
-    { $$ = new yy.Assignment($1, $3); }
+    { $$ = new yy.Assignment($1, $3, @1); }
   ;
 
 // TODO FieldAccess and ArrayAccess
@@ -469,88 +469,88 @@ conditional_or_expression
   : conditional_and_expression
     { $$ = $1; }
   | conditional_or_expression OPERATOR_LOGICAL_OR conditional_and_expression
-    { $$ = new yy.LogicalOr($1, $3); }
+    { $$ = new yy.LogicalOr($1, $3, @2); }
   ;
 
 conditional_and_expression
   : inclusive_or_expression
     { $$ = $1; }
   | conditional_and_expression OPERATOR_LOGICAL_AND inclusive_or_expression
-    { $$ = new yy.LogicalAnd($1, $3); }
+    { $$ = new yy.LogicalAnd($1, $3, @2); }
   ;
 
 inclusive_or_expression
   : exclusive_or_expression
     { $$ = $1; }
   | inclusive_or_expression OPERATOR_INCLUSIVE_OR exclusive_or_expression
-    { $$ = new yy.InclusiveOr($1, $3); }
+    { $$ = new yy.InclusiveOr($1, $3, @2); }
   ;
 
 exclusive_or_expression
   : and_expression
     { $$ = $1; }
   | exclusive_or_expression OPERATOR_XOR and_expression
-    { $$ = new yy.ExclusiveOr($1, $3); }
+    { $$ = new yy.ExclusiveOr($1, $3, @2); }
   ;
 
 and_expression
   : equality_expression
     { $$ = $1; }
   | and_expression OPERATOR_INCLUSIVE_AND equality_expression
-    { $$ = new yy.InclusiveAnd($1, $3); }
+    { $$ = new yy.InclusiveAnd($1, $3, @2); }
   ;
 
 equality_expression
   : relational_expression
     { $$ = $1; }
   | equality_expression OPERATOR_EQUAL relational_expression
-    { $$ = new yy.Equals($1, $3); }
+    { $$ = new yy.Equals($1, $3, @2); }
   | equality_expression OPERATOR_NOT_EQUAL relational_expression
-    { $$ = new yy.NotEquals($1, $3); }
+    { $$ = new yy.NotEquals($1, $3, @2); }
   ;
 
 relational_expression
   : shift_expression
     { $$ = $1; }
   | relational_expression OPERATOR_LESS_THAN shift_expression
-    { $$ = new yy.LessThan($1, $3); }
+    { $$ = new yy.LessThan($1, $3, @2); }
   | relational_expression OPERATOR_LESS_THAN_EQUAL shift_expression
-    { $$ = new yy.LogicalOr(new yy.LessThan($1, $3), new yy.Equals($1, $3)); }
+    { $$ = new yy.LogicalOr(new yy.LessThan($1, $3, @2), new yy.Equals($1, $3, @2), @2); }
   | relational_expression OPERATOR_GREATER_THAN shift_expression
-    { $$ = new yy.GreaterThan($1, $3); }
+    { $$ = new yy.GreaterThan($1, $3, @2); }
   | relational_expression OPERATOR_GREATER_THAN_EQUAL shift_expression
-    { $$ = new yy.LogicalOr(new yy.GreaterThan($1, $3), new yy.Equals($1, $3)); }
+    { $$ = new yy.LogicalOr(new yy.GreaterThan($1, $3, @2), new yy.Equals($1, $3, @2), @2); }
   ;
 
 shift_expression
   : additive_expression
     { $$ = $1; }
   | shift_expression OPERATOR_LEFTSHIFT additive_expression
-    { $$ = new yy.LeftShift($1, $3); }
+    { $$ = new yy.LeftShift($1, $3, @2); }
   | shift_expression OPERATOR_RIGHTSHIFT additive_expression
-    { $$ = new yy.RightShift($1, $3); }
+    { $$ = new yy.RightShift($1, $3, @2); }
   | shift_expression OPERATOR_ZEROFILL_RIGHTSHIFT additive_expression
-    { $$ = new yy.ZeroFillRightShift($1, $3); }
+    { $$ = new yy.ZeroFillRightShift($1, $3, @2); }
   ;
 
 additive_expression
   : multiplicative_expression
     { $$ = $1; }
   | additive_expression OPERATOR_ADDITION multiplicative_expression
-    { $$ = new yy.Addition($1, $3); }
+    { $$ = new yy.Addition($1, $3, @2); }
   | additive_expression OPERATOR_SUBTRACTION multiplicative_expression
-    { $$ = new yy.Subtraction($1, $3); }
+    { $$ = new yy.Subtraction($1, $3, @2); }
   ;
 
 multiplicative_expression
   : unary_expression
     { $$ = $1; }
   | multiplicative_expression OPERATOR_MULTIPLICATION unary_expression
-    { $$ = new yy.Multiplication($1, $3); }
+    { $$ = new yy.Multiplication($1, $3, @2); }
   | multiplicative_expression OPERATOR_DIVISON unary_expression
-    { $$ = new yy.Division($1, $3); }
+    { $$ = new yy.Division($1, $3, @2); }
   | multiplicative_expression OPERATOR_MODULO unary_expression
-    { $$ = new yy.Modulo($1, $3); }
+    { $$ = new yy.Modulo($1, $3, @2); }
   ;
 
 /*
@@ -579,21 +579,21 @@ unary_expression
   | pre_decrement_expression
     { $$ = $1; }
   | OPERATOR_SUBTRACTION unary_expression
-    { $$ = new yy.UnaryMinus($2); }
+    { $$ = new yy.UnaryMinus($2, @1); }
   | OPERATOR_ADDITION unary_expression
-    { $$ = new yy.UnaryPlus($2); }
+    { $$ = new yy.UnaryPlus($2, @1); }
   | unary_expression_not_plus_minus
     { $$ = $1; }
   ;
 
 post_increment_expression
   : OPERATOR_INCREMENT unary_expression
-    { $$ = new yy.PreIncrement($2); }
+    { $$ = new yy.PreIncrement($2, @1); }
   ;
 
 post_decrement_expression
   : OPERATOR_DECREMENT unary_expression
-    { $$ = new yy.PreDecrement($2); }
+    { $$ = new yy.PreDecrement($2, @1); }
   ;
 
 
@@ -601,9 +601,9 @@ unary_expression_not_plus_minus
   : postfix_expression
     { $$ = $1; }
   | OPERATOR_BITWISE_NEGATION unary_expression
-    { $$ = new yy.BitwiseNegation($2); }
+    { $$ = new yy.BitwiseNegation($2, @1); }
   | OPERATOR_NEGATION unary_expression
-    { $$ = new yy.Negation($2); }
+    { $$ = new yy.Negation($2, @1); }
   | cast_expression
     { $$ = $1; }
   ;
@@ -621,12 +621,12 @@ postfix_expression
 
 post_increment_expression
   : postfix_expression OPERATOR_INCREMENT
-    { $$ = new yy.PostIncrement($1); }
+    { $$ = new yy.PostIncrement($1, @2); }
   ;
 
 post_decrement_expression
   : postfix_expression OPERATOR_DECREMENT
-    { $$ = new yy.PostDecrement($1); }
+    { $$ = new yy.PostDecrement($1, @2); }
   ;
 
 /*
@@ -637,7 +637,7 @@ CastExpression:
 */
 cast_expression
   : LEFT_PAREN primitive_type RIGHT_PAREN unary_expression
-    { $$ = new yy.CastExpression($2, $4); }
+    { $$ = new yy.CastExpression($2, $4, @4); }
   ;
 
 primary
@@ -664,50 +664,50 @@ literal
 
 method_invocation
   : name LEFT_PAREN RIGHT_PAREN
-    { $$ = new yy.MethodInvocation($1); }
+    { $$ = new yy.MethodInvocation($1, @$); }
   | name LEFT_PAREN argument_list RIGHT_PAREN
-    { $$ = new yy.MethodInvocation($1, $3); }
+    { $$ = new yy.MethodInvocation($1, $3, @$); }
   ;
 
 argument_list
   : expression
-    { $$ = new yy.ArgumentList($1); }
+    { $$ = new yy.ArgumentList($1, @1); }
   | argument_list COMMA expression
     { $1.appendChild($3); $$ = $1; }
   ;
 
 boolean_literal
   : TRUE_LITERAL
-    { $$ = new yy.BooleanLiteral($1); }
+    { $$ = new yy.BooleanLiteral($1, @1); }
   | FALSE_LITERAL
-    { $$ = new yy.BooleanLiteral($1); }
+    { $$ = new yy.BooleanLiteral($1, @1); }
   ;
 
 integer_literal
   : DECIMAL_INTEGER_LITERAL
-    { $$ = new yy.IntegerLiteral($1); }
+    { $$ = new yy.IntegerLiteral($1, @1); }
   ;
 
 char_literal
   : CHAR_LITERAL
-    { $$ = new yy.CharLiteral($1); }
+    { $$ = new yy.CharLiteral($1, @1); }
   ;
 
 null_literal
   : NULL_LITERAL
-    { $$ = new yy.NullLiteral($1); }
+    { $$ = new yy.NullLiteral($1, @1); }
   ;
 
 // FLOATING POINT
 
 floating_point_literal
   : FLOATING_POINT_LITERAL
-    { $$ = new yy.FloatingPointLiteral($1); }
+    { $$ = new yy.FloatingPointLiteral($1, @1); }
   ;
 
 // END FLOATING POINT
 
 string_literal
   : STRING_LITERAL
-    { $$ = new yy.StringLiteral($1); }
+    { $$ = new yy.StringLiteral($1, @1); }
   ;

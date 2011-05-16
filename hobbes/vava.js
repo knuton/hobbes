@@ -6,6 +6,10 @@ var vavaType = require('./vava/type');
 
 exports.scope = require('./vava/scope');
 
+exports.mixins = {
+  TypeChecking : vavaType.TypeChecking
+};
+
 exports.env = utils.merge(
   vavaClass,
   vavaMethod,

@@ -36,6 +36,17 @@ describe('Utils', function () {
       expect(farmerInterface.check(farmer)).not.toBeDefined();
     });
   });
+
+  describe('Mixin', function () {
+    
+    it('should copy methods', function () {
+      var Farmer = function () {};
+      var Robber = new utils.Mixin('Robber', {steal : function () { return 'This is a stick-up!'; }});
+      Robber.mixInto(Farmer);
+      expect((new Farmer()).steal()).toBe('This is a stick-up!');
+    });
+
+  });
   
   describe('Array test', function () {
     

@@ -4,6 +4,82 @@
 
 var utils = (typeof hobbes !== 'undefined' && hobbes.utils) || require('../utils');
 
+var TypeChecking = exports.TypeChecking = new utils.Mixin('TypeChecking', {
+
+  /**
+   * Returns the object's vava type.
+   */
+  getVavaType : function () {
+    return this.vavaType;
+  },
+
+  /**
+   * Checks if variable is of given type.
+   *
+   * @param vavaType Type to check for
+   */
+  isVavaType : function (vavaType) {
+    return this.getVavaType() === vavaType;
+  },
+
+  /**
+   * Checks if variable is of native type.
+   *
+   * That is, whether it is one of {boolean, byte, short, int, long, char, float, double}.
+   */
+  isPrimitive : function () {
+    var vT = this.getVavaType();
+    return (vT === "boolean" || vT === "byte" || vT === "short" || vT === "int" || vT === "long" || vT === "char" || vT === "float" || vT === "double");
+  },
+
+  /**
+   * Checks if variable is of integral type.
+   *
+   * That is, whether it is one of {byte, short, int, long, char}.
+   */
+  isIntegral : function () {
+    var vT = this.getVavaType();
+    return (vT === "byte" || vT === "short" || vT === "int" || vT === "long");
+  },
+
+  /**
+   * Checks if variable is of floating point type.
+   *
+   * That is, whether it is one of {float, double}.
+   */
+  isFloatingPoint : function () {
+    var vT = this.getVavaType();
+    return (vT === "float" || vT === "double");
+  },
+
+  /**
+   * Checks if variable is of number type.
+   *
+   * That is, whether it is one of {byte, short, int, long, char, float, double}.
+   */
+  isNumber : function () {
+    return this.isIntegral() || this.isFloatingPoint();
+  },
+
+  /**
+   * Checks for compatibility of own and provided type.
+   *
+   * TODO Autocasting for natives
+   * TODO Hierarchical compatibility for reference types
+   */
+  isAssignmentCompatible : function (typedValue) {
+    if (this.isPrimitive()) {
+      if (typedValue.getVavaType() === this.getVavaType()) return true;
+      if (this.isIntegral() && typedValue.isIntegral()) return true;
+      return this.isFloatingPoint() && typedValue.isFloatingPoint();
+    } else {
+      var vavaType = typedValue.getVavaType();
+      return (vavaType === "null" || vavaType === this.getVavaType());
+    }
+  }
+
+});
+
 /**
  * @constructor
  * Creates a typed variable, possessing name, type and value.
@@ -20,6 +96,8 @@ var TypedVariable = exports.TypedVariable = function (vavaType, identifier, type
   this.set(typedValue || this.defaultValue());
   
 };
+
+TypeChecking.mixInto(TypedVariable);
 
 /**
  * Returns the Vava type of the variable.
@@ -65,65 +143,6 @@ TypedVariable.prototype.set = function (typedValue) {
 TypedVariable.prototype._setAdjusted = function (typedValue) {
   // Leave it to specific types to convert themselves
   this.typedValue = typedValue.to(this.vavaType);
-};
-
-/**
- * Checks if variable is of given type.
- *
- * @param vavaType Type to check for
- */
-TypedVariable.prototype.isVavaType = function (vavaType) {
-  return this.getVavaType() === vavaType;
-};
-
-
-/**
- * Checks if variable is of native type.
- *
- * That is, whether it is one of {boolean, byte, short, int, long, char, float, double}.
- */
-TypedVariable.prototype.isPrimitive = function () {
-  var vT = this.getVavaType();
-  return (vT === "boolean" || vT === "byte" || vT === "short" || vT === "int" || vT === "long" || vT === "char" || vT === "float" || vT === "double");
-};
-
-/**
- * Checks if variable is of integral type.
- *
- * That is, whether it is one of {byte, short, int, long}.
- * TODO Might want to add `char`
- */
-TypedVariable.prototype.isIntegral = function () {
-  var vT = this.getVavaType();
-  return (vT === "byte" || vT === "short" || vT === "int" || vT === "long");
-};
-
-/**
- * Checks if variable is of floating point type.
- *
- * That is, whether it is one of {float, double}.
- */
-TypedVariable.prototype.isFloatingPoint = function () {
-  var vT = this.getVavaType();
-  return (vT === "float" || vT === "double");
-};
-
-/**
- * Checks for compatibility of own and provided type.
- *
- * TODO Autocasting for natives
- * TODO Hierarchical compatibility for reference types
- */
-TypedVariable.prototype.isAssignmentCompatible = function (typedValue) {
-
-  if (this.isPrimitive()) {
-    if (typedValue.getVavaType() === this.getVavaType()) return true;
-    if (this.isIntegral() && typedValue.isIntegral()) return true;
-    return this.isFloatingPoint() && typedValue.isFloatingPoint();
-  } else {
-    var vavaType = typedValue.getVavaType();
-    return (vavaType === "null" || vavaType === this.getVavaType());
-  }
 };
 
 /**
@@ -212,10 +231,7 @@ TypedValue.prototype.to = function (vavaType) {
   return TypedValue.constructorFor(vavaType).intern(this.get());
 };
 
-TypedValue.prototype.isVavaType = TypedVariable.prototype.isVavaType;
-TypedValue.prototype.isPrimitive = TypedVariable.prototype.isPrimitive;
-TypedValue.prototype.isIntegral = TypedVariable.prototype.isIntegral;
-TypedValue.prototype.isFloatingPoint = TypedVariable.prototype.isFloatingPoint;
+TypeChecking.mixInto(TypedValue);
 
 /**
  * Returns a string representation of the value.

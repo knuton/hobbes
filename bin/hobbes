@@ -16,6 +16,15 @@ if (filename) {
 }
 
 function execute(src) {
-  hobbes.compiler.run(src);
+  try {
+    hobbes.compiler.run(src);
+  } catch (err) {
+    if (err.type === 'CompileTimeError') {
+      process.stdout.write(filename + ':' + err.line + ': ' + err.message + '\n' + err.description + '\n1 error\n');
+    } else {
+      process.stdout.write(filename + '\n');
+      throw err;
+    }
+  }
 };
 

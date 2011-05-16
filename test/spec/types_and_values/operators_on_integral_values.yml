@@ -20,3 +20,5 @@ specifications:
       - 'Casting.java'
 
   - description: "There are no casts between integral types and the type boolean."
+    test_files:
+      - 'NoBooleanInts.java'

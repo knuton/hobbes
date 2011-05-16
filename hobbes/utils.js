@@ -65,6 +65,41 @@ Interface.check = function (object) {
 };
 
 /**
+ * @constructor
+ * Creates a mixin containing instance methods.
+ *
+ * @param {string} name The mixin's name
+ * @param {object} methods Hash containing as keys method namesd, as values fns
+ */
+var Mixin = exports.Mixin = function (name, methods_hash) {
+  if (typeof name !== 'string' || !methods_hash) {
+    throw new Error('Mixin requires name and method hash.');
+  }
+  this.name = name;
+  this.methods = {};
+  for (methName in methods_hash) {
+    if (typeof methName !== 'string')
+      throw new Error('Not a method name: ' + methName);
+    if (typeof methods_hash[methName] !== 'function')
+      throw new Error('Not a function: ' + methods_hash[methName]);
+    this.methods[methName] = methods_hash[methName];
+  }
+};
+
+/**
+ * Copys the mixin's methods to the constructor's prototype.
+ *
+ * @param constructor The constructor to augment
+ */
+Mixin.prototype.mixInto = function (constructor) {
+  for (methName in this.methods) {
+    if (!constructor.prototype[methName]) {
+      constructor.prototype[methName] = this.methods[methName];
+    }
+  }
+};
+
+/**
  * Tests a given argument for its array-ish-ness.
  *
  * Based on Crockford's typeOf fn.

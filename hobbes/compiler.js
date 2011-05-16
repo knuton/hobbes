@@ -11,10 +11,35 @@ exports.run = function (vavaSrc) {
     throw new TypeError('Expected Vava source to be provided as string.');
   }
   var vavaAST = parser.parse(vavaSrc);
-  var compilation = vavaAST.compile();
+  try {
+    var compilation = vavaAST.compile();
+  } catch (err) {
+    if (err.type === 'CompileTimeError') {
+      err.line = err.loc.first_line;
+      err.description = errorDescription(vavaSrc, err);
+    }
+    throw err;
+  }
   
   var runner = new Function (compilation);
   // TODO How does the import of `java.lang` happen in Java?
   var scope = new vava.scope.Scope({__env : vava.env}).__add(stdlib).__add(stdlib.java.lang);
   runner.call(scope);
 };
+
+function errorDescription(source, err) {
+  var description = (err.description && err.description + '\n') || '';
+  description += rogueLines(source, err.loc.first_line, err.loc.last_line) + '\n';
+  description += pointer(err.loc.first_column);
+  return description;
+}
+
+function rogueLines(source, firstLine, lastLine) {
+  return source.split('\n').slice(firstLine - 1, lastLine).join('\n');
+}
+
+function pointer(colnum) {
+  var pointerString = '^', i;
+  for (i = 0; i < colnum; i++) pointerString = ' ' + pointerString;
+  return pointerString;
+}
