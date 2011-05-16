@@ -641,8 +641,15 @@ cast_expression
   ;
 
 primary
+  : primary_no_new_array
+    { $$ = $1; }
+  ;
+
+primary_no_new_array
   : literal
     { $$ = $1; }
+  | LEFT_PAREN expression RIGHT_PAREN
+    { $$ = $2; }
   | method_invocation
     { $$ = $1; }
   ;
