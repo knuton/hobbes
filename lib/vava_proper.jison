@@ -370,6 +370,7 @@ if_then_statement
     { $$ = new yy.IfThen($3, $5, @$); }
   ;
 
+// TODO no_short_if variants!
 if_then_else_statement
   : KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN statement_no_short_if KEYWORD_ELSE statement
     { $$ = new yy.IfThenElse($3, $5, $7, @$); }
@@ -395,6 +396,10 @@ while_statement
     { $$ = new yy.WhileLoop($3, $5, @$); }
   ;
 
+while_statement_no_short_if
+  : KEYWORD_WHILE LEFT_PAREN expression RIGHT_PAREN statement_no_short_if
+    { $$ = new yy.WhileLoop($3, $5, @$); }
+  ;
 do_statement
   : KEYWORD_DO statement KEYWORD_WHILE LEFT_PAREN expression RIGHT_PAREN LINE_TERMINATOR
     { $$ = new yy.DoWhileLoop($2, $5, @$); }
