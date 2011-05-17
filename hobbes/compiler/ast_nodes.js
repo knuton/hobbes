@@ -1595,11 +1595,12 @@ var WhileLoop = exports.WhileLoop = function (condition, statement) {
 WhileLoop.inherits(ASTNode);
 
 WhileLoop.prototype.compileNode = function (indent) {
-  var js = utils.indent('while (this.__env.BooleanValue.intern(true) === ', indent);
-  js += this.children[0].compileNode() + ') {\n';
-  js += this.children[1].compileNode(indent + 2) + '\n';
-  js += utils.indent('}\n', indent);
-  return js;
+  return utils.indent(builder.wrapParens(
+    builder.wrapAsFunction(
+      utils.indentSpaces(indent + 2) + 'while (this.__env.BooleanValue.intern(true) === ' + this.children[0].compile() + ') { ' + builder.wrapParens(builder.wrapAsFunction(this.children[1].compile(indent + 4))) + '.call(blockScope); }',
+      ['blockScope']
+    )
+  ) + '.call(this, this.__descend());', indent);
 };
 
 /**

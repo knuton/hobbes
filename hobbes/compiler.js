@@ -6,7 +6,8 @@ parser.yy = require('./compiler/ast_nodes');
 parser.yy.utils = utils.yyUtils;
 
 // Simple interface for now
-exports.run = function (vavaSrc) {
+exports.run = function (vavaSrc, options) {
+  options = options || {};
   if (typeof vavaSrc !== 'string') {
     throw new TypeError('Expected Vava source to be provided as string.');
   }
@@ -19,6 +20,10 @@ exports.run = function (vavaSrc) {
       err.description = errorDescription(vavaSrc, err);
     }
     throw err;
+  }
+
+  if (options.debug && typeof console !== 'undefined') {
+    console.log(compilation);
   }
   
   var runner = new Function (compilation);

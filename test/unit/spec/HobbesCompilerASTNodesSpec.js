@@ -665,7 +665,7 @@ describe('Compiler', function () {
       });
       
       it('should compile itself', function () {
-        expect(testNode.compile()).toBe('(MOCK.get() ? MOCK : MOCK)');
+        expect(testNode.compile()).toBe('((this.__env.BooleanValue.intern(true) === MOCK) ? MOCK : MOCK)');
       });
       
     }); // end TernaryOperator spec
@@ -942,6 +942,9 @@ describe('Compiler', function () {
         expect(testNode.toString()).toBe('- <WhileLoop>\n  - <ASTNode>\n  - <ASTNode>\n');
       });
       
+      it('should compile itself', function () {
+        expect(testNode.compile()).toBe('(function (blockScope) {\nwhile (this.__env.BooleanValue.intern(true) === MOCK) { (function () {\nMOCK\n}).call(blockScope); }\n}).call(this, this.__descend());');
+      });
     }); // end WhileLoop spec
     
     describe('DoWhileLoop', function () {
@@ -961,7 +964,7 @@ describe('Compiler', function () {
       });
 
       it('should compile itself', function () {
-        expect(testNode.compile()).toBe('(function (freeRide, blockScope) {\nwhile (freeRide || this.__env.BooleanValue.intern(true) === MOCK) { (function () {\nMOCK\n}).call(blockScope); freeRide = false; }\n})(true, this.__descend());');
+        expect(testNode.compile()).toBe('(function (freeRide, blockScope) {\nwhile (freeRide || this.__env.BooleanValue.intern(true) === MOCK) { (function () {\nMOCK\n}).call(blockScope); freeRide = false; }\n}).call(this, true, this.__descend());');
       });
       
     }); // end DoWhileLoop spec
