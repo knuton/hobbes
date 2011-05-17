@@ -21,6 +21,8 @@ EXPO              ([Ee][+-]?{Ds})
 "["                   {return 'LEFT_BRACKET';}
 "]"                   {return 'RIGHT_BRACKET';}
 ","                   {return 'COMMA';}
+"?"                   {return 'QUESTION_MARK';}
+":"                   {return 'COLON';}
 ";"                   {return 'LINE_TERMINATOR';}
 
 
@@ -38,6 +40,7 @@ EXPO              ([Ee][+-]?{Ds})
 "if"                  {return 'KEYWORD_IF';}
 "else"                {return 'KEYWORD_ELSE';}
 "while"               {return 'KEYWORD_WHILE';}
+"do"                  {return 'KEYWORD_DO';}
 "true"                {return 'TRUE_LITERAL';}
 "false"               {return 'FALSE_LITERAL';}
 
@@ -356,6 +359,8 @@ statement_without_trailing_substatement
     { $$ = $1; }
   | expression_statement
     { $$ = $1; }
+  | do_statement
+    { $$ = $1; }
   ;
 
 /*** CONTROL STRUCTURES: BRANCHING ***/
@@ -388,6 +393,11 @@ statement_no_short_if
 while_statement
   : KEYWORD_WHILE LEFT_PAREN expression RIGHT_PAREN statement
     { $$ = new yy.WhileLoop($3, $5, @$); }
+  ;
+
+do_statement
+  : KEYWORD_DO statement KEYWORD_WHILE LEFT_PAREN expression RIGHT_PAREN LINE_TERMINATOR
+    { $$ = new yy.DoWhileLoop($2, $5, @$); }
   ;
 
 /* statement_without_trailing_substatement */
@@ -459,10 +469,11 @@ assignment_expression
     { $$ = $1; }
   ;
 
-// TODO Ternary operator
 conditional_expression
   : conditional_or_expression
     { $$ = $1; }
+  | conditional_or_expression QUESTION_MARK expression COLON conditional_expression
+    { $$ = new yy.TernaryOperator($1, $3, $5, @$); }
   ;
 
 conditional_or_expression

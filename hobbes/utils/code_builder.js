@@ -4,10 +4,20 @@
  */
 
 /**
+ * Wraps a string in parentheses.
+ *
+ * @param str The string to wrap
+ */
+var wrapParens = exports.wrapParens = function (str) {
+  return '(' + str + ')';
+};
+
+
+/**
  * Builds a string of variable declaration.
  *
  * @param identifierStr Variable identifier
- * @semicolonInsertion `true` to insert semicolon at line end (default: true)
+ * @param semicolonInsertion `true` to insert semicolon at line end (default: true)
  */
 var declaration = exports.declaration = function (identifierStr, semicolonInsertion) {
   return semicolize(['var', identifierStr].join(' '), semicolonInsertion);
@@ -18,7 +28,7 @@ var declaration = exports.declaration = function (identifierStr, semicolonInsert
  *
  * @param identifierStr Variable identifier
  * @param expressionStr Variable value
- * @semicolonInsertion `true` to insert semicolon at line end (default: true)
+ * @param semicolonInsertion `true` to insert semicolon at line end (default: true)
  */
 var declarationAssignment = exports.declarationAssignment = function (identifierStr, expressionStr, semicolonInsertion) {
   return semicolize([declaration(identifierStr, false), '=', expressionStr].join(' '), semicolonInsertion);
@@ -30,10 +40,12 @@ var declarationAssignment = exports.declarationAssignment = function (identifier
  * Wraps a string of expressions or an array of these as a function.
  *
  * @param code The string of expressions or array of strings of expressions
+ * @param params Optional array of paramater list
  */
-var wrapAsFunction = exports.wrapAsFunction = function (code) {
+var wrapAsFunction = exports.wrapAsFunction = function (code, params) {
   code = Array.isArray(code) ? code : [code];
-  return 'function () {\n' + code.join('\n') + '\n}';
+  params = params || [];
+  return 'function (' + params.join(', ') + ') {\n' + code.join('\n') + '\n}';
 };
  
 
@@ -42,7 +54,7 @@ var wrapAsFunction = exports.wrapAsFunction = function (code) {
  *
  * @param identifierStr Function identifier
  * @param fnArgs Array of arguments to the function
- * @semicolonInsertion `true` to insert semicolon at line end (default: true)
+ * @param semicolonInsertion `true` to insert semicolon at line end (default: true)
  */
 var functionCall = exports.functionCall = function (identifierStr, fnArgs, semicolonInsertion) {
   fnArgs = fnArgs || [];
@@ -54,7 +66,7 @@ var functionCall = exports.functionCall = function (identifierStr, fnArgs, semic
  *
  * @param identifierStr Constructor identifier
  * @param fnArgs Array of arguments to the constructor
- * @semicolonInsertion `true` to insert semicolon at line end (default: true)
+ * @param semicolonInsertion `true` to insert semicolon at line end (default: true)
  */
 var constructorCall = exports.constructorCall = function (identifierStr, fnArgs, semicolonInsertion) {
   return ['new', functionCall(identifierStr, fnArgs, semicolonInsertion)].join(' ');

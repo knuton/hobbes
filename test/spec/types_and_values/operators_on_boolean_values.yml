@@ -7,6 +7,8 @@ specifications:
       - 'BooleanOperators.java'
 
   - description: "Only `boolean` expressions can be used in Vava's control flow statements and as the first operand of the conditional operator ?:."
+    test_files:
+      - 'BooleanInControlFlow.java'
 
   - description: "An integral value x can be converted to a value of type `boolean`, following the C language convention that any nonzero value is `true`, by the expression `x!=0`."
     test_files:

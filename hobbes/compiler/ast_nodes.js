@@ -1254,6 +1254,29 @@ NotEquals.prototype.compileNode = function (indent) {
 };
 
 /**
+ * Creates a node for a ternary operator.
+ *
+ * @param condition expression of boolean type
+ * @param optionA   Truthy option
+ * @param optionB   Falsy option
+ */
+var TernaryOperator = exports.TernaryOperator = function (condition, optionA, optionB) {
+  this.type = 'TernaryOperator';
+  this.setLoc(arguments[arguments.length-1]);
+  this.vavaType = optionA.getVavaType();
+  this.children = [];
+  this.appendChild(condition);
+  this.appendChild(optionA);
+  this.appendChild(optionB);
+};
+
+TernaryOperator.inherits(ASTNode);
+
+TernaryOperator.prototype.compileNode = function (indent) {
+  return ['((this.__env.BooleanValue.intern(true) === ', this.children[0].compile(), ') ? ', this.children[1].compile(), ' : ', this.children[2].compile() + ')'].join('');
+};
+
+/**
  * Creates a node for a logical AND.
  *
  * @param boolA First truth value
@@ -1579,3 +1602,30 @@ WhileLoop.prototype.compileNode = function (indent) {
   return js;
 };
 
+/**
+ * Creates a node for a do-while loop.
+ *
+ * @param statement The looped statements
+ * @param condition The condition
+ */
+var DoWhileLoop = exports.DoWhileLoop = function (statement, condition) {
+  this.type = 'DoWhileLoop';
+  this.setLoc(arguments[arguments.length-1]);
+  this.children = [];
+  if (!condition || !statement) {
+    throw new TypeError('Expected condition and conditional.');
+  }
+  this.appendChild(statement);
+  this.appendChild(condition);
+};
+
+DoWhileLoop.inherits(ASTNode);
+
+DoWhileLoop.prototype.compileNode = function (indent) {
+  return utils.indent(builder.wrapParens(
+    builder.wrapAsFunction(
+      utils.indentSpaces(indent + 2) + 'while (freeRide || this.__env.BooleanValue.intern(true) === ' + this.children[1].compile() + ') { ' + builder.wrapParens(builder.wrapAsFunction(this.children[0].compile(indent + 4))) + '.call(blockScope); freeRide = false; }',
+      ['freeRide', 'blockScope']
+    )
+  ) + '.call(this, true, this.__descend());', indent);
+};

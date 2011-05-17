@@ -648,6 +648,28 @@ describe('Compiler', function () {
       
     }); // end NotEquals spec
     
+    describe('TernaryOperator', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.TernaryOperator(mockASTNode({vavaType: 'boolean'}), mockASTNode({vavaType: 'int'}), mockASTNode({vavaType: 'byte'}));
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `TernaryOperator`', function () {
+        expect(testNode.getType()).toBe('TernaryOperator');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <TernaryOperator vavaType: int>\n  - <ASTNode vavaType: boolean>\n  - <ASTNode vavaType: int>\n  - <ASTNode vavaType: byte>\n');
+      });
+      
+      it('should compile itself', function () {
+        expect(testNode.compile()).toBe('(MOCK.get() ? MOCK : MOCK)');
+      });
+      
+    }); // end TernaryOperator spec
+
     describe('LogicalAnd', function () {
       
       beforeEach(function () {
@@ -920,7 +942,29 @@ describe('Compiler', function () {
         expect(testNode.toString()).toBe('- <WhileLoop>\n  - <ASTNode>\n  - <ASTNode>\n');
       });
       
-    }); // end IfThen spec
+    }); // end WhileLoop spec
+    
+    describe('DoWhileLoop', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.DoWhileLoop(mockASTNode(), mockASTNode({vavaType: 'boolean'}));
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `DoWhileLoop`', function () {
+        expect(testNode.getType()).toBe('DoWhileLoop');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <DoWhileLoop>\n  - <ASTNode>\n  - <ASTNode vavaType: boolean>\n');
+      });
+
+      it('should compile itself', function () {
+        expect(testNode.compile()).toBe('(function (freeRide, blockScope) {\nwhile (freeRide || this.__env.BooleanValue.intern(true) === MOCK) { (function () {\nMOCK\n}).call(blockScope); freeRide = false; }\n})(true, this.__descend());');
+      });
+      
+    }); // end DoWhileLoop spec
     
     afterEach(function () {
       testNode = null;

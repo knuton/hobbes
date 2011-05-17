@@ -122,7 +122,7 @@ var isArray = exports.isArray = function (value) {
  */
 var indentSpaces = exports.indentSpaces = function (number) {
   if (typeof number !== 'number' || number < 0) {
-    throw new TypeError('indent expected a positive number.');
+    number = 0;
   }
   
   var spaces = '';
