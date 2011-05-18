@@ -304,7 +304,7 @@ floating_point_type
     { $$ = $1; }
   ;
 
-/*** BLOCK ***/
+/*** 19.11 BLOCKS AND STATEMENTS ***/
 
 block
   : EMBRACE UNBRACE
@@ -332,8 +332,6 @@ local_variable_declaration_statement
     { $$ = $1; }
   ;
 
-/* local_variable_declaration_statement */
-
 local_variable_declaration
   : type variable_declarators
     { $$ = new yy.LocalVariableDeclaration($1, $2, @$); }
@@ -344,36 +342,14 @@ local_variable_declaration
 statement
   : statement_without_trailing_substatement
     { $$ = $1; }
-  | if_then_else_statement
-    { $$ = $1; }
+  // TODO labeled_statement
   | if_then_statement
+    { $$ = $1; }
+  | if_then_else_statement
     { $$ = $1; }
   | while_statement
     { $$ = $1; }
-  ;
-
-statement_without_trailing_substatement
-  : block
-    { $$ = $1; }
-  | empty_statement
-    { $$ = $1; }
-  | expression_statement
-    { $$ = $1; }
-  | do_statement
-    { $$ = $1; }
-  ;
-
-/*** CONTROL STRUCTURES: BRANCHING ***/
-
-if_then_statement
-  : KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN statement
-    { $$ = new yy.IfThen($3, $5, @$); }
-  ;
-
-// TODO no_short_if variants!
-if_then_else_statement
-  : KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN statement_no_short_if KEYWORD_ELSE statement
-    { $$ = new yy.IfThenElse($3, $5, $7, @$); }
+  // TODO for_statement
   ;
 
 statement_no_short_if
@@ -387,6 +363,66 @@ statement_no_short_if
     { $$ = $1; }
   | for_statement_no_short_if
     { $$ = $1; }
+  ;
+
+statement_without_trailing_substatement
+  : block
+    { $$ = $1; }
+  | empty_statement
+    { $$ = $1; }
+  | expression_statement
+    { $$ = $1; }
+  // TODO switch_statement
+  | do_statement
+    { $$ = $1; }
+  // TODO break_statement
+  // TODO continue_statement
+  // TODO return_statement
+  // TODO throw_statement
+  // TODO try_statement
+  ;
+
+empty_statement
+  : LINE_TERMINATOR
+    { $$ = new yy.ASTNode(); }
+  ;
+
+expression_statement
+  : statement_expression LINE_TERMINATOR
+    { $$ = new yy.ExpressionStatement($1, @1); }
+  ;
+
+statement_expression
+  : assignment
+    { $$ = $1; }
+  | pre_increment_expression
+    { $$ = $1; }
+  | pre_decrement_expression
+    { $$ = $1; }
+  | post_increment_expression
+    { $$ = $1; }
+  | post_decrement_expression
+    { $$ = $1; }
+  | method_invocation
+    { $$ = $1; }
+  // TODO class_instance_creation_expression
+  ;
+
+/*** CONTROL STRUCTURES: BRANCHING ***/
+
+if_then_statement
+  : KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN statement
+    { $$ = new yy.IfThen($3, $5, @$); }
+  ;
+
+if_then_else_statement
+  : KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN statement_no_short_if KEYWORD_ELSE statement
+    { $$ = new yy.IfThenElse($3, $5, $7, @$); }
+  ;
+
+if_then_else_statement_no_short_if
+  : KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN statement_no_short_if KEYWORD_ELSE statement_no_short_if
+    { $$ = new yy.IfThenElse($3, $5, $7, @$); }
   ;
 
 /*** CONTROL STRUCTURES: LOOPS ***/
@@ -403,27 +439,6 @@ while_statement_no_short_if
 do_statement
   : KEYWORD_DO statement KEYWORD_WHILE LEFT_PAREN expression RIGHT_PAREN LINE_TERMINATOR
     { $$ = new yy.DoWhileLoop($2, $5, @$); }
-  ;
-
-/* statement_without_trailing_substatement */
-
-empty_statement
-  : LINE_TERMINATOR
-    { $$ = new yy.ASTNode(); }
-  ;
-
-expression_statement
-  : statement_expression LINE_TERMINATOR
-    { $$ = new yy.ExpressionStatement($1, @1); }
-  ;
-
-/* statement_expression */
-
-statement_expression
-  : assignment
-    { $$ = $1; }
-  | method_invocation
-    { $$ = $1; }
   ;
 
 /*** NAMES ***/
