@@ -41,6 +41,7 @@ EXPO              ([Ee][+-]?{Ds})
 "else"                {return 'KEYWORD_ELSE';}
 "while"               {return 'KEYWORD_WHILE';}
 "do"                  {return 'KEYWORD_DO';}
+"for"                 {return 'KEYWORD_FOR';}
 "true"                {return 'TRUE_LITERAL';}
 "false"               {return 'FALSE_LITERAL';}
 
@@ -349,7 +350,8 @@ statement
     { $$ = $1; }
   | while_statement
     { $$ = $1; }
-  // TODO for_statement
+  | for_statement
+    { $$ = $1; }
   ;
 
 statement_no_short_if
@@ -439,6 +441,44 @@ while_statement_no_short_if
 do_statement
   : KEYWORD_DO statement KEYWORD_WHILE LEFT_PAREN expression RIGHT_PAREN LINE_TERMINATOR
     { $$ = new yy.DoWhileLoop($2, $5, @$); }
+  ;
+
+for_statement
+  : KEYWORD_FOR LEFT_PAREN for_init LINE_TERMINATOR expression LINE_TERMINATOR for_update RIGHT_PAREN statement
+    { $$ = new yy.ForLoop($3, $5, $7, $8, @$); }
+  | KEYWORD_FOR LEFT_PAREN for_init LINE_TERMINATOR expression LINE_TERMINATOR RIGHT_PAREN statement
+    { $$ = new yy.ForLoop($3, $5, null, $8, @$); }
+  | KEYWORD_FOR LEFT_PAREN for_init LINE_TERMINATOR LINE_TERMINATOR for_update RIGHT_PAREN statement
+    { $$ = new yy.ForLoop($3, null, $7, $8, @$); }
+  | KEYWORD_FOR LEFT_PAREN for_init LINE_TERMINATOR LINE_TERMINATOR RIGHT_PAREN statement
+    { $$ = new yy.ForLoop($3, null, null, $8, @$); }
+  | KEYWORD_FOR LEFT_PAREN LINE_TERMINATOR expression LINE_TERMINATOR for_update RIGHT_PAREN statement
+    { $$ = new yy.ForLoop(null, $5, $7, $8, @$); }
+  | KEYWORD_FOR LEFT_PAREN LINE_TERMINATOR expression LINE_TERMINATOR RIGHT_PAREN statement
+    { $$ = new yy.ForLoop(null, $5, null, $8, @$); }
+  | KEYWORD_FOR LEFT_PAREN LINE_TERMINATOR LINE_TERMINATOR for_update RIGHT_PAREN statement
+    { $$ = new yy.ForLoop(null, null, $7, $8, @$); }
+  | KEYWORD_FOR LEFT_PAREN LINE_TERMINATOR LINE_TERMINATOR RIGHT_PAREN statement
+    { $$ = new yy.ForLoop(null, null, null, $8, @$); }
+  ;
+
+for_init
+  : statement_expression_list
+    { $$ = $1; }
+  | local_variable_declaration
+    { $$ = $1; }
+  ;
+
+for_update
+  : statement_expression_list
+    { $$ = $1; }
+  ;
+
+statement_expression_list
+  : statement_expression
+    { $$ = new yy.StatementExpressionList($1); }
+  | statement_expression_list COMMA statement_expression
+    { $1.appendChild($3); $$ = $1; }
   ;
 
 /*** NAMES ***/
@@ -584,26 +624,6 @@ multiplicative_expression
     { $$ = new yy.Modulo($1, $3, @2); }
   ;
 
-/*
-UnaryExpression:
-  PreIncrementExpression
-  PreDecrementExpression
-  + UnaryExpression
-  - UnaryExpression
-  UnaryExpressionNotPlusMinus
-
-PreIncrementExpression:
-  ++ UnaryExpression
-
-PreDecrementExpression:
-  -- UnaryExpression
-
-UnaryExpressionNotPlusMinus:
-  PostfixExpression
-  ~ UnaryExpression
-  ! UnaryExpression
-  CastExpression
-*/
 unary_expression
   : pre_increment_expression
     { $$ = $1; }
@@ -617,16 +637,15 @@ unary_expression
     { $$ = $1; }
   ;
 
-post_increment_expression
+pre_increment_expression
   : OPERATOR_INCREMENT unary_expression
     { $$ = new yy.PreIncrement($2, @1); }
   ;
 
-post_decrement_expression
+pre_decrement_expression
   : OPERATOR_DECREMENT unary_expression
     { $$ = new yy.PreDecrement($2, @1); }
   ;
-
 
 unary_expression_not_plus_minus
   : postfix_expression

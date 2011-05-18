@@ -17,6 +17,10 @@ public class BooleanInControlFlow {
 
     while (a < 5) while (a < 10) System.out.println(a++);
 
+    for (int i = 0; i < 10; i++) {
+      System.out.println(i != 10);
+    }
+
   }
 
 }
