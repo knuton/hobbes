@@ -68,6 +68,7 @@ EXPO              ([Ee][+-]?{Ds})
 ">="                  {return 'OPERATOR_GREATER_THAN_EQUAL';}
 ">"                   {return 'OPERATOR_GREATER_THAN';}
 "!="                  {return 'OPERATOR_NOT_EQUAL';}
+"instanceof"          {return 'OPERATOR_INSTANCEOF';}
 "||"                  {return 'OPERATOR_LOGICAL_OR';}
 "|"                   {return 'OPERATOR_INCLUSIVE_OR';}
 "^"                   {return 'OPERATOR_XOR';}
@@ -98,6 +99,38 @@ EXPO              ([Ee][+-]?{Ds})
 .                     {return 'INVALID';}
 
 /lex
+/**
+postfix expr++ expr--
+unary ++expr --expr +expr -expr ~ !
+multiplicative  * / %
+additive  + -
+shift << >> >>>
+relational  < > <= >= instanceof
+equality  == !=
+bitwise AND &
+bitwise exclusive OR  ^
+bitwise inclusive OR  |
+logical AND &&
+logical OR  ||
+ternary ? :
+assignment  = += -= *= /= %= &= ^= |= <<= >>= >>>=
+*/
+%right OPERATOR_ASSIGNMENT
+%right TERNARY
+%left OPERATOR_LOGICAL_OR
+%left OPERATOR_LOGICAL_AND
+%left OPERATOR_INCLUSIVE_OR
+%left OPERATOR_XOR
+%left OPERATOR_INCLUSIVE_AND
+%left OPERATOR_EQUAL OPERATOR_NOT_EQUAL
+%left OPERATOR_LESS_THAN OPERATOR_GREATER_THAN OPERATOR_LESS_THAN_EQUAL OPERATOR_GREATER_THAN_EQUAL OPERATOR_INSTANCEOF
+%left OPERATOR_LEFTSHIFT OPERATOR_RIGHTSHIFT OPERATOR_ZEROFILL_RIGHTSHIFT
+%left OPERATOR_ADDITION OPERATOR_SUBTRACTION
+%left OPERATOR_MULTIPLICATION OPERATOR_DIVISION OPERATOR_MODULO
+%right PRE_INCREMENT PRE_DECREMENT U_PLUS U_MINUS OPERATOR_BITWISE_NEGATION OPERATOR_NEGATION
+%right POST_INCREMENT POST_DECREMENT
+
+%start compilation_unit
 
 %% /* language grammar */
 
@@ -121,6 +154,56 @@ compilation_unit
   | package_declaration import_declarations type_declarations EOF
     { var cu = new yy.CompilationUnit(); cu.vavaPackage = $1; cu.appendChild($2); cu.appendChild($3); return cu; }
   ;
+
+/*** 19.3 Lexical Structure ***/
+
+literal
+  : integer_literal
+    { $$ = $1; }
+  | character_literal
+    { $$ = $1; }
+  | floating_point_literal
+    { $$ = $1; }
+  | boolean_literal
+    { $$ = $1; }
+  | string_literal
+    { $$ = $1; }
+  | null_literal
+    { $$ = $1; }
+  ;
+
+integer_literal
+  : DECIMAL_INTEGER_LITERAL
+    { $$ = new yy.IntegerLiteral($1, @1); }
+  ;
+
+floating_point_literal
+  : FLOATING_POINT_LITERAL
+    { $$ = new yy.FloatingPointLiteral($1, @1); }
+  ;
+
+boolean_literal
+  : TRUE_LITERAL
+    { $$ = new yy.BooleanLiteral($1, @1); }
+  | FALSE_LITERAL
+    { $$ = new yy.BooleanLiteral($1, @1); }
+  ;
+
+character_literal
+  : CHAR_LITERAL
+    { $$ = new yy.CharLiteral($1, @1); }
+  ;
+
+string_literal
+  : STRING_LITERAL
+    { $$ = new yy.StringLiteral($1, @1); }
+  ;
+
+null_literal
+  : NULL_LITERAL
+    { $$ = new yy.NullLiteral($1, @1); }
+  ;
+
 
 /*** COMPILATION UNIT ***/
 
@@ -501,194 +584,7 @@ qualified_name
     { $$ = new yy.Name($1.qualified() + '.' + $3, @$); }
   ;
 
-/*** EXPRESSIONS ***/
-
-assignment
-  // TODO Should be assignment_expression
-  : left_hand_side OPERATOR_ASSIGNMENT conditional_expression
-    { $$ = new yy.Assignment($1, $3, @1); }
-  ;
-
-// TODO FieldAccess and ArrayAccess
-left_hand_side
-  : name
-    { $$ = $1; }
-  ;
-
-expression
-  // TODO Should be assignment_expression
-  : conditional_expression
-    { $$ = $1; }
-  ;
-
-/* assignment_expression */
-assignment_expression
-  : conditional_expression
-    { $$ = $1; }
-  | assignment
-    { $$ = $1; }
-  ;
-
-conditional_expression
-  : conditional_or_expression
-    { $$ = $1; }
-  | conditional_or_expression QUESTION_MARK expression COLON conditional_expression
-    { $$ = new yy.TernaryOperator($1, $3, $5, @$); }
-  ;
-
-conditional_or_expression
-  : conditional_and_expression
-    { $$ = $1; }
-  | conditional_or_expression OPERATOR_LOGICAL_OR conditional_and_expression
-    { $$ = new yy.LogicalOr($1, $3, @2); }
-  ;
-
-conditional_and_expression
-  : inclusive_or_expression
-    { $$ = $1; }
-  | conditional_and_expression OPERATOR_LOGICAL_AND inclusive_or_expression
-    { $$ = new yy.LogicalAnd($1, $3, @2); }
-  ;
-
-inclusive_or_expression
-  : exclusive_or_expression
-    { $$ = $1; }
-  | inclusive_or_expression OPERATOR_INCLUSIVE_OR exclusive_or_expression
-    { $$ = new yy.InclusiveOr($1, $3, @2); }
-  ;
-
-exclusive_or_expression
-  : and_expression
-    { $$ = $1; }
-  | exclusive_or_expression OPERATOR_XOR and_expression
-    { $$ = new yy.ExclusiveOr($1, $3, @2); }
-  ;
-
-and_expression
-  : equality_expression
-    { $$ = $1; }
-  | and_expression OPERATOR_INCLUSIVE_AND equality_expression
-    { $$ = new yy.InclusiveAnd($1, $3, @2); }
-  ;
-
-equality_expression
-  : relational_expression
-    { $$ = $1; }
-  | equality_expression OPERATOR_EQUAL relational_expression
-    { $$ = new yy.Equals($1, $3, @2); }
-  | equality_expression OPERATOR_NOT_EQUAL relational_expression
-    { $$ = new yy.NotEquals($1, $3, @2); }
-  ;
-
-relational_expression
-  : shift_expression
-    { $$ = $1; }
-  | relational_expression OPERATOR_LESS_THAN shift_expression
-    { $$ = new yy.LessThan($1, $3, @2); }
-  | relational_expression OPERATOR_LESS_THAN_EQUAL shift_expression
-    { $$ = new yy.LogicalOr(new yy.LessThan($1, $3, @2), new yy.Equals($1, $3, @2), @2); }
-  | relational_expression OPERATOR_GREATER_THAN shift_expression
-    { $$ = new yy.GreaterThan($1, $3, @2); }
-  | relational_expression OPERATOR_GREATER_THAN_EQUAL shift_expression
-    { $$ = new yy.LogicalOr(new yy.GreaterThan($1, $3, @2), new yy.Equals($1, $3, @2), @2); }
-  ;
-
-shift_expression
-  : additive_expression
-    { $$ = $1; }
-  | shift_expression OPERATOR_LEFTSHIFT additive_expression
-    { $$ = new yy.LeftShift($1, $3, @2); }
-  | shift_expression OPERATOR_RIGHTSHIFT additive_expression
-    { $$ = new yy.RightShift($1, $3, @2); }
-  | shift_expression OPERATOR_ZEROFILL_RIGHTSHIFT additive_expression
-    { $$ = new yy.ZeroFillRightShift($1, $3, @2); }
-  ;
-
-additive_expression
-  : multiplicative_expression
-    { $$ = $1; }
-  | additive_expression OPERATOR_ADDITION multiplicative_expression
-    { $$ = new yy.Addition($1, $3, @2); }
-  | additive_expression OPERATOR_SUBTRACTION multiplicative_expression
-    { $$ = new yy.Subtraction($1, $3, @2); }
-  ;
-
-multiplicative_expression
-  : unary_expression
-    { $$ = $1; }
-  | multiplicative_expression OPERATOR_MULTIPLICATION unary_expression
-    { $$ = new yy.Multiplication($1, $3, @2); }
-  | multiplicative_expression OPERATOR_DIVISON unary_expression
-    { $$ = new yy.Division($1, $3, @2); }
-  | multiplicative_expression OPERATOR_MODULO unary_expression
-    { $$ = new yy.Modulo($1, $3, @2); }
-  ;
-
-unary_expression
-  : pre_increment_expression
-    { $$ = $1; }
-  | pre_decrement_expression
-    { $$ = $1; }
-  | OPERATOR_SUBTRACTION unary_expression
-    { $$ = new yy.UnaryMinus($2, @1); }
-  | OPERATOR_ADDITION unary_expression
-    { $$ = new yy.UnaryPlus($2, @1); }
-  | unary_expression_not_plus_minus
-    { $$ = $1; }
-  ;
-
-pre_increment_expression
-  : OPERATOR_INCREMENT unary_expression
-    { $$ = new yy.PreIncrement($2, @1); }
-  ;
-
-pre_decrement_expression
-  : OPERATOR_DECREMENT unary_expression
-    { $$ = new yy.PreDecrement($2, @1); }
-  ;
-
-unary_expression_not_plus_minus
-  : postfix_expression
-    { $$ = $1; }
-  | OPERATOR_BITWISE_NEGATION unary_expression
-    { $$ = new yy.BitwiseNegation($2, @1); }
-  | OPERATOR_NEGATION unary_expression
-    { $$ = new yy.Negation($2, @1); }
-  | cast_expression
-    { $$ = $1; }
-  ;
-
-postfix_expression
-  : primary
-    { $$ = $1; }
-  | name
-    { $$ = $1; }
-  | post_increment_expression
-    { $$ = $1; }
-  | post_decrement_expression
-    { $$ = $1; }
-  ;
-
-post_increment_expression
-  : postfix_expression OPERATOR_INCREMENT
-    { $$ = new yy.PostIncrement($1, @2); }
-  ;
-
-post_decrement_expression
-  : postfix_expression OPERATOR_DECREMENT
-    { $$ = new yy.PostDecrement($1, @2); }
-  ;
-
-/*
-CastExpression:
-  ( PrimitiveType Dims_opt ) UnaryExpression
-  ( Expression ) UnaryExpressionNotPlusMinus
-  ( Name Dims ) UnaryExpressionNotPlusMinus
-*/
-cast_expression
-  : LEFT_PAREN primitive_type RIGHT_PAREN unary_expression
-    { $$ = new yy.CastExpression($2, $4, @4); }
-  ;
+/*** 19.12 EXPRESSIONS ***/
 
 primary
   : primary_no_new_array
@@ -704,19 +600,11 @@ primary_no_new_array
     { $$ = $1; }
   ;
 
-literal
-  : integer_literal
-    { $$ = $1; }
-  | char_literal
-    { $$ = $1; }
-  | floating_point_literal
-    { $$ = $1; }
-  | boolean_literal
-    { $$ = $1; }
-  | string_literal
-    { $$ = $1; }
-  | null_literal
-    { $$ = $1; }
+argument_list
+  : expression
+    { $$ = new yy.ArgumentList($1, @1); }
+  | argument_list COMMA expression
+    { $1.appendChild($3); $$ = $1; }
   ;
 
 method_invocation
@@ -726,45 +614,187 @@ method_invocation
     { $$ = new yy.MethodInvocation($1, $3, @$); }
   ;
 
-argument_list
-  : expression
-    { $$ = new yy.ArgumentList($1, @1); }
-  | argument_list COMMA expression
-    { $1.appendChild($3); $$ = $1; }
+postfix_expression
+  : primary
+    { $$ = $1; }
+  | name
+    { $$ = $1; }
+  | post_increment_expression
+    { $$ = $1; }
+  | post_decrement_expression
+    { $$ = $1; }
   ;
 
-boolean_literal
-  : TRUE_LITERAL
-    { $$ = new yy.BooleanLiteral($1, @1); }
-  | FALSE_LITERAL
-    { $$ = new yy.BooleanLiteral($1, @1); }
+post_increment_expression
+  : postfix_expression OPERATOR_INCREMENT %prec POST_INCREMENT
+    { $$ = new yy.PostIncrement($1, @2); }
   ;
 
-integer_literal
-  : DECIMAL_INTEGER_LITERAL
-    { $$ = new yy.IntegerLiteral($1, @1); }
+post_decrement_expression
+  : postfix_expression OPERATOR_DECREMENT %prec POST_DECREMENT
+    { $$ = new yy.PostDecrement($1, @2); }
   ;
 
-char_literal
-  : CHAR_LITERAL
-    { $$ = new yy.CharLiteral($1, @1); }
+unary_expression
+  : pre_increment_expression
+    { $$ = $1; }
+  | pre_decrement_expression
+    { $$ = $1; }
+  | OPERATOR_SUBTRACTION unary_expression %prec U_MINUS
+    { $$ = new yy.UnaryMinus($2, @1); }
+  | OPERATOR_ADDITION unary_expression %prec U_PLUS
+    { $$ = new yy.UnaryPlus($2, @1); }
+  | unary_expression_not_plus_minus
+    { $$ = $1; }
   ;
 
-null_literal
-  : NULL_LITERAL
-    { $$ = new yy.NullLiteral($1, @1); }
+pre_increment_expression
+  : OPERATOR_INCREMENT unary_expression %prec PRE_INCREMENT
+    { $$ = new yy.PreIncrement($2, @1); }
   ;
 
-// FLOATING POINT
-
-floating_point_literal
-  : FLOATING_POINT_LITERAL
-    { $$ = new yy.FloatingPointLiteral($1, @1); }
+pre_decrement_expression
+  : OPERATOR_DECREMENT unary_expression %prec PRE_DECREMENT
+    { $$ = new yy.PreDecrement($2, @1); }
   ;
 
-// END FLOATING POINT
-
-string_literal
-  : STRING_LITERAL
-    { $$ = new yy.StringLiteral($1, @1); }
+unary_expression_not_plus_minus
+  : postfix_expression
+    { $$ = $1; }
+  | OPERATOR_BITWISE_NEGATION unary_expression
+    { $$ = new yy.BitwiseNegation($2, @1); }
+  | OPERATOR_NEGATION unary_expression
+    { $$ = new yy.Negation($2, @1); }
+  | cast_expression
+    { $$ = $1; }
   ;
+
+/*
+CastExpression:
+  ( PrimitiveType Dims_opt ) UnaryExpression
+  ( Expression ) UnaryExpressionNotPlusMinus
+  ( Name Dims ) UnaryExpressionNotPlusMinus
+*/
+cast_expression
+  : LEFT_PAREN primitive_type RIGHT_PAREN unary_expression
+    { $$ = new yy.CastExpression($2, $4, @4); }
+  ;
+
+multiplicative_expression
+  : unary_expression
+    { $$ = $1; }
+  | multiplicative_expression OPERATOR_MULTIPLICATION unary_expression
+    { $$ = new yy.Multiplication($1, $3, @2); }
+  | multiplicative_expression OPERATOR_DIVISON unary_expression
+    { $$ = new yy.Division($1, $3, @2); }
+  | multiplicative_expression OPERATOR_MODULO unary_expression
+    { $$ = new yy.Modulo($1, $3, @2); }
+  ;
+
+additive_expression
+  : multiplicative_expression
+    { $$ = $1; }
+  | additive_expression OPERATOR_ADDITION multiplicative_expression
+    { $$ = new yy.Addition($1, $3, @2); }
+  | additive_expression OPERATOR_SUBTRACTION multiplicative_expression
+    { $$ = new yy.Subtraction($1, $3, @2); }
+  ;
+
+shift_expression
+  : additive_expression
+    { $$ = $1; }
+  | shift_expression OPERATOR_LEFTSHIFT additive_expression
+    { $$ = new yy.LeftShift($1, $3, @2); }
+  | shift_expression OPERATOR_RIGHTSHIFT additive_expression
+    { $$ = new yy.RightShift($1, $3, @2); }
+  | shift_expression OPERATOR_ZEROFILL_RIGHTSHIFT additive_expression
+    { $$ = new yy.ZeroFillRightShift($1, $3, @2); }
+  ;
+
+relational_expression
+  : shift_expression
+    { $$ = $1; }
+  | relational_expression OPERATOR_LESS_THAN shift_expression
+    { $$ = new yy.LessThan($1, $3, @2); }
+  | relational_expression OPERATOR_LESS_THAN_EQUAL shift_expression
+    { $$ = new yy.LogicalOr(new yy.LessThan($1, $3, @2), new yy.Equals($1, $3, @2), @2); }
+  | relational_expression OPERATOR_GREATER_THAN shift_expression
+    { $$ = new yy.GreaterThan($1, $3, @2); }
+  | relational_expression OPERATOR_GREATER_THAN_EQUAL shift_expression
+    { $$ = new yy.LogicalOr(new yy.GreaterThan($1, $3, @2), new yy.Equals($1, $3, @2), @2); }
+  ;
+
+equality_expression
+  : relational_expression
+    { $$ = $1; }
+  | equality_expression OPERATOR_EQUAL relational_expression
+    { $$ = new yy.Equals($1, $3, @2); }
+  | equality_expression OPERATOR_NOT_EQUAL relational_expression
+    { $$ = new yy.NotEquals($1, $3, @2); }
+  ;
+
+and_expression
+  : equality_expression
+    { $$ = $1; }
+  | and_expression OPERATOR_INCLUSIVE_AND equality_expression
+    { $$ = new yy.InclusiveAnd($1, $3, @2); }
+  ;
+
+exclusive_or_expression
+  : and_expression
+    { $$ = $1; }
+  | exclusive_or_expression OPERATOR_XOR and_expression
+    { $$ = new yy.ExclusiveOr($1, $3, @2); }
+  ;
+
+inclusive_or_expression
+  : exclusive_or_expression
+    { $$ = $1; }
+  | inclusive_or_expression OPERATOR_INCLUSIVE_OR exclusive_or_expression
+    { $$ = new yy.InclusiveOr($1, $3, @2); }
+  ;
+
+conditional_and_expression
+  : inclusive_or_expression
+    { $$ = $1; }
+  | conditional_and_expression OPERATOR_LOGICAL_AND inclusive_or_expression
+    { $$ = new yy.LogicalAnd($1, $3, @2); }
+  ;
+
+conditional_or_expression
+  : conditional_and_expression
+    { $$ = $1; }
+  | conditional_or_expression OPERATOR_LOGICAL_OR conditional_and_expression
+    { $$ = new yy.LogicalOr($1, $3, @2); }
+  ;
+
+conditional_expression
+  : conditional_or_expression
+    { $$ = $1; }
+  | conditional_or_expression QUESTION_MARK expression COLON conditional_expression %prec TERNARY
+    { $$ = new yy.TernaryOperator($1, $3, $5, @$); }
+  ;
+
+assignment_expression
+  : conditional_expression
+    { $$ = $1; }
+  | assignment
+    { $$ = $1; }
+  ;
+
+assignment
+  : name assignment_operator assignment_expression
+    { $$ = new yy.Assignment($1, $3, @1); }
+  // TODO FieldAccess and ArrayAccess
+  ;
+
+assignment_operator
+  : OPERATOR_ASSIGNMENT
+    { $$ = $1; }
+  ;
+
+expression
+  : assignment_expression
+    { $$ = $1; }
+  ;
+
