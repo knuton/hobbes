@@ -545,6 +545,25 @@ for_statement
     { $$ = new yy.ForLoop(null, null, null, $8, @$); }
   ;
 
+for_statement_no_short_if
+  : KEYWORD_FOR LEFT_PAREN for_init LINE_TERMINATOR expression LINE_TERMINATOR for_update RIGHT_PAREN statement_no_short_if
+    { $$ = new yy.ForLoop($3, $5, $7, $9, @$); }
+  | KEYWORD_FOR LEFT_PAREN for_init LINE_TERMINATOR expression LINE_TERMINATOR RIGHT_PAREN statement_no_short_if
+    { $$ = new yy.ForLoop($3, $5, null, $8, @$); }
+  | KEYWORD_FOR LEFT_PAREN for_init LINE_TERMINATOR LINE_TERMINATOR for_update RIGHT_PAREN statement_no_short_if
+    { $$ = new yy.ForLoop($3, null, $6, $8, @$); }
+  | KEYWORD_FOR LEFT_PAREN for_init LINE_TERMINATOR LINE_TERMINATOR RIGHT_PAREN statement_no_short_if
+    { $$ = new yy.ForLoop($3, null, null, $8, @$); }
+  | KEYWORD_FOR LEFT_PAREN LINE_TERMINATOR expression LINE_TERMINATOR for_update RIGHT_PAREN statement_no_short_if
+    { $$ = new yy.ForLoop(null, $4, $6, $8, @$); }
+  | KEYWORD_FOR LEFT_PAREN LINE_TERMINATOR expression LINE_TERMINATOR RIGHT_PAREN statement_no_short_if
+    { $$ = new yy.ForLoop(null, $4, null, $8, @$); }
+  | KEYWORD_FOR LEFT_PAREN LINE_TERMINATOR LINE_TERMINATOR for_update RIGHT_PAREN statement_no_short_if
+    { $$ = new yy.ForLoop(null, null, $6, $8, @$); }
+  | KEYWORD_FOR LEFT_PAREN LINE_TERMINATOR LINE_TERMINATOR RIGHT_PAREN statement_no_short_if
+    { $$ = new yy.ForLoop(null, null, null, $8, @$); }
+  ;
+
 for_init
   : statement_expression_list
     { $$ = $1; }
