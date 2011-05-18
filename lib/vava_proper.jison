@@ -413,7 +413,7 @@ block_statement
 
 local_variable_declaration_statement
   : local_variable_declaration LINE_TERMINATOR
-    { $$ = $1; }
+    { $$ = new yy.LocalVariableDeclarationStatement($1, @$); }
   ;
 
 local_variable_declaration
@@ -528,19 +528,19 @@ do_statement
 
 for_statement
   : KEYWORD_FOR LEFT_PAREN for_init LINE_TERMINATOR expression LINE_TERMINATOR for_update RIGHT_PAREN statement
-    { $$ = new yy.ForLoop($3, $5, $7, $8, @$); }
+    { $$ = new yy.ForLoop($3, $5, $7, $9, @$); }
   | KEYWORD_FOR LEFT_PAREN for_init LINE_TERMINATOR expression LINE_TERMINATOR RIGHT_PAREN statement
     { $$ = new yy.ForLoop($3, $5, null, $8, @$); }
   | KEYWORD_FOR LEFT_PAREN for_init LINE_TERMINATOR LINE_TERMINATOR for_update RIGHT_PAREN statement
-    { $$ = new yy.ForLoop($3, null, $7, $8, @$); }
+    { $$ = new yy.ForLoop($3, null, $6, $8, @$); }
   | KEYWORD_FOR LEFT_PAREN for_init LINE_TERMINATOR LINE_TERMINATOR RIGHT_PAREN statement
     { $$ = new yy.ForLoop($3, null, null, $8, @$); }
   | KEYWORD_FOR LEFT_PAREN LINE_TERMINATOR expression LINE_TERMINATOR for_update RIGHT_PAREN statement
-    { $$ = new yy.ForLoop(null, $5, $7, $8, @$); }
+    { $$ = new yy.ForLoop(null, $4, $6, $8, @$); }
   | KEYWORD_FOR LEFT_PAREN LINE_TERMINATOR expression LINE_TERMINATOR RIGHT_PAREN statement
-    { $$ = new yy.ForLoop(null, $5, null, $8, @$); }
+    { $$ = new yy.ForLoop(null, $4, null, $8, @$); }
   | KEYWORD_FOR LEFT_PAREN LINE_TERMINATOR LINE_TERMINATOR for_update RIGHT_PAREN statement
-    { $$ = new yy.ForLoop(null, null, $7, $8, @$); }
+    { $$ = new yy.ForLoop(null, null, $6, $8, @$); }
   | KEYWORD_FOR LEFT_PAREN LINE_TERMINATOR LINE_TERMINATOR RIGHT_PAREN statement
     { $$ = new yy.ForLoop(null, null, null, $8, @$); }
   ;

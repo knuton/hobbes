@@ -331,13 +331,25 @@ var LocalVariableDeclaration = exports.LocalVariableDeclaration = function (vava
 LocalVariableDeclaration.inherits(ASTNode);
 
 LocalVariableDeclaration.prototype.compileNode = function (indent) {
-  return utils.indent('this.__add({' + this.children[0].compileNode(this.vavaType) + '});', indent);
+  return utils.indent('this.__add({' + this.children[0].compileNode(this.vavaType) + '})', indent);
 };
 
-LocalVariableDeclaration.prototype.getSignature = function () {
-  return {
-    vavaType : this.vavaType
-  };
+/**
+ * Creates node for a LocalVariableDeclarationStatement, adding line separation to a LocalVariableDeclaration.
+ *
+ * @param locVarDec Local variable declaration node
+ */
+var LocalVariableDeclarationStatement = exports.LocalVariableDeclarationStatement = function (locVarDec) {
+  this.type  = 'LocalVariableDeclarationStatement';
+  this.setLoc(arguments[arguments.length-1]);
+  this.children = [];
+  this.appendChild(locVarDec);
+};
+
+LocalVariableDeclarationStatement.inherits(ASTNode);
+
+LocalVariableDeclarationStatement.prototype.compileNode = function (indent) {
+  return utils.indent(this.children[0].compile(indent) + ';', indent);
 };
 
 /**
@@ -1630,3 +1642,55 @@ DoWhileLoop.prototype.compileNode = function (indent) {
     )
   ) + '.call(this, true, this.__descend());', indent);
 };
+
+/**
+ * Creates a node for a for loop.
+ *
+ * @param init The initialization
+ * @param condition The condition
+ * @param update The update
+ * @param statement The statement
+ */
+var ForLoop = exports.ForLoop = function (init, condition, update, statement) {
+  this.type = 'ForLoop';
+  this.setLoc(arguments[arguments.length-1]);
+  this.children = [];
+  init = init || new ASTNode();
+  condition = condition || new BooleanLiteral(true);
+  update = update || new ASTNode();
+  this.appendChild(init);
+  this.appendChild(condition);
+  this.appendChild(update);
+  this.appendChild(statement);
+};
+
+ForLoop.inherits(ASTNode);
+
+ForLoop.prototype.compileNode = function (indent) {
+  return utils.indent(builder.wrapParens(
+    builder.wrapAsFunction(
+      utils.indentSpaces(indent + 2) + 'for (' + this.children[0].compile() + '; this.__env.BooleanValue.intern(true) === ' + this.children[1].compile() + '; ' + this.children[2].compile() + ') { ' + builder.wrapParens(builder.wrapAsFunction(this.children[3].compile(indent + 4))) + '.call(blockScope); }',
+      ['blockScope']
+    )
+  ) + '.call(this, this.__descend());', indent);
+};
+
+/**
+ * Creates a node for a list of statement expressions
+ *
+ * @param firstChild Optional first child
+ */
+var StatementExpressionList = exports.StatementExpressionList = function (firstChild) {
+  this.type = 'StatementExpressionList';
+  this.setLoc(arguments[arguments.length-1]);
+  this.children = [];
+  if (firstChild) this.appendChild(firstChild);
+
+};
+
+StatementExpressionList.inherits(ASTNode);
+
+StatementExpressionList.prototype.compileNode = function (indent) {
+  return this.children.map(function (child) { return child.compile(); }).join(', ');
+};
+

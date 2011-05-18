@@ -11,9 +11,10 @@ describe('Compiler', function () {
     function mockASTNode(properties) {
       properties = properties || {};
       var mockNode = new astNodes.ASTNode();
-      mockNode.compileNode = function () { return 'MOCK'; }
+      mockNode.compileNode = function () { return properties.__mock || 'MOCK'; }
       for (key in properties) {
-        mockNode[key] = properties[key];
+        if (key.substr(0,2) !== '__')
+          mockNode[key] = properties[key];
       }
       return mockNode;
     }
@@ -145,6 +146,30 @@ describe('Compiler', function () {
         });
         testNode = new astNodes.LocalVariableDeclaration('int', mockVariableDeclarators);
         expect(testNode.toString()).toBe('- <LocalVariableDeclaration vavaType: int>\n  - Kiddo\n');
+      });
+      
+    }); // end LocalVariableDeclaration spec
+    
+    describe('LocalVariableDeclarationStatement', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.LocalVariableDeclarationStatement(
+          mockASTNode({type: 'LocalVariableDeclaration', __mock: 'DECLARATION'})
+        );
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+      
+      it('should be of type `LocalVariableDeclarationStatement`', function () {
+        expect(testNode.getType()).toBe('LocalVariableDeclarationStatement');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <LocalVariableDeclarationStatement>\n  - <LocalVariableDeclaration>\n');
+      });
+      
+      it('should compile, adding line separator', function () {
+        expect(testNode.compile()).toBe('DECLARATION;');
       });
       
     }); // end LocalVariableDeclaration spec
@@ -968,6 +993,50 @@ describe('Compiler', function () {
       });
       
     }); // end DoWhileLoop spec
+    
+    describe('ForLoop', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.ForLoop(mockASTNode({__mock: 'INIT'}), mockASTNode({vavaType: 'boolean', __mock: 'COND'}), mockASTNode({__mock: 'UPDATE'}), mockASTNode({__mock: 'BLOCK'}));
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `ForLoop`', function () {
+        expect(testNode.getType()).toBe('ForLoop');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <ForLoop>\n  - <ASTNode>\n  - <ASTNode vavaType: boolean>\n  - <ASTNode>\n  - <ASTNode>\n');
+      });
+      
+      it('should compile itself', function () {
+        expect(testNode.compile()).toBe('(function (blockScope) {\nfor (INIT; this.__env.BooleanValue.intern(true) === COND; UPDATE) { (function () {\nBLOCK\n}).call(blockScope); }\n}).call(this, this.__descend());');
+      });
+    }); // end ForLoop spec
+    
+    describe('StatementExpressionList', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.StatementExpressionList(mockASTNode({__mock: 'MOCKA'}));
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `StatementExpressionList`', function () {
+        expect(testNode.getType()).toBe('StatementExpressionList');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <StatementExpressionList>\n  - <ASTNode>\n');
+      });
+      
+      it('should compile itself', function () {
+        testNode.appendChild(mockASTNode({__mock: 'MOCKB'}));
+        testNode.appendChild(mockASTNode({__mock: 'MOCKC'}));
+        expect(testNode.compile()).toBe('MOCKA, MOCKB, MOCKC');
+      });
+    }); // end StatementExpressionList spec
     
     afterEach(function () {
       testNode = null;
