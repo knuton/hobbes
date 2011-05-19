@@ -250,7 +250,7 @@ ClassDeclaration.prototype.compileNode = function (indent) {
     // Field Declarations
     builder.keyValue(
       'fields',
-      builder.joinToObject(
+      builder.array(
         self.children.filter(function (child) {
           return child.getType() === 'FieldDeclaration';
         }).map(function (field) { return field.compile() })
@@ -279,8 +279,9 @@ ClassDeclaration.prototype.compileNode = function (indent) {
  *
  * @param vavaType The Vava type of the declared fields
  * @param variableDeclarators Array of VariableDeclaration objects
+ * @param Hash containing modifier information
  */
-var FieldDeclaration = exports.FieldDeclaration = function (vavaType, variableDeclarators) {
+var FieldDeclaration = exports.FieldDeclaration = function (vavaType, variableDeclarators, modifiers) {
   if (typeof vavaType !== 'string') {
     throw new TypeError('Expected Vava type to be string.');
   }
@@ -291,14 +292,34 @@ var FieldDeclaration = exports.FieldDeclaration = function (vavaType, variableDe
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   this.vavaType = vavaType;
-
+  this.parseModifiers(modifiers);
   this.appendChild(variableDeclarators);
 };
 
 FieldDeclaration.inherits(ASTNode);
 
+FieldDeclaration.prototype.parseModifiers = function (modifiers) {
+  this.visibility = modifiers.visibility || 'default';
+  this.staticness = !!modifiers.staticness;
+  this.valuedness = modifiers.valuedness;
+};
+
 FieldDeclaration.prototype.compileNode = function (indent) {
-  return this.children[0].compileNode(this.vavaType);
+  return builder.joinToObject(
+    builder.keyValue('isStatic', String(this.staticness)),
+    builder.keyValue('visibility', builder.string(this.visibility)),
+    builder.keyValue('variables',
+      builder.joinToObject(
+        function (obj) {
+          var declarations = [];
+          for (declName in obj) {
+            declarations.push(builder.keyValue(declName, obj[declName]));
+          }
+          return declarations;
+        }(this.children[0].compileForField({vavaType: this.vavaType, valuedness: this.valuedness}))
+      )
+    )
+  );
 };
 
 FieldDeclaration.prototype.getSignature = function () {
@@ -372,6 +393,10 @@ VariableDeclarators.prototype.compileNode = function (vavaType) {
   return [this.children.map(function (child) { return child.compileNode(vavaType) })].join(',');
 };
 
+VariableDeclarators.prototype.compileForField = function (options) {
+  return utils.merge(this.children.map(function (child) { return child.compileForField(options) }));
+};
+
 VariableDeclarators.prototype.checkChild = function (declarator) {
   if (!declarator || declarator.getType() !== 'VariableDeclarator') {
     throw new TypeError('Expected variable declarator to be of type `VariableDeclarator`.');
@@ -399,10 +424,6 @@ var VariableDeclarator = exports.VariableDeclarator = function (vavaIdentifier, 
   if (typeof vavaIdentifier !== 'string') {
     throw new TypeError('Expected Vava identifier to be a string.');
   }
-  // TODO Bring this back later
-  // if (vavaExpression && vavaExpression.getType() !== 'Expression') {
-  //   throw new TypeError('Expected Vava expression to be of type `Expression`.');
-  // }
   this.type = 'VariableDeclarator';
   this.setLoc(arguments[arguments.length-1]);
   // set vavaExpression to undefined, if it is loc hash
@@ -427,6 +448,16 @@ VariableDeclarator.prototype.compileNode = function (vavaType) {
       false
     )
   );
+};
+
+VariableDeclarator.prototype.compileForField = function (options) {
+  var obj = {};
+  obj[this.vavaIdentifier] = builder.constructorCall(
+    'this.__env.TypedVariable',
+    [builder.string(options.vavaType), builder.string(this.vavaIdentifier), this.vavaInitializer && this.vavaInitializer.compile(), builder.objectToLiteral({modifier: options.valuedness})].filter(function (value) { return !!value; }),
+    false
+  );
+  return obj;
 };
 
 VariableDeclarator.prototype.getSignature = function () {
@@ -1025,8 +1056,8 @@ CastExpression.prototype.compileNode = function (indent) {
 };
 
 CastExpression.prototype.compileTimeCheck = function () {
-  if (this.isVavaType('boolean') && !this.children[0].isVavaType('boolean'))
-    this.throwError('inconvertible types', 'found   : ' + this.children[0].getVavaType() + '\nrequired: boolean');
+  if (this.isVavaType('boolean') ^ this.children[0].isVavaType('boolean'))
+    this.throwError('inconvertible types', 'found   : ' + this.children[0].getVavaType() + '\nrequired: ' + this.getVavaType());
 }
 
 // Binary

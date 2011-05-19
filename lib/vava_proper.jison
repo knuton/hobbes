@@ -26,14 +26,15 @@ EXPO              ([Ee][+-]?{Ds})
 ";"                   {return 'LINE_TERMINATOR';}
 
 
-"public"              {return 'MODIFIER_PUBLIC'; /* Modifier */}
-"private"             {return 'MODIFIER_PRIVATE';}
-"protected"           {return 'MODIFIER_PROTECTED';}
+"public"              {return 'public'; /* Modifier */}
+"private"             {return 'private';}
+"protected"           {return 'protected';}
 
-"static"              {return 'MODIFIER_STATIC';}
-"void"                {return 'MODIFIER_VOID';}
-"final"               {return 'MODIFIER_FINAL';}
+"static"              {return 'static';}
 
+"final"               {return 'final';}
+
+"void"                {return 'void';}
 
 "package"             {return 'KEYWORD_PACKAGE'; /* Keywords */}
 "import"              {return 'KEYWORD_IMPORT';}
@@ -234,11 +235,47 @@ type_declaration
     { $$ = $1; }
   ;
 
+/**
+Modifiers:
+
+  Modifier
+
+  Modifiers Modifier
+
+Modifier: one of
+
+  public protected private
+
+  static
+
+  abstract final native synchronized transient volatile
+  */
+modifiers
+  : modifier
+    { $$ = $1; }
+  | modifiers modifier
+    { $$ = yy.utils.merge($1, $2); }
+  ;
+
+modifier
+  : 'public'
+    %{ $$ = {visibility: 'public'}; %}
+  | 'private'
+    %{ $$ = {visibility: 'private'}; %}
+  | 'protected'
+    %{ $$ = {visibility: 'protected'}; %}
+  | 'static'
+    %{ $$ = {staticity: 'static'}; %}
+  | 'final'
+    %{ $$ = {valuedness: 'final'}; %}
+  ;
+    
+
 /* TODO Modifiers_{opt} class Identifier Super_{opt} Interfaces_{opt} ClassBody */
 class_declaration
   : KEYWORD_CLASS IDENTIFIER class_body
     { $$ = new yy.ClassDeclaration($2, $3, @$); }
-  | MODIFIER_PUBLIC KEYWORD_CLASS IDENTIFIER class_body
+  | 'public' KEYWORD_CLASS IDENTIFIER class_body
     { $$ = new yy.ClassDeclaration($3, $4, @$); }
   ;
 
@@ -277,6 +314,8 @@ class_member_declaration
 field_declaration
   : type variable_declarators LINE_TERMINATOR
     { $$ = new yy.FieldDeclaration($1, $2, @$); }
+  | modifiers type variable_declarators LINE_TERMINATOR
+    { $$ = new yy.FieldDeclaration($2, $3, $1, @$); }
   ;
 
 method_declaration
@@ -286,15 +325,16 @@ method_declaration
 
 /*** METHOD DECLARATIONS ***/
 
-/* TODO Modifiers_{opt} Type MethodDeclarator Throws_{opt}
-        Modifiers_{opt} void MethodDeclarator Throws_{opt}
-*/
 method_header
-  : type method_declarator
+  // TODO throws_opt
+  : modifiers type method_declarator
+    %{ $$ = yy.utils.merge({vavaType: $2}, $3); %}
+  | type method_declarator
     %{ $$ = yy.utils.merge({vavaType: $1}, $2); %}
-  // TODO Specialty item
-  | MODIFIER_PUBLIC MODIFIER_STATIC MODIFIER_VOID method_declarator
+  | modifiers 'void' method_declarator
     %{ $$ = yy.utils.merge({vavaType: $3}, $4); %}
+  | 'void' method_declarator
+    %{ $$ = yy.utils.merge({vavaType: $1}, $2); %}
   ;
 
 method_declarator
@@ -351,6 +391,8 @@ variable_initializer
 
 type
   : primitive_type
+    { $$ = $1; }
+  | name
     { $$ = $1; }
   ;
 
