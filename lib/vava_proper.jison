@@ -332,7 +332,7 @@ method_header
   | type method_declarator
     %{ $$ = yy.utils.merge({vavaType: $1}, $2); %}
   | modifiers 'void' method_declarator
-    %{ $$ = yy.utils.merge({vavaType: $3}, $4); %}
+    %{ $$ = yy.utils.merge({vavaType: $2}, $3); %}
   | 'void' method_declarator
     %{ $$ = yy.utils.merge({vavaType: $1}, $2); %}
   ;

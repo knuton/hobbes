@@ -103,7 +103,7 @@ case 46: this.$ = yy.utils.merge({vavaType: $$[$0-1]}, $$[$0]);
 break;
 case 47: this.$ = yy.utils.merge({vavaType: $$[$0-1]}, $$[$0]); 
 break;
-case 48: this.$ = yy.utils.merge({vavaType: $$[$0]}, $$[$01]); 
+case 48: this.$ = yy.utils.merge({vavaType: $$[$0-1]}, $$[$0]); 
 break;
 case 49: this.$ = yy.utils.merge({vavaType: $$[$0-1]}, $$[$0]); 
 break;
