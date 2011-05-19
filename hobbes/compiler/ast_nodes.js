@@ -321,7 +321,7 @@ var FieldDeclaration = exports.FieldDeclaration = function (vavaType, variableDe
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   this.vavaType = vavaType;
-  this.parseModifiers(modifiers);
+  this.parseModifiers(modifiers || {});
   this.appendChild(variableDeclarators);
 };
 
@@ -1088,7 +1088,6 @@ var PreDecrement = exports.PreDecrement = function (variable) {
   this.type = 'PreDecrement';
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
-  this.vavaType = 'int';
   this.appendChild(variable);
 };
 

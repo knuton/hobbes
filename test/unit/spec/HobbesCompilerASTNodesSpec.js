@@ -18,6 +18,17 @@ describe('Compiler', function () {
       }
       return mockNode;
     }
+
+    function mockOpts(properties) {
+      properties = properties || {};
+      var mockOpts = {};
+      mockOpts.mergeOpts = function () { return mockOpts; }
+      mockOpts.descendScope = function () { return mockOpts; }
+      for (key in properties) {
+        mockOpts[key] = properties[key];
+      }
+      return mockOpts;
+    }
     
     // Used for tests concerning all nodes
     function commonASTNodeTests() {
@@ -169,7 +180,7 @@ describe('Compiler', function () {
       });
       
       it('should compile, adding line separator', function () {
-        expect(testNode.compile()).toBe('DECLARATION;');
+        expect(testNode.compile({})).toBe('DECLARATION;');
       });
       
     }); // end LocalVariableDeclaration spec
@@ -300,11 +311,11 @@ describe('Compiler', function () {
       });
       
       it('should turn itself into a string', function () {
-        expect(testNode.toString()).toBe('- <CharLiteral character: a>\n');
+        expect(testNode.toString()).toBe('- <CharLiteral character: a vavaType: char>\n');
       });
 
       it('should compile itself', function () {
-        expect(testNode.compile()).toBe('this.__env.CharValue.intern("a")');
+        expect(testNode.compile(mockOpts())).toBe('this.__env.CharValue.intern("a")');
       });
       
     }); // end CharLiteral spec
@@ -340,7 +351,7 @@ describe('Compiler', function () {
       });
 
       it('should turn itself into a string', function () {
-        expect(testNode.toString()).toBe('- <NullLiteral>\n');
+        expect(testNode.toString()).toBe('- <NullLiteral vavaType: null>\n');
       });
       
     }); // end NullLiteral spec
@@ -349,6 +360,7 @@ describe('Compiler', function () {
       
       beforeEach(function () {
         testNode = new astNodes.UnaryMinus(mockASTNode({
+          vavaType: 'int',
           compile : function () { return 'MOCK'; }
         }));
       });
@@ -360,11 +372,11 @@ describe('Compiler', function () {
       });
       
       it('should turn itself into a string', function () {
-        expect(testNode.toString()).toBe('- <UnaryMinus>\n  - <ASTNode>\n');
+        expect(testNode.toString()).toBe('- <UnaryMinus>\n  - <ASTNode vavaType: int>\n');
       });
 
       it('should compile to inversion call', function () {
-        expect(testNode.compile()).toBe('MOCK.inverse()');
+        expect(testNode.compile(mockOpts())).toBe('MOCK.inverse()');
       });
       
     }); // end UnaryMinus spec
@@ -372,7 +384,7 @@ describe('Compiler', function () {
     describe('UnaryPlus', function () {
       
       beforeEach(function () {
-        testNode = new astNodes.UnaryPlus(mockASTNode());
+        testNode = new astNodes.UnaryPlus(mockASTNode({vavaType: 'int'}));
       });
       
       it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
@@ -382,11 +394,11 @@ describe('Compiler', function () {
       });
       
       it('should turn itself into a string', function () {
-        expect(testNode.toString()).toBe('- <UnaryPlus>\n  - <ASTNode>\n');
+        expect(testNode.toString()).toBe('- <UnaryPlus>\n  - <ASTNode vavaType: int>\n');
       });
 
       it('should compile to child\'s compilation', function () {
-        expect(testNode.compile()).toBe('MOCK');
+        expect(testNode.compile(mockOpts())).toBe('MOCK');
       });
       
     }); // end UnaryPlus spec
@@ -404,11 +416,11 @@ describe('Compiler', function () {
       });
       
       it('should turn itself into a string', function () {
-        expect(testNode.toString()).toBe('- <PostIncrement vavaType: int>\n  - <ASTNode vavaType: int>\n');
+        expect(testNode.toString()).toBe('- <PostIncrement>\n  - <ASTNode vavaType: int>\n');
       });
 
       it('should compile itself', function () {
-        expect(testNode.compile()).toBe('MOCK.postInc()');
+        expect(testNode.compile(mockOpts())).toBe('MOCK.postInc()');
       });
       
     }); // end PostIncrement spec
@@ -426,11 +438,11 @@ describe('Compiler', function () {
       });
       
       it('should turn itself into a string', function () {
-        expect(testNode.toString()).toBe('- <PostDecrement vavaType: int>\n  - <ASTNode vavaType: int>\n');
+        expect(testNode.toString()).toBe('- <PostDecrement>\n  - <ASTNode vavaType: int>\n');
       });
 
       it('should compile itself', function () {
-        expect(testNode.compile()).toBe('MOCK.postDec()');
+        expect(testNode.compile(mockOpts())).toBe('MOCK.postDec()');
       });
       
     }); // end PostDecrement spec
@@ -448,11 +460,11 @@ describe('Compiler', function () {
       });
       
       it('should turn itself into a string', function () {
-        expect(testNode.toString()).toBe('- <PreIncrement vavaType: int>\n  - <ASTNode vavaType: int>\n');
+        expect(testNode.toString()).toBe('- <PreIncrement>\n  - <ASTNode vavaType: int>\n');
       });
 
       it('should compile itself', function () {
-        expect(testNode.compile()).toBe('MOCK.preInc()');
+        expect(testNode.compile(mockOpts())).toBe('MOCK.preInc()');
       });
       
     }); // end PreIncrement spec
@@ -470,11 +482,11 @@ describe('Compiler', function () {
       });
       
       it('should turn itself into a string', function () {
-        expect(testNode.toString()).toBe('- <PreDecrement vavaType: int>\n  - <ASTNode vavaType: int>\n');
+        expect(testNode.toString()).toBe('- <PreDecrement>\n  - <ASTNode vavaType: int>\n');
       });
 
       it('should compile itself', function () {
-        expect(testNode.compile()).toBe('MOCK.preDec()');
+        expect(testNode.compile(mockOpts())).toBe('MOCK.preDec()');
       });
       
     }); // end PreDecrement spec
@@ -596,7 +608,7 @@ describe('Compiler', function () {
     describe('LessThan', function () {
       
       beforeEach(function () {
-        testNode = new astNodes.LessThan(mockASTNode(), mockASTNode());
+        testNode = new astNodes.LessThan(mockASTNode({vavaType: 'int'}), mockASTNode({vavaType: 'short'}));
       });
       
       it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
@@ -606,11 +618,11 @@ describe('Compiler', function () {
       });
       
       it('should turn itself into a string', function () {
-        expect(testNode.toString()).toBe('- <LessThan vavaType: boolean>\n  - <ASTNode>\n  - <ASTNode>\n');
+        expect(testNode.toString()).toBe('- <LessThan vavaType: boolean>\n  - <ASTNode vavaType: int>\n  - <ASTNode vavaType: short>\n');
       });
 
       it('should compile itself', function () {
-        expect(testNode.compile()).toBe('this.__env.BooleanValue.intern((MOCK).isLessThan(MOCK))');
+        expect(testNode.compile(mockOpts())).toBe('this.__env.BooleanValue.intern((MOCK).isLessThan(MOCK))');
       });
       
     }); // end LessThan spec
@@ -628,7 +640,7 @@ describe('Compiler', function () {
       });
       
       it('should turn itself into a string', function () {
-        expect(testNode.toString()).toBe('- <Equals>\n  - <ASTNode>\n  - <ASTNode>\n');
+        expect(testNode.toString()).toBe('- <Equals vavaType: boolean>\n  - <ASTNode>\n  - <ASTNode>\n');
       });
       
     }); // end Equals spec
@@ -636,7 +648,7 @@ describe('Compiler', function () {
     describe('GreaterThan', function () {
       
       beforeEach(function () {
-        testNode = new astNodes.GreaterThan(mockASTNode(), mockASTNode());
+        testNode = new astNodes.GreaterThan(mockASTNode({vavaType: 'int'}), mockASTNode({vavaType: 'byte'}));
       });
       
       it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
@@ -646,11 +658,11 @@ describe('Compiler', function () {
       });
       
       it('should turn itself into a string', function () {
-        expect(testNode.toString()).toBe('- <GreaterThan vavaType: boolean>\n  - <ASTNode>\n  - <ASTNode>\n');
+        expect(testNode.toString()).toBe('- <GreaterThan vavaType: boolean>\n  - <ASTNode vavaType: int>\n  - <ASTNode vavaType: byte>\n');
       });
 
       it('should compile itself', function () {
-        expect(testNode.compile()).toBe('this.__env.BooleanValue.intern((MOCK).isGreaterThan(MOCK))');
+        expect(testNode.compile(mockOpts())).toBe('this.__env.BooleanValue.intern((MOCK).isGreaterThan(MOCK))');
       });
       
     }); // end GreaterThan spec
@@ -668,7 +680,7 @@ describe('Compiler', function () {
       });
       
       it('should turn itself into a string', function () {
-        expect(testNode.toString()).toBe('- <NotEquals>\n  - <ASTNode>\n  - <ASTNode>\n');
+        expect(testNode.toString()).toBe('- <NotEquals vavaType: boolean>\n  - <ASTNode>\n  - <ASTNode>\n');
       });
       
     }); // end NotEquals spec
@@ -686,7 +698,7 @@ describe('Compiler', function () {
       });
       
       it('should turn itself into a string', function () {
-        expect(testNode.toString()).toBe('- <TernaryOperator vavaType: int>\n  - <ASTNode vavaType: boolean>\n  - <ASTNode vavaType: int>\n  - <ASTNode vavaType: byte>\n');
+        expect(testNode.toString()).toBe('- <TernaryOperator>\n  - <ASTNode vavaType: boolean>\n  - <ASTNode vavaType: int>\n  - <ASTNode vavaType: byte>\n');
       });
       
       it('should compile itself', function () {
@@ -752,11 +764,11 @@ describe('Compiler', function () {
       });
       
       it('should turn itself into a string', function () {
-        expect(testNode.toString()).toBe('- <InclusiveAnd vavaType: boolean>\n  - <ASTNode vavaType: boolean>\n  - <ASTNode vavaType: boolean>\n');
+        expect(testNode.toString()).toBe('- <InclusiveAnd>\n  - <ASTNode vavaType: boolean>\n  - <ASTNode vavaType: boolean>\n');
       });
       
       it('should compile itself', function () {
-        expect(testNode.compile()).toBe('MOCK.and(MOCK)');
+        expect(testNode.compile(mockOpts())).toBe('MOCK.and(MOCK)');
       });
       
     }); // end InclusiveAnd spec
@@ -778,7 +790,7 @@ describe('Compiler', function () {
       });
       
       it('should compile itself', function () {
-        expect(testNode.compile()).toBe('MOCK.or(MOCK)');
+        expect(testNode.compile(mockOpts())).toBe('MOCK.or(MOCK)');
       });
       
     }); // end InclusiveOr spec
@@ -800,7 +812,7 @@ describe('Compiler', function () {
       });
       
       it('should compile itself', function () {
-        expect(testNode.compile()).toBe('MOCK.xor(MOCK)');
+        expect(testNode.compile(mockOpts())).toBe('MOCK.xor(MOCK)');
       });
       
     }); // end ExclusiveOr spec
@@ -822,7 +834,7 @@ describe('Compiler', function () {
       });
       
       it('should compile itself', function () {
-        expect(testNode.compile()).toBe('MOCK.not()');
+        expect(testNode.compile(mockOpts())).toBe('MOCK.not()');
       });
       
     }); // end Negation spec
@@ -844,7 +856,7 @@ describe('Compiler', function () {
       });
       
       it('should compile itself', function () {
-        expect(testNode.compile()).toBe('MOCK.bitwiseNot()');
+        expect(testNode.compile(mockOpts())).toBe('MOCK.bitwiseNot()');
       });
       
     }); // end BitwiseNegation spec
@@ -866,7 +878,7 @@ describe('Compiler', function () {
       });
       
       it('should compile itself', function () {
-        expect(testNode.compile()).toBe('MOCK.leftshift(MOCK)');
+        expect(testNode.compile(mockOpts())).toBe('MOCK.leftshift(MOCK)');
       });
       
     }); // end LeftShift spec
@@ -888,7 +900,7 @@ describe('Compiler', function () {
       });
       
       it('should compile itself', function () {
-        expect(testNode.compile()).toBe('MOCK.rightshift(MOCK)');
+        expect(testNode.compile(mockOpts())).toBe('MOCK.rightshift(MOCK)');
       });
       
     }); // end RightShift spec
@@ -910,7 +922,7 @@ describe('Compiler', function () {
       });
       
       it('should compile itself', function () {
-        expect(testNode.compile()).toBe('MOCK.zerofillRightshift(MOCK)');
+        expect(testNode.compile(mockOpts())).toBe('MOCK.zerofillRightshift(MOCK)');
       });
       
     }); // end ZeroFillRightShift spec
@@ -954,7 +966,7 @@ describe('Compiler', function () {
     describe('WhileLoop', function () {
       
       beforeEach(function () {
-        testNode = new astNodes.WhileLoop(mockASTNode(), mockASTNode());
+        testNode = new astNodes.WhileLoop(mockASTNode({vavaType: 'boolean'}), mockASTNode());
       });
       
       it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
@@ -964,11 +976,11 @@ describe('Compiler', function () {
       });
       
       it('should turn itself into a string', function () {
-        expect(testNode.toString()).toBe('- <WhileLoop>\n  - <ASTNode>\n  - <ASTNode>\n');
+        expect(testNode.toString()).toBe('- <WhileLoop>\n  - <ASTNode vavaType: boolean>\n  - <ASTNode>\n');
       });
       
       it('should compile itself', function () {
-        expect(testNode.compile()).toBe('(function (blockScope) {\nwhile (this.__env.BooleanValue.intern(true) === MOCK) { (function () {\nMOCK\n}).call(blockScope); }\n}).call(this, this.__descend());');
+        expect(testNode.compile(mockOpts())).toBe('(function (blockScope) {\nwhile (this.__env.BooleanValue.intern(true) === MOCK) { (function () {\nMOCK\n}).call(blockScope); }\n}).call(this, this.__descend());');
       });
     }); // end WhileLoop spec
     
@@ -989,7 +1001,7 @@ describe('Compiler', function () {
       });
 
       it('should compile itself', function () {
-        expect(testNode.compile()).toBe('(function (freeRide, blockScope) {\nwhile (freeRide || this.__env.BooleanValue.intern(true) === MOCK) { (function () {\nMOCK\n}).call(blockScope); freeRide = false; }\n}).call(this, true, this.__descend());');
+        expect(testNode.compile(mockOpts())).toBe('(function (freeRide, blockScope) {\nwhile (freeRide || this.__env.BooleanValue.intern(true) === MOCK) { (function () {\nMOCK\n}).call(blockScope); freeRide = false; }\n}).call(this, true, this.__descend());');
       });
       
     }); // end DoWhileLoop spec
@@ -1011,7 +1023,7 @@ describe('Compiler', function () {
       });
       
       it('should compile itself', function () {
-        expect(testNode.compile()).toBe('(function (blockScope) {\nfor (INIT; this.__env.BooleanValue.intern(true) === COND; UPDATE) { (function () {\nBLOCK\n}).call(blockScope); }\n}).call(this, this.__descend());');
+        expect(testNode.compile(mockOpts())).toBe('(function (blockScope) {\nfor (INIT; this.__env.BooleanValue.intern(true) === COND; UPDATE) { (function () {\nBLOCK\n}).call(blockScope); }\n}).call(this, this.__descend());');
       });
     }); // end ForLoop spec
     
@@ -1034,7 +1046,7 @@ describe('Compiler', function () {
       it('should compile itself', function () {
         testNode.appendChild(mockASTNode({__mock: 'MOCKB'}));
         testNode.appendChild(mockASTNode({__mock: 'MOCKC'}));
-        expect(testNode.compile()).toBe('MOCKA, MOCKB, MOCKC');
+        expect(testNode.compile(mockOpts())).toBe('MOCKA, MOCKB, MOCKC');
       });
     }); // end StatementExpressionList spec
     
