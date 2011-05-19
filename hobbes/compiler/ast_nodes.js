@@ -52,9 +52,10 @@ ASTNode.prototype.checkChild = function (node) {
 /**
  * Compiles the node with all its children
  */
-ASTNode.prototype.compile = function (indent) {
+ASTNode.prototype.compile = function (opts) {
+  var result = this.__compiled || (this.__compiled = this.compileNode(opts));
   this.compileTimeCheck();
-  return this.__compiled || (this.__compiled = this.compileNode(indent));
+  return result;
 };
 
 /**
@@ -143,11 +144,27 @@ CompilationUnit.inherits(ASTNode);
  *   - the `package` property,
  *   - the list of `imports`.
  */
-CompilationUnit.prototype.compileNode = function () {
+CompilationUnit.prototype.compileNode = function (opts) {
+  var opts = opts || {};
+  opts.names = opts.names || new vava.scope.Scope();
+  opts.mergeOpts = function (extraOptions) {
+    var F = function () {};
+    F.prototype = this;
+    var obj = new F();
+    for (key in (extraOptions || {})) {
+      obj[key] = extraOptions[key];
+    }
+    return obj;
+  };
+  opts.descendScope = function(extraOptions) {
+    var obj = this.mergeOpts(extraOptions);
+    obj.names = this.names.__descend();
+    return obj;
+  };
   var jsSource = '';
   
   this.children.forEach(function (child) {
-    jsSource += child.compile(0) + '\n';
+    jsSource += child.compile(opts) + '\n';
   });
   
   return jsSource;
@@ -174,8 +191,8 @@ var ImportDeclarations = exports.ImportDeclarations = function (importDeclaratio
 
 ImportDeclarations.inherits(ASTNode);
 
-ImportDeclarations.prototype.compileNode = function () {
-  return [this.children.map(function (child) { return child.compileNode() })].join('\n');
+ImportDeclarations.prototype.compileNode = function (opts) {
+  return [this.children.map(function (child) { return child.compile(opts) })].join('\n');
 };
 
 ImportDeclarations.prototype.checkChild = function (declaration) {
@@ -214,7 +231,15 @@ ImportDeclaration.prototype.checkChild = function (name) {
   }
 };
 
-ImportDeclaration.prototype.compileNode = function () {
+ImportDeclaration.prototype.compileNode = function (opts) {
+  for (var i = 0; i < this.children.length; i++) {
+    var parts = this.children[i].parts();
+    var tmpObj = opts.names[parts[0]];
+    for (var j = 1; j < parts.length; j++) {
+      tmpObj = tmpObj[parts[j]];
+    }
+    opts.names[parts[j]] = tmpObj;
+  }
   return 'this.' + this.children[0].simple() + ' = this.' + this.children[0].qualified() + ';';
 };
 
@@ -243,8 +268,12 @@ ClassDeclaration.prototype.getSignature = function () {
   };
 };
 
-ClassDeclaration.prototype.compileNode = function (indent) {
+ClassDeclaration.prototype.compileNode = function (opts) {
   var self = this;
+
+  // Add class name to compilation unit scope
+  opts.names.__addName(this.vavaClassName, this);
+  var classOpts = opts.descendScope();
   
   var serializedBody = builder.joinToObject(
     // Field Declarations
@@ -253,7 +282,7 @@ ClassDeclaration.prototype.compileNode = function (indent) {
       builder.array(
         self.children.filter(function (child) {
           return child.getType() === 'FieldDeclaration';
-        }).map(function (field) { return field.compile() })
+        }).map(function (field) { return field.compile(classOpts) })
       )
     ),
     // Method Declarations
@@ -262,7 +291,7 @@ ClassDeclaration.prototype.compileNode = function (indent) {
       builder.joinToObject(
         self.children.filter(function (child) {
           return child.getType() === 'MethodDeclaration';
-        }).map(function (method) { return method.compile() })
+        }).map(function (method) { return method.compile(classOpts) })
       )
     )
   );
@@ -304,7 +333,7 @@ FieldDeclaration.prototype.parseModifiers = function (modifiers) {
   this.valuedness = modifiers.valuedness;
 };
 
-FieldDeclaration.prototype.compileNode = function (indent) {
+FieldDeclaration.prototype.compileNode = function (opts) {
   return builder.joinToObject(
     builder.keyValue('isStatic', String(this.staticness)),
     builder.keyValue('visibility', builder.string(this.visibility)),
@@ -316,7 +345,7 @@ FieldDeclaration.prototype.compileNode = function (indent) {
             declarations.push(builder.keyValue(declName, obj[declName]));
           }
           return declarations;
-        }(this.children[0].compileForField({vavaType: this.vavaType, valuedness: this.valuedness}))
+        }(this.children[0].compileForField(opts.mergeOpts({vavaType: this.vavaType, valuedness: this.valuedness})))
       )
     )
   );
@@ -351,8 +380,8 @@ var LocalVariableDeclaration = exports.LocalVariableDeclaration = function (vava
 
 LocalVariableDeclaration.inherits(ASTNode);
 
-LocalVariableDeclaration.prototype.compileNode = function (indent) {
-  return utils.indent('this.__add({' + this.children[0].compileNode(this.vavaType) + '})', indent);
+LocalVariableDeclaration.prototype.compileNode = function (opts) {
+  return utils.indent('this.__add({' + this.children[0].compile(opts.mergeOpts({vavaType: this.vavaType})) + '})', opts.indent);
 };
 
 /**
@@ -369,8 +398,8 @@ var LocalVariableDeclarationStatement = exports.LocalVariableDeclarationStatemen
 
 LocalVariableDeclarationStatement.inherits(ASTNode);
 
-LocalVariableDeclarationStatement.prototype.compileNode = function (indent) {
-  return utils.indent(this.children[0].compile(indent) + ';', indent);
+LocalVariableDeclarationStatement.prototype.compileNode = function (opts) {
+  return utils.indent(this.children[0].compile(opts) + ';', opts.indent);
 };
 
 /**
@@ -389,12 +418,12 @@ var VariableDeclarators = exports.VariableDeclarators = function (variableDeclar
 
 VariableDeclarators.inherits(ASTNode);
 
-VariableDeclarators.prototype.compileNode = function (vavaType) {
-  return [this.children.map(function (child) { return child.compileNode(vavaType) })].join(',');
+VariableDeclarators.prototype.compileNode = function (opts) {
+  return [this.children.map(function (child) { return child.compile(opts) })].join(',');
 };
 
-VariableDeclarators.prototype.compileForField = function (options) {
-  return utils.merge(this.children.map(function (child) { return child.compileForField(options) }));
+VariableDeclarators.prototype.compileForField = function (opts) {
+  return utils.merge(this.children.map(function (child) { return child.compileForField(opts) }));
 };
 
 VariableDeclarators.prototype.checkChild = function (declarator) {
@@ -437,26 +466,32 @@ var VariableDeclarator = exports.VariableDeclarator = function (vavaIdentifier, 
 
 VariableDeclarator.inherits(ASTNode);
 
-VariableDeclarator.prototype.compileNode = function (vavaType) {
-  return builder.keyValue(
+VariableDeclarator.prototype.compileNode = function (opts) {
+  var result = builder.keyValue(
     this.vavaIdentifier,
     builder.constructorCall(
       'this.__env.TypedVariable',
-      [builder.string(vavaType), builder.string(this.vavaIdentifier), this.vavaInitializer && this.vavaInitializer.compile()].filter(
+      [builder.string(opts.vavaType), builder.string(this.vavaIdentifier), this.vavaInitializer && this.vavaInitializer.compile(opts)].filter(
         function (value) { return !!value; }
       ),
       false
     )
   );
+  // TODO error on wrong type
+  this.vavaType = (this.vavaInitializer && this.vavaInitializer.getVavaType()) || opts.vavaType;
+  opts.names.__addName(this.vavaIdentifier, this.vavaType);
+  return result;
 };
 
-VariableDeclarator.prototype.compileForField = function (options) {
+VariableDeclarator.prototype.compileForField = function (opts) {
   var obj = {};
   obj[this.vavaIdentifier] = builder.constructorCall(
     'this.__env.TypedVariable',
-    [builder.string(options.vavaType), builder.string(this.vavaIdentifier), this.vavaInitializer && this.vavaInitializer.compile(), builder.objectToLiteral({modifier: options.valuedness})].filter(function (value) { return !!value; }),
+    [builder.string(opts.vavaType), builder.string(this.vavaIdentifier), this.vavaInitializer && this.vavaInitializer.compile(opts), builder.objectToLiteral({modifier: opts.valuedness})].filter(function (value) { return !!value; }),
     false
   );
+  this.vavaType = (this.vavaInitializer && this.vavaInitializer.getVavaType()) || opts.vavaType;
+  opts.names.__addName(this.vavaIdentifier, this.vavaType);
   return obj;
 };
 
@@ -483,8 +518,12 @@ var Assignment = exports.Assignment = function (name, value) {
 
 Assignment.inherits(ASTNode);
 
-Assignment.prototype.compileNode = function (indent) {
-  return utils.indent(this.children[0].compileNode('set') + '.set(' + this.children[1].compileNode() + ')', indent);
+Assignment.prototype.compileNode = function (opts) {
+  var result = utils.indent(this.children[0].compile(opts.mergeOpts({set: true})) + '.set(' + this.children[1].compile(opts) + ')', opts.indent);
+  this.vavaType = this.children[1].getVavaType();
+  // TODO qualified names
+  opts.names.__addName(this.children[1].simple(), this.vavaType);
+  return result;
 };
 
 /**
@@ -517,7 +556,8 @@ var MethodDeclaration = exports.MethodDeclaration = function (vavaHeader, vavaBl
 
 MethodDeclaration.inherits(ASTNode);
 
-MethodDeclaration.prototype.compileNode = function () {
+MethodDeclaration.prototype.compileNode = function (opts) {
+  var methodOpts = opts.descendScope();
   // TODO This will not roll with method overriding (using vavaIdentifier as hash name)
   // Better: this.vavaIdentifier + this.vavaFormalParameters.map(vavaType)
   return builder.keyValue(
@@ -527,8 +567,8 @@ MethodDeclaration.prototype.compileNode = function () {
       [
         builder.string(this.vavaIdentifier),
         builder.string(this.vavaType),
-        builder.array(this.vavaFormalParameters.map(function (fP) { fP.compile(); })),
-        builder.wrapAsFunction(this.children[0].compile())
+        builder.array(this.vavaFormalParameters.map(function (fP) { fP.compile(methodOpts); })),
+        builder.wrapAsFunction(this.children[0].compile(methodOpts))
       ],
       false
     )
@@ -562,7 +602,8 @@ var FormalParameter = exports.FormalParameter = function (vavaType, vavaIdentifi
 
 FormalParameter.inherits(ASTNode);
 
-FormalParameter.prototype.compileNode = function () {
+FormalParameter.prototype.compileNode = function (opts) {
+  opts.names.__addName(this.vavaIdentifier, this.vavaType);
   return builder.joinToObject(builder.keyValue('identifier', this.vavaType), builder.keyValue('vavaType', this.vavaType));
 };
 
@@ -589,8 +630,10 @@ var MethodInvocation = exports.MethodInvocation = function (name, argumentList) 
 
 MethodInvocation.inherits(ASTNode);
 
-MethodInvocation.prototype.compileNode = function (indent) {
-  return utils.indent('this.' + this.name.prefix() + '.send("' + this.name.simple() + '", ' + this.children[0].compile() + ')', indent);
+MethodInvocation.prototype.compileNode = function (opts) {
+  // TODO Type of method invocation
+  //this.vavaType = 
+  return utils.indent('this.' + this.name.prefix() + '.send("' + this.name.simple() + '", ' + this.children[0].compile(opts) + ')', opts.indent);
 };
 
 MethodInvocation.prototype.getSignature = function () {
@@ -612,8 +655,8 @@ var ArgumentList = exports.ArgumentList = function (firstArg) {
 
 ArgumentList.inherits(ASTNode);
 
-ArgumentList.prototype.compileNode = function () {
-  return '[' + this.children.map(function (child) { return child.compile() }).join(', ') + ']';
+ArgumentList.prototype.compileNode = function (opts) {
+  return '[' + this.children.map(function (child) { return child.compile(opts) }).join(', ') + ']';
 };
 
 /**
@@ -640,9 +683,9 @@ var Block = exports.Block = function (vavaStatements) {
 
 Block.inherits(ASTNode);
 
-Block.prototype.compileNode = function (indent) {
+Block.prototype.compileNode = function (opts) {
   var js = this.children.map(function (child) {
-    return child.compile((indent || 0) + 2);
+    return child.compile(opts.mergeOpts({indent: (opts.indent || 0) + 2}));
   }).join('\n');
   return js;
 };
@@ -663,8 +706,8 @@ var ExpressionStatement = exports.ExpressionStatement = function (expression) {
 
 ExpressionStatement.inherits(ASTNode);
 
-ExpressionStatement.prototype.compileNode = function (indent) {
-  return this.children[0].compile(indent) + ';';
+ExpressionStatement.prototype.compileNode = function (opts) {
+  return this.children[0].compile(opts) + ';';
 };
 
 /**
@@ -709,12 +752,23 @@ Name.prototype.qualified = function () {
 };
 
 /**
+ * Return an array of the name's parts.
+ */
+Name.prototype.parts = function () {
+  return this.name.split('.');
+};
+
+/**
  * Simply resolve the name.
  *
- * @param dontGet If truthy, don't call #get
+ * @param opts
+ *   [noGet] If truthy, don't call #get
  */
-Name.prototype.compileNode = function (dontGet) {
-  return 'this.' + this.name + (dontGet ? '' : '.get()');
+Name.prototype.compileNode = function (opts) {
+  var result = 'this.' + this.name + (opts.noGet ? '' : '.get()');
+  // TODO Too simplified
+  this.vavaType = opts.names[this.simple()];
+  return result;
 };
 
 Name.prototype.getSignature = function () {
@@ -730,6 +784,7 @@ var BooleanLiteral = exports.BooleanLiteral = function (bool) {
   this.type = 'BooleanLiteral';
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
+  this.vavaType = 'boolean';
   var boolString = String(bool);
   if (boolString === 'true' || boolString === 'false') {
     this.value = boolString;
@@ -744,7 +799,7 @@ BooleanLiteral.prototype.getSignature = function () {
   return {value : this.value};
 };
 
-BooleanLiteral.prototype.compileNode = function (indent) {
+BooleanLiteral.prototype.compileNode = function (opts) {
   return 'this.__env.BooleanValue.intern(' + this.value + ')';
 };
 
@@ -777,7 +832,7 @@ IntegerLiteral.prototype.getSignature = function () {
   return {value : this.value, vavaType : this.vavaType};
 };
 
-IntegerLiteral.prototype.compileNode = function (indent) {
+IntegerLiteral.prototype.compileNode = function (opts) {
   if (this.vavaType === 'long') {
     return builder.functionCall('this.__env.LongValue.intern', [this.value], false);
   } else {
@@ -794,6 +849,7 @@ var CharLiteral = exports.CharLiteral = function (character) {
   this.type = 'CharLiteral';
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
+  this.vavaType = 'char';
   this.character = character.substr(1,1);
 };
 
@@ -803,7 +859,7 @@ CharLiteral.prototype.getSignature = function () {
   return {character : this.character};
 };
 
-CharLiteral.prototype.compileNode = function (indent) {
+CharLiteral.prototype.compileNode = function (opts) {
   return builder.functionCall('this.__env.CharValue.intern', [builder.string(this.character)], false);
 };
 
@@ -852,7 +908,7 @@ FloatingPointLiteral.prototype.getSignature = function () {
   };
 };
 
-FloatingPointLiteral.prototype.compileNode = function (indent) {
+FloatingPointLiteral.prototype.compileNode = function (opts) {
   var num = (this.prePoint + this.postPoint/Math.pow(10,this.postPoint.toString(10).length)) * Math.pow(10, this.exponent);
   if (this.isVavaType('float')) {
     return builder.functionCall('this.__env.FloatValue.intern', [num], false);
@@ -867,13 +923,14 @@ FloatingPointLiteral.prototype.compileNode = function (indent) {
  */
 var NullLiteral = exports.NullLiteral = function () {
   this.type = 'NullLiteral';
+  this.vavaType = 'null';
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
 };
 
 NullLiteral.inherits(ASTNode);
 
-NullLiteral.prototype.compileNode = function (indent) {
+NullLiteral.prototype.compileNode = function (opts) {
   return 'this.__env.NullValue.intern()';
 };
 
@@ -887,6 +944,7 @@ var StringLiteral = exports.StringLiteral = function (str) {
   this.type = 'StringLiteral';
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
+  this.vavaType = 'String';
   this.value = str;
 };
 
@@ -897,7 +955,7 @@ StringLiteral.prototype.getSignature = function () {
 };
 
 // TODO Interned strings
-StringLiteral.prototype.compileNode = function (indent) {
+StringLiteral.prototype.compileNode = function (opts) {
   return builder.constructorCall('this.__env.StringValue', [this.value], false);
 };
 
@@ -924,8 +982,10 @@ UnaryMinus.prototype.getSignature = function () {
   return {};
 };
 
-UnaryMinus.prototype.compileNode = function (indent) {
-  return builder.functionCall(this.children[0].compile() + '.inverse', [], false);
+UnaryMinus.prototype.compileNode = function (opts) {
+  var result = builder.functionCall(this.children[0].compile(opts) + '.inverse', [], false);
+  this.vavaType = this.children[0].getVavaType();
+  return result;
 };
 
 /**
@@ -947,8 +1007,10 @@ UnaryPlus.prototype.getSignature = function () {
   return {};
 };
 
-UnaryPlus.prototype.compileNode = function (indent) {
-  return this.children[0].compile();
+UnaryPlus.prototype.compileNode = function (opts) {
+  var result = this.children[0].compile(opts);
+  this.vavaType = this.children[0].getVavaType();
+  return result;
 };
 
 /**
@@ -960,16 +1022,17 @@ var PostIncrement = exports.PostIncrement = function (variable) {
   this.type = 'PostIncrement';
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
-  this.vavaType = 'int';
   this.appendChild(variable);
 };
 
 PostIncrement.inherits(ASTNode);
 
-PostIncrement.prototype.compileNode = function (indent) {
-  return builder.functionCall(
-    this.children[0].compileNode('set') + '.postInc', [], false
+PostIncrement.prototype.compileNode = function (opts) {
+  var result = builder.functionCall(
+    this.children[0].compile(opts.mergeOpts({noGet: true})) + '.postInc', [], false
   );
+  this.vavaType = this.children[0].getVavaType();
+  return result;
 };
 
 /**
@@ -981,16 +1044,17 @@ var PostDecrement = exports.PostDecrement = function (variable) {
   this.type = 'PostDecrement';
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
-  this.vavaType = 'int';
   this.appendChild(variable);
 };
 
 PostDecrement.inherits(ASTNode);
 
-PostDecrement.prototype.compileNode = function (indent) {
-  return builder.functionCall(
-    this.children[0].compileNode('set') + '.postDec', [], false
+PostDecrement.prototype.compileNode = function (opts) {
+  var result = builder.functionCall(
+    this.children[0].compile(opts.mergeOpts({noGet: true})) + '.postDec', [], false
   );
+  this.vavaType = this.children[0].getVavaType();
+  return result;
 };
 
 /**
@@ -1002,16 +1066,17 @@ var PreIncrement = exports.PreIncrement = function (variable) {
   this.type = 'PreIncrement';
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
-  this.vavaType = 'int';
   this.appendChild(variable);
 };
 
 PreIncrement.inherits(ASTNode);
 
-PreIncrement.prototype.compileNode = function (indent) {
-  return builder.functionCall(
-    this.children[0].compileNode('set') + '.preInc', [], false
+PreIncrement.prototype.compileNode = function (opts) {
+  var result = builder.functionCall(
+    this.children[0].compile(opts.mergeOpts({noGet: true})) + '.preInc', [], false
   );
+  this.vavaType = this.children[0].getVavaType();
+  return result;
 };
 
 /**
@@ -1029,10 +1094,12 @@ var PreDecrement = exports.PreDecrement = function (variable) {
 
 PreDecrement.inherits(ASTNode);
 
-PreDecrement.prototype.compileNode = function (indent) {
-  return builder.functionCall(
-    this.children[0].compileNode('set') + '.preDec', [], false
+PreDecrement.prototype.compileNode = function (opts) {
+  var result = builder.functionCall(
+    this.children[0].compile(opts.mergeOpts({noGet: true})) + '.preDec', [], false
   );
+  this.vavaType = this.children[0].getVavaType();
+  return result;
 };
 
 /**
@@ -1051,8 +1118,8 @@ var CastExpression = exports.CastExpression = function (vavaType, unaryExpressio
 
 CastExpression.inherits(ASTNode);
 
-CastExpression.prototype.compileNode = function (indent) {
-  return builder.functionCall('(' + this.children[0].compile() + ').to', [builder.string(this.vavaType)], false);
+CastExpression.prototype.compileNode = function (opts) {
+  return builder.functionCall('(' + this.children[0].compile(opts) + ').to', [builder.string(this.vavaType)], false);
 };
 
 CastExpression.prototype.compileTimeCheck = function () {
@@ -1061,6 +1128,19 @@ CastExpression.prototype.compileTimeCheck = function () {
 }
 
 // Binary
+
+var NumberTypes = {'byte': true, 'short': true, 'char': true, 'int': true, 'long': true, 'float': true, 'double': true};
+
+var BinaryOperationTypes = {
+  'byte' : {'byte' : 'int','short' : 'int','char' : 'int','int' : 'int','long' : 'long','float' : 'float','double' : 'double','String' : 'String'},
+  'short' : {'byte' : 'int','short' : 'int','char' : 'int','int' : 'int','long' : 'long','float' : 'float','double' : 'double','String' : 'String'},
+  'char' : {'byte' : 'int','short' : 'int','char' : 'int','int' : 'int','long' : 'long','float' : 'float','double' : 'double','String' : 'String'},
+  'int' : {'byte' : 'int','short' : 'int','char' : 'int','int' : 'int','long' : 'long','float' : 'float','double' : 'double','String' : 'String'},
+  'long' : {'byte':'long', 'short':'long', 'char':'long', 'int':'long', 'long':'long', 'float':'float', 'double':'double', 'String':'String'},
+  'float' : {'byte':'float', 'short':'float', 'char':'float', 'int':'float', 'long':'float', 'float':'float', 'double':'double', 'String':'String'},
+  'double' : {'byte':'double', 'short':'double', 'char':'double', 'int':'double', 'long':'double', 'float':'double', 'double':'double', 'String':'String'},
+  'String' : {'byte':'String', 'short':'String', 'char':'String', 'int':'String', 'long':'String', 'float':'String', 'double':'String', 'String':'String'},
+};
 
 /**
  * Creates a node for an addition operation.
@@ -1082,14 +1162,17 @@ var Addition = exports.Addition = function (numA, numB) {
 
 Addition.inherits(ASTNode);
 
-Addition.prototype.compileNode = function (indent) {
-  return utils.indent(this.children[0].compile() + '.add(' + this.children[1].compile() + ')', indent);
+Addition.prototype.compileNode = function (opts) {
+  return utils.indent(this.children[0].compile(opts) + '.add(' + this.children[1].compile(opts) + ')', opts.indent);
 };
 
 Addition.prototype.compileTimeCheck = function () {
-  if (this.children[0].isNumber() && this.children[1].isNumber()) return true;
-  if (this.children[0].isVavaType('String') || this.children[1].isVavaType('String')) return true;
-  return false;
+  this.vavaType = BinaryOperationTypes[this.children[0].getVavaType()][this.children[1].getVavaType()];
+  if (!(this.vavaType === undefined)) {
+    return true;
+  } else {
+    this.throwError('wrong types in addition', 'found   : ' + this.children[0].getVavaType() + '\nrequired: ' + this.children[1].getVavaType());
+  }
 };
 
 /**
@@ -1112,8 +1195,17 @@ var Subtraction = exports.Subtraction = function (numA, numB) {
 
 Subtraction.inherits(ASTNode);
 
-Subtraction.prototype.compileNode = function (indent) {
-  return utils.indent(this.children[0].compile() + '.subtract(' + this.children[1].compile() + ')', indent);
+Subtraction.prototype.compileNode = function (opts) {
+  return utils.indent(this.children[0].compile(opts) + '.subtract(' + this.children[1].compile(opts) + ')', opts.indent);
+};
+
+Subtraction.prototype.compileTimeCheck = function () {
+  this.vavaType = BinaryOperationTypes[this.children[0].getVavaType()][this.children[1].getVavaType()];
+  if (!(this.vavaType === undefined || this.vavaType === 'String')) {
+    return true;
+  } else {
+    this.throwError('wrong types in addition');
+  }
 };
 
 /**
@@ -1136,9 +1228,11 @@ var Multiplication = exports.Multiplication = function (numA, numB) {
 
 Multiplication.inherits(ASTNode);
 
-Multiplication.prototype.compileNode = function (indent) {
-  return utils.indent(this.children[0].compile() + '.times(' + this.children[1].compile() + ')', indent);
+Multiplication.prototype.compileNode = function (opts) {
+  return utils.indent(this.children[0].compile(opts) + '.times(' + this.children[1].compile(opts) + ')', opts.indent);
 };
+
+Multiplication.prototype.compileTimeCheck = Subtraction.prototype.compileTimeCheck;
 
 /**
  * Creates a node for a division operation.
@@ -1160,8 +1254,18 @@ var Division = exports.Division = function (numA, numB) {
 
 Division.inherits(ASTNode);
 
-Division.prototype.compileNode = function (indent) {
-  return utils.indent(this.children[0].compile() + '.divide(' + this.children[1].compile() + ')', indent);
+Division.prototype.compileNode = function (opts) {
+  return utils.indent(this.children[0].compile(opts) + '.divide(' + this.children[1].compile(opts) + ')', opts.indent);
+};
+
+Division.prototype.compileTimeCheck = function () {
+  // TODO division by zero
+  this.vavaType = BinaryOperationTypes[this.children[0].getVavaType()][this.children[1].getVavaType()];
+  if (!(this.vavaType === undefined || this.vavaType === 'String')) {
+    return true;
+  } else {
+    this.throwError('wrong types in addition');
+  }
 };
 
 /**
@@ -1184,9 +1288,11 @@ var Modulo = exports.Modulo = function (numA, numB) {
 
 Modulo.inherits(ASTNode);
 
-Modulo.prototype.compileNode = function (indent) {
-  return utils.indent(this.children[0].compile() + '.modulo(' + this.children[1].compile() + ')', indent);
+Modulo.prototype.compileNode = function (opts) {
+  return utils.indent(this.children[0].compile(opts) + '.modulo(' + this.children[1].compile(opts) + ')', opts.indent);
 };
+
+Modulo.prototype.compileTimeCheck = Division.prototype.compileTimeCheck;
 
 /**
  * Creates a node for less than comparison.
@@ -1208,15 +1314,20 @@ var LessThan = exports.LessThan = function (a, b) {
 
 LessThan.inherits(ASTNode);
 
-LessThan.prototype.compileNode = function (indent) {
+LessThan.prototype.compileNode = function (opts) {
   return utils.indent(
     builder.functionCall(
       'this.__env.BooleanValue.intern',
-      [builder.functionCall('(' + this.children[0].compile() + ').isLessThan', [this.children[1].compile()], false)],
+      [builder.functionCall('(' + this.children[0].compile(opts) + ').isLessThan', [this.children[1].compile(opts)], false)],
       false
     ),
-    indent
+    opts.indent
   );
+};
+
+LessThan.prototype.compileTimeCheck = function () {
+  if (!(this.children[0].isNumber() && this.children[1].isNumber()))
+    this.throwError('expecting two numbers');
 };
 
 /**
@@ -1228,6 +1339,7 @@ LessThan.prototype.compileNode = function (indent) {
 var Equals = exports.Equals = function (a, b) {
   this.type = 'Equals';
   this.setLoc(arguments[arguments.length-1]);
+  this.vavaType = 'boolean';
   this.children = [];
   if (!a || !b) {
     throw new TypeError('Expected two values to compare for equality.');
@@ -1238,8 +1350,8 @@ var Equals = exports.Equals = function (a, b) {
 
 Equals.inherits(ASTNode);
 
-Equals.prototype.compileNode = function (indent) {
-  return utils.indent('this.__env.BooleanValue.intern(' + this.children[0].compile() + ' === ' + this.children[1].compile() + ')', indent);
+Equals.prototype.compileNode = function (opts) {
+  return utils.indent('this.__env.BooleanValue.intern(' + this.children[0].compile(opts) + ' === ' + this.children[1].compile(opts) + ')', opts.indent);
 };
 
 /**
@@ -1262,16 +1374,18 @@ var GreaterThan = exports.GreaterThan = function (a, b) {
 
 GreaterThan.inherits(ASTNode);
 
-GreaterThan.prototype.compileNode = function (indent) {
+GreaterThan.prototype.compileNode = function (opts) {
   return utils.indent(
     builder.functionCall(
       'this.__env.BooleanValue.intern',
-      [builder.functionCall('(' + this.children[0].compile() + ').isGreaterThan', [this.children[1].compile()], false)],
+      [builder.functionCall('(' + this.children[0].compile(opts) + ').isGreaterThan', [this.children[1].compile(opts)], false)],
       false
     ),
-    indent
+    opts.indent
   );
 };
+
+GreaterThan.prototype.compileTimeCheck = LessThan.prototype.compileTimeCheck;
 
 /**
  * Creates a node for an inequality comparison.
@@ -1282,6 +1396,7 @@ GreaterThan.prototype.compileNode = function (indent) {
 var NotEquals = exports.NotEquals = function (a, b) {
   this.type = 'NotEquals';
   this.setLoc(arguments[arguments.length-1]);
+  this.vavaType = 'boolean';
   this.children = [];
   if (!a || !b) {
     throw new TypeError('Expected two values to compare for inequality.');
@@ -1292,8 +1407,8 @@ var NotEquals = exports.NotEquals = function (a, b) {
 
 NotEquals.inherits(ASTNode);
 
-NotEquals.prototype.compileNode = function (indent) {
-  return utils.indent('this.__env.BooleanValue.intern(' + this.children[0].compile() + ' !== ' + this.children[1].compile() + ')', indent);
+NotEquals.prototype.compileNode = function (opts) {
+  return utils.indent('this.__env.BooleanValue.intern(' + this.children[0].compile(opts) + ' !== ' + this.children[1].compile(opts) + ')', opts.indent);
 };
 
 /**
@@ -1306,7 +1421,6 @@ NotEquals.prototype.compileNode = function (indent) {
 var TernaryOperator = exports.TernaryOperator = function (condition, optionA, optionB) {
   this.type = 'TernaryOperator';
   this.setLoc(arguments[arguments.length-1]);
-  this.vavaType = optionA.getVavaType();
   this.children = [];
   this.appendChild(condition);
   this.appendChild(optionA);
@@ -1315,8 +1429,14 @@ var TernaryOperator = exports.TernaryOperator = function (condition, optionA, op
 
 TernaryOperator.inherits(ASTNode);
 
-TernaryOperator.prototype.compileNode = function (indent) {
-  return ['((this.__env.BooleanValue.intern(true) === ', this.children[0].compile(), ') ? ', this.children[1].compile(), ' : ', this.children[2].compile() + ')'].join('');
+TernaryOperator.prototype.compileNode = function (opts) {
+  return ['((this.__env.BooleanValue.intern(true) === ', this.children[0].compile(opts), ') ? ', this.children[1].compile(opts), ' : ', this.children[2].compile(opts) + ')'].join('');
+};
+
+TernaryOperator.prototype.compileTimeCheck = function () {
+  this.vavaType = this.children[1].getVavaType();
+  if (!this.children[0].isVavaType('boolean'))
+    this.throwError('boolean type expected');
 };
 
 /**
@@ -1336,12 +1456,17 @@ var LogicalAnd = exports.LogicalAnd = function (boolA, boolB) {
 
 LogicalAnd.inherits(ASTNode);
 
-LogicalAnd.prototype.compileNode = function (indent) {
+LogicalAnd.prototype.compileNode = function (opts) {
   return builder.functionCall(
     'this.__env.BooleanValue.intern',
-    [this.children[0].compile() + '.get() && ' + this.children[1].compile() + '.get()'],
+    [this.children[0].compile(opts) + '.get() && ' + this.children[1].compile(opts) + '.get()'],
     false
   );
+};
+
+LogicalAnd.prototype.compileTimeCheck = function () {
+  if (!this.children[0].isVavaType('boolean') || !this.children[1].isVavaType('boolean'))
+    this.throwError('boolean type expected');
 };
 
 /**
@@ -1361,13 +1486,15 @@ var LogicalOr = exports.LogicalOr = function (boolA, boolB) {
 
 LogicalOr.inherits(ASTNode);
 
-LogicalOr.prototype.compileNode = function (indent) {
+LogicalOr.prototype.compileNode = function (opts) {
   return builder.functionCall(
     'this.__env.BooleanValue.intern',
-    [this.children[0].compile() + '.get() || ' + this.children[1].compile() + '.get()'],
+    [this.children[0].compile(opts) + '.get() || ' + this.children[1].compile(opts) + '.get()'],
     false
   );
 };
+
+LogicalOr.prototype.compileTimeCheck = LogicalAnd.prototype.compileTimeCheck;
 
 /**
  * Creates a node for an inclusive logical AND.
@@ -1378,8 +1505,6 @@ LogicalOr.prototype.compileNode = function (indent) {
 var InclusiveAnd = exports.InclusiveAnd = function (a, b) {
   this.type = 'InclusiveAnd';
   this.setLoc(arguments[arguments.length-1]);
-  // TODO depends on args
-  this.vavaType = 'boolean';
   this.children = [];
   this.appendChild(a);
   this.appendChild(b);
@@ -1387,12 +1512,21 @@ var InclusiveAnd = exports.InclusiveAnd = function (a, b) {
 
 InclusiveAnd.inherits(ASTNode);
 
-InclusiveAnd.prototype.compileNode = function (indent) {
+InclusiveAnd.prototype.compileNode = function (opts) {
   return builder.functionCall(
-    this.children[0].compile() + '.and',
-    [this.children[1].compile()],
+    this.children[0].compile(opts) + '.and',
+    [this.children[1].compile(opts)],
     false
   );
+};
+
+InclusiveAnd.prototype.compileTimeCheck = function () {
+  if (this.children[0].isVavaType('boolean') && this.children[1].isVavaType('boolean'))
+    this.vavaType = 'boolean';
+  else if (this.children[0].isIntegral() && this.children[1].isIntegral())
+    this.vavaType = BinaryOperationTypes[this.children[0].getVavaType()][this.children[1].getVavaType()];
+  else
+    this.throwError('int x int or bool x bool');
 };
 
 /**
@@ -1413,13 +1547,15 @@ var InclusiveOr = exports.InclusiveOr = function (a, b) {
 
 InclusiveOr.inherits(ASTNode);
 
-InclusiveOr.prototype.compileNode = function (indent) {
+InclusiveOr.prototype.compileNode = function (opts) {
   return builder.functionCall(
-    this.children[0].compile() + '.or',
-    [this.children[1].compile()],
+    this.children[0].compile(opts) + '.or',
+    [this.children[1].compile(opts)],
     false
   );
 };
+
+InclusiveOr.prototype.compileTimeCheck = InclusiveAnd.prototype.compileTimeCheck;
 
 /**
  * Creates a node for an exclusive logical OR.
@@ -1439,13 +1575,15 @@ var ExclusiveOr = exports.ExclusiveOr = function (a, b) {
 
 ExclusiveOr.inherits(ASTNode);
 
-ExclusiveOr.prototype.compileNode = function (indent) {
+ExclusiveOr.prototype.compileNode = function (opts) {
   return builder.functionCall(
-    this.children[0].compile() + '.xor',
-    [this.children[1].compile()],
+    this.children[0].compile(opts) + '.xor',
+    [this.children[1].compile(opts)],
     false
   );
 };
+
+ExclusiveOr.prototype.compileTimeCheck = InclusiveAnd.prototype.compileTimeCheck;
 
 /**
  * Creates a node for a logical negation.
@@ -1462,8 +1600,13 @@ var Negation = exports.Negation = function (boolA) {
 
 Negation.inherits(ASTNode);
 
-Negation.prototype.compileNode = function (indent) {
-  return this.children[0].compile() + '.not()';
+Negation.prototype.compileNode = function (opts) {
+  return this.children[0].compile(opts) + '.not()';
+};
+
+Negation.prototype.compileTimeCheck = function () {
+  if (!this.children[0].isVavaType('boolean'))
+    this.throwError('negating non-bool');
 };
 
 /**
@@ -1476,14 +1619,18 @@ var BitwiseNegation = exports.BitwiseNegation = function (num) {
   this.setLoc(arguments[arguments.length-1]);
   this.vavaType = 'int';
   this.children = [];
-  // TODO Check condition
   this.appendChild(num);
 };
 
 BitwiseNegation.inherits(ASTNode);
 
-BitwiseNegation.prototype.compileNode = function (indent) {
-  return this.children[0].compile() + '.bitwiseNot()';
+BitwiseNegation.prototype.compileNode = function (opts) {
+  return this.children[0].compile(opts) + '.bitwiseNot()';
+};
+
+BitwiseNegation.prototype.compileTimeCheck = function () {
+  if (!this.children[0].isIntegral())
+    this.throwError('bitwise negating non-int');
 };
 
 /**
@@ -1503,12 +1650,19 @@ var LeftShift = exports.LeftShift = function (a, b) {
 
 LeftShift.inherits(ASTNode);
 
-LeftShift.prototype.compileNode = function (indent) {
+LeftShift.prototype.compileNode = function (opts) {
   return builder.functionCall(
-    this.children[0].compile() + '.leftshift',
-    [this.children[1].compile()],
+    this.children[0].compile(opts) + '.leftshift',
+    [this.children[1].compile(opts)],
     false
   );
+};
+
+LeftShift.prototype.compileTimeCheck = function () {
+  if (this.children[0].isIntegral() && this.children[1].isIntegral())
+    this.vavaType = BinaryOperationTypes[this.children[0].getVavaType()][this.children[1].getVavaType()];
+  else
+    this.throwError('int x int');
 };
 
 /**
@@ -1528,13 +1682,15 @@ var RightShift = exports.RightShift = function (a, b) {
 
 RightShift.inherits(ASTNode);
 
-RightShift.prototype.compileNode = function (indent) {
+RightShift.prototype.compileNode = function (opts) {
   return builder.functionCall(
-    this.children[0].compile() + '.rightshift',
-    [this.children[1].compile()],
+    this.children[0].compile(opts) + '.rightshift',
+    [this.children[1].compile(opts)],
     false
   );
 };
+
+RightShift.prototype.compileTimeCheck = LeftShift.prototype.compileTimeCheck;
 
 /**
  * Creates a node for a zero-filling rightshift operation.
@@ -1553,13 +1709,15 @@ var ZeroFillRightShift = exports.ZeroFillRightShift = function (a, b) {
 
 ZeroFillRightShift.inherits(ASTNode);
 
-ZeroFillRightShift.prototype.compileNode = function (indent) {
+ZeroFillRightShift.prototype.compileNode = function (opts) {
   return builder.functionCall(
-    this.children[0].compile() + '.zerofillRightshift',
-    [this.children[1].compile()],
+    this.children[0].compile(opts) + '.zerofillRightshift',
+    [this.children[1].compile(opts)],
     false
   );
 };
+
+ZeroFillRightShift.prototype.compileTimeCheck = LeftShift.prototype.compileTimeCheck;
 
 /**
  * Creates a node for an if-then conditional.
@@ -1580,11 +1738,17 @@ var IfThen = exports.IfThen = function (ifExpr, thenExpr) {
 
 IfThen.inherits(ASTNode);
 
-IfThen.prototype.compileNode = function (indent) {
+IfThen.prototype.compileNode = function (opts) {
+  var blockOpts = opts.descendScope({indent: (opts.indent || 0) + 2});
   var js = 'if (this.__env.BooleanValue.intern(true) === ';
-  js += this.children[0].compileNode() + ') {\n';
-  js += this.children[1].compileNode(2);
-  return utils.indent(js + '\n}\n', indent);
+  js += this.children[0].compile(opts) + ') {\n';
+  js += this.children[1].compile(blockOpts);
+  return utils.indent(js + '\n}\n', opts.indent);
+};
+
+IfThen.prototype.compileTimeCheck = function () {
+  if (!this.children[0].isVavaType('boolean'))
+    this.throwError('expected bool in if');
 };
 
 /**
@@ -1608,15 +1772,18 @@ var IfThenElse = exports.IfThenElse = function (condition, truthyStatement, fals
 
 IfThenElse.inherits(ASTNode);
 
-IfThenElse.prototype.compileNode = function (indent) {
-  var js = utils.indent('if (this.__env.BooleanValue.intern(true) === ', indent);
-  js += this.children[0].compileNode() + ') {\n';
-  js += this.children[1].compileNode(indent + 2) + '\n';
-  js += utils.indent('} else {\n', indent);
-  js += this.children[2].compileNode(indent + 2) + '\n';
-  js += utils.indent('}', indent);
+IfThenElse.prototype.compileNode = function (opts) {
+  var blockOpts = opts.descendScope({indent: (opts.indent || 0) + 2});
+  var js = utils.indent('if (this.__env.BooleanValue.intern(true) === ', opts.indent);
+  js += this.children[0].compile(blockOpts) + ') {\n';
+  js += this.children[1].compile(blockOpts) + '\n';
+  js += utils.indent('} else {\n', opts.indent);
+  js += this.children[2].compile(blockOpts) + '\n';
+  js += utils.indent('}', opts.indent);
   return js;
 };
+
+IfThenElse.prototype.compileTimeCheck = IfThen.prototype.compileTimeCheck;
 
 /**
  * Creates a node for a while loop.
@@ -1637,14 +1804,17 @@ var WhileLoop = exports.WhileLoop = function (condition, statement) {
 
 WhileLoop.inherits(ASTNode);
 
-WhileLoop.prototype.compileNode = function (indent) {
+WhileLoop.prototype.compileNode = function (opts) {
+  var blockOpts = opts.descendScope({indent: (opts.indent || 0) + 2});
   return utils.indent(builder.wrapParens(
     builder.wrapAsFunction(
-      utils.indentSpaces(indent + 2) + 'while (this.__env.BooleanValue.intern(true) === ' + this.children[0].compile() + ') { ' + builder.wrapParens(builder.wrapAsFunction(this.children[1].compile(indent + 4))) + '.call(blockScope); }',
+      utils.indentSpaces(opts.indent + 2) + 'while (this.__env.BooleanValue.intern(true) === ' + this.children[0].compile(blockOpts) + ') { ' + builder.wrapParens(builder.wrapAsFunction(this.children[1].compile(blockOpts))) + '.call(blockScope); }',
       ['blockScope']
     )
-  ) + '.call(this, this.__descend());', indent);
+  ) + '.call(this, this.__descend());', opts.indent);
 };
+
+WhileLoop.prototype.compileTimeCheck = IfThen.prototype.compileTimeCheck;
 
 /**
  * Creates a node for a do-while loop.
@@ -1665,13 +1835,19 @@ var DoWhileLoop = exports.DoWhileLoop = function (statement, condition) {
 
 DoWhileLoop.inherits(ASTNode);
 
-DoWhileLoop.prototype.compileNode = function (indent) {
+DoWhileLoop.prototype.compileNode = function (opts) {
+  var blockOpts = opts.descendScope({indent: (opts.indent || 0) + 2});
   return utils.indent(builder.wrapParens(
     builder.wrapAsFunction(
-      utils.indentSpaces(indent + 2) + 'while (freeRide || this.__env.BooleanValue.intern(true) === ' + this.children[1].compile() + ') { ' + builder.wrapParens(builder.wrapAsFunction(this.children[0].compile(indent + 4))) + '.call(blockScope); freeRide = false; }',
+      utils.indentSpaces(opts.indent + 2) + 'while (freeRide || this.__env.BooleanValue.intern(true) === ' + this.children[1].compile(blockOpts) + ') { ' + builder.wrapParens(builder.wrapAsFunction(this.children[0].compile(blockOpts))) + '.call(blockScope); freeRide = false; }',
       ['freeRide', 'blockScope']
     )
-  ) + '.call(this, true, this.__descend());', indent);
+  ) + '.call(this, true, this.__descend());', opts.indent);
+};
+
+DoWhileLoop.prototype.compileTimeCheck = function () {
+  if (!this.children[1].isVavaType('boolean'))
+    this.throwError('expected bool in do-while');
 };
 
 /**
@@ -1697,13 +1873,19 @@ var ForLoop = exports.ForLoop = function (init, condition, update, statement) {
 
 ForLoop.inherits(ASTNode);
 
-ForLoop.prototype.compileNode = function (indent) {
+ForLoop.prototype.compileNode = function (opts) {
+  var blockOpts = opts.descendScope({indent: (opts.indent || 0) + 2});
   return utils.indent(builder.wrapParens(
     builder.wrapAsFunction(
-      utils.indentSpaces(indent + 2) + 'for (' + this.children[0].compile() + '; this.__env.BooleanValue.intern(true) === ' + this.children[1].compile() + '; ' + this.children[2].compile() + ') { ' + builder.wrapParens(builder.wrapAsFunction(this.children[3].compile(indent + 4))) + '.call(blockScope); }',
+      utils.indentSpaces(opts.indent + 2) + 'for (' + this.children[0].compile(blockOpts) + '; this.__env.BooleanValue.intern(true) === ' + this.children[1].compile(blockOpts) + '; ' + this.children[2].compile(blockOpts) + ') { ' + builder.wrapParens(builder.wrapAsFunction(this.children[3].compile(blockOpts))) + '.call(blockScope); }',
       ['blockScope']
     )
-  ) + '.call(this, this.__descend());', indent);
+  ) + '.call(this, this.__descend());', opts.indent);
+};
+
+ForLoop.prototype.compileTimeCheck = function () {
+  if (!this.children[1].isVavaType('boolean'))
+    this.throwError('expected bool in for condition');
 };
 
 /**
@@ -1721,7 +1903,7 @@ var StatementExpressionList = exports.StatementExpressionList = function (firstC
 
 StatementExpressionList.inherits(ASTNode);
 
-StatementExpressionList.prototype.compileNode = function (indent) {
-  return this.children.map(function (child) { return child.compile(); }).join(', ');
+StatementExpressionList.prototype.compileNode = function (opts) {
+  return this.children.map(function (child) { return child.compile(opts); }).join(', ');
 };
 

@@ -12,8 +12,9 @@ exports.run = function (vavaSrc, options) {
     throw new TypeError('Expected Vava source to be provided as string.');
   }
   var vavaAST = parser.parse(vavaSrc);
+  var scope = new vava.scope.Scope({__env : vava.env}).__add(stdlib).__add(stdlib.java.lang);
   try {
-    var compilation = vavaAST.compile();
+    var compilation = vavaAST.compile({names: scope.__descend()});
   } catch (err) {
     if (err.type === 'CompileTimeError') {
       err.line = err.loc.first_line;
@@ -28,7 +29,6 @@ exports.run = function (vavaSrc, options) {
   
   var runner = new Function (compilation);
   // TODO How does the import of `java.lang` happen in Java?
-  var scope = new vava.scope.Scope({__env : vava.env}).__add(stdlib).__add(stdlib.java.lang);
   runner.call(scope);
 };
 

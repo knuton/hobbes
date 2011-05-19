@@ -13,6 +13,11 @@ Scope.prototype.__add = function (namesValues) {
   return this;
 };
 
+Scope.prototype.__addName = function (name, value) {
+  this[name] = value;
+  return this;
+};
+
 Scope.prototype.__descend = function (namesValues) {
   var Scoper = function () {};
   Scoper.prototype = this;

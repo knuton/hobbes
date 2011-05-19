@@ -17,3 +17,6 @@ specifications:
   - description: "An object reference `obj` can be converted to a value of type `boolean`, following the C language convention that any reference other than `null` is true, by the expression `obj!=null`."
 
   - description: "There are no casts between the type `boolean` and any other type."
+    test_files:
+      - 'NoBooleanCastsTo.java'
+      - 'NoBooleanCastsFrom.java'
