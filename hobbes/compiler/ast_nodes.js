@@ -319,7 +319,8 @@ ClassDeclaration.prototype.compileNode = function (opts) {
     this.vavaClassName,
     builder.constructorCall('this.__env.VavaClass', [builder.string(this.vavaClassName), serializedBody, 'this'], false)
     // TODO call of main method should be more robust (several classes in CU?)
-  ) + '\n' + builder.functionCall('this["' + this.vavaClassName + '"].send', ['"main(String[])"']);
+    // TODO de-bullshit
+  ) + '\n' + builder.functionCall('this["' + this.vavaClassName + '"].send', ['"main(String[])"', '[{getVavaType: function () { return true; }, to: function () {return this;}}]']);
 };
 
 /**
@@ -581,7 +582,6 @@ var MethodDeclaration = exports.MethodDeclaration = function (vavaHeader, vavaBl
   if (vavaHeader.vavaFormalParameters && !Array.isArray(vavaHeader.vavaFormalParameters)) {
     throw new TypeError('Expected Vava formal parameters to be array.');
   }
-  console.log(vavaHeader);
   this.vavaFormalParameters = vavaHeader.vavaFormalParameters || [];
   if (vavaBlock.getType() !== 'Block') {
     throw new TypeError('Expected Vava block to be Block.');
@@ -602,7 +602,7 @@ MethodDeclaration.prototype.compileNode = function (opts) {
       [
         builder.string(this.vavaIdentifier),
         builder.string(this.vavaType),
-        builder.array(this.vavaFormalParameters.map(function (fP) { fP.compile(methodOpts); })),
+        builder.array(this.vavaFormalParameters.map(function (fP) { return fP.compile(methodOpts); })),
         builder.wrapAsFunction(this.children[0].compile(methodOpts))
       ],
       false

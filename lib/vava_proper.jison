@@ -341,7 +341,7 @@ method_declarator
   : IDENTIFIER LEFT_PAREN formal_parameter_list RIGHT_PAREN
     %{ $$ = {vavaIdentifier: $1, vavaFormalParameters: $3}; %}
   | IDENTIFIER LEFT_PAREN STRING_TYPE LEFT_BRACKET RIGHT_BRACKET IDENTIFIER RIGHT_PAREN
-    %{ $$ = {vavaIdentifier: $1, vavaFormalParameters: []}; %}
+    %{ $$ = {vavaIdentifier: $1, vavaFormalParameters: [new yy.FormalParameter('String[]', $6)]}; %}
   ;
 
 formal_parameter_list

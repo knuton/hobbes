@@ -109,7 +109,7 @@ case 49: this.$ = yy.utils.merge({vavaType: $$[$0-1]}, $$[$0]);
 break;
 case 50: this.$ = {vavaIdentifier: $$[$0-3], vavaFormalParameters: $$[$0-1]}; 
 break;
-case 51: this.$ = {vavaIdentifier: $$[$0-6], vavaFormalParameters: []}; 
+case 51: this.$ = {vavaIdentifier: $$[$0-6], vavaFormalParameters: [new yy.FormalParameter('String[]', $$[$0-1])]}; 
 break;
 case 52: this.$ = [$$[$0]]; 
 break;

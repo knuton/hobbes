@@ -33,13 +33,13 @@ exports.System = {
           'print',
           'void',
           [{identifier: 'str', vavaType: 'int'}],
-          function () { process.stdout.write(this.str.toString()); }
+          function () { process.stdout.write(this.str.get()); }
         ),
         println : new vava.env.VavaMethod(
           'println',
           'void',
           [{identifier: 'str', vavaType: 'int'}],
-          function () { process.stdout.write(this.str.toString() + '\n'); }
+          function () { process.stdout.write(this.str.get() + '\n'); }
         )
       }
     },

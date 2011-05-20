@@ -1,3 +1,5 @@
+var type = (typeof hobbes !== 'undefined' && hobbes.vava.type) || require('./type');
+
 /**
  * Creates a VavaMethod object.
  *
@@ -47,7 +49,9 @@ VavaMethod.prototype.call = function (scope, args) {
     if (args[i].getVavaType() !== this.vavaFormalParameters[i].vavaType) {
       // TODO Throw Java-style error
     }
-    locals[this.vavaFormalParameters[i].identifier] = args[i];
+    var identifier = this.vavaFormalParameters[i].identifier;
+    var value = args[i];
+    locals[identifier] = new type.TypedVariable(value.getVavaType(), identifier, value);
   }
   // TODO Check return type?
   return this.vavaBlock.apply(scope.__descend(locals));
