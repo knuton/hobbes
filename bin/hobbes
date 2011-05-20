@@ -4,7 +4,17 @@ global.sys = require(/^v0\.[012]/.test(process.version) ? "sys" : "util");
 var fs = require("fs");
 var hobbes = require("../hobbes");
 
-var filename = process.argv[2];
+var args = process.argv.slice(2);
+var options = {};
+var filename;
+
+while (args.length != 0) {
+  var arg = args.shift();
+  if (arg === '-d' || arg === '--debug')
+    options.debug = true;
+  else
+    filename = arg;
+}
 
 if (filename) {
   fs.readFile(filename, "utf8", function(err, src){
@@ -17,7 +27,7 @@ if (filename) {
 
 function execute(src) {
   try {
-    hobbes.compiler.run(src);
+    hobbes.compiler.run(src, options);
   } catch (err) {
     if (err.type === 'CompileTimeError') {
       for (var i = 0; i < err.length; i++) {
