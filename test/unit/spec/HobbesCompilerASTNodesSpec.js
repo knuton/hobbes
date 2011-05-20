@@ -627,6 +627,28 @@ describe('Compiler', function () {
       
     }); // end LessThan spec
     
+    describe('LessThanEqual', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.LessThanEqual(mockASTNode({vavaType: 'int'}), mockASTNode({vavaType: 'short'}));
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `LessThanEqual`', function () {
+        expect(testNode.getType()).toBe('LessThanEqual');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <LessThanEqual vavaType: boolean>\n  - <ASTNode vavaType: int>\n  - <ASTNode vavaType: short>\n');
+      });
+
+      it('should compile itself', function () {
+        expect(testNode.compile(mockOpts())).toBe('this.__env.BooleanValue.intern((MOCK).isLessThan(MOCK) || MOCK === MOCK)');
+      });
+      
+    }); // end LessThanEqual spec
+    
     describe('Equals', function () {
       
       beforeEach(function () {
@@ -641,6 +663,10 @@ describe('Compiler', function () {
       
       it('should turn itself into a string', function () {
         expect(testNode.toString()).toBe('- <Equals vavaType: boolean>\n  - <ASTNode>\n  - <ASTNode>\n');
+      });
+      
+      it('should compile itself', function () {
+        expect(testNode.compile(mockOpts())).toBe('this.__env.BooleanValue.intern(MOCK === MOCK)');
       });
       
     }); // end Equals spec
@@ -666,6 +692,28 @@ describe('Compiler', function () {
       });
       
     }); // end GreaterThan spec
+    
+    describe('GreaterThanEqual', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.GreaterThanEqual(mockASTNode({vavaType: 'int'}), mockASTNode({vavaType: 'short'}));
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `GreaterThanEqual`', function () {
+        expect(testNode.getType()).toBe('GreaterThanEqual');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <GreaterThanEqual vavaType: boolean>\n  - <ASTNode vavaType: int>\n  - <ASTNode vavaType: short>\n');
+      });
+
+      it('should compile itself', function () {
+        expect(testNode.compile(mockOpts())).toBe('this.__env.BooleanValue.intern((MOCK).isGreaterThan(MOCK) || MOCK === MOCK)');
+      });
+      
+    }); // end GreaterThanEqual spec
     
     describe('NotEquals', function () {
       

@@ -5,6 +5,7 @@ specifications:
   - description: "Vava provides a number of operators that act on integral values, including numerical comparison (which results in a value of type boolean), arithmetic operators, increment and decrement, bitwise logical and shift operators, and numeric cast."
     test_files:
       - 'IntegralOperators.java'
+      - 'IntegralOperatorsMisused.java'
 
   - description: "Operands of certain unary and binary operators are subject to numeric promotion."
     test_files:
