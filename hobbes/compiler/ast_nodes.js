@@ -319,7 +319,7 @@ ClassDeclaration.prototype.compileNode = function (opts) {
     this.vavaClassName,
     builder.constructorCall('this.__env.VavaClass', [builder.string(this.vavaClassName), serializedBody, 'this'], false)
     // TODO call of main method should be more robust (several classes in CU?)
-  ) + '\n' + builder.functionCall('this["' + this.vavaClassName + '"].send', ['"main"']);
+  ) + '\n' + builder.functionCall('this["' + this.vavaClassName + '"].send', ['"main(String[])"']);
 };
 
 /**
@@ -553,7 +553,7 @@ var Assignment = exports.Assignment = function (name, value) {
 Assignment.inherits(ASTNode);
 
 Assignment.prototype.compileNode = function (opts) {
-  var result = utils.indent(this.children[0].compile(opts.mergeOpts({set: true})) + '.set(' + this.children[1].compile(opts) + ')', opts.indent);
+  var result = utils.indent(this.children[0].compile(opts.mergeOpts({noGet: true})) + '.set(' + this.children[1].compile(opts) + ')', opts.indent);
   this.vavaType = this.children[1].getVavaType();
   // TODO qualified names
   opts.names.__addName(this.children[0].simple(), this.vavaType);
@@ -581,6 +581,7 @@ var MethodDeclaration = exports.MethodDeclaration = function (vavaHeader, vavaBl
   if (vavaHeader.vavaFormalParameters && !Array.isArray(vavaHeader.vavaFormalParameters)) {
     throw new TypeError('Expected Vava formal parameters to be array.');
   }
+  console.log(vavaHeader);
   this.vavaFormalParameters = vavaHeader.vavaFormalParameters || [];
   if (vavaBlock.getType() !== 'Block') {
     throw new TypeError('Expected Vava block to be Block.');
@@ -638,7 +639,7 @@ FormalParameter.inherits(ASTNode);
 
 FormalParameter.prototype.compileNode = function (opts) {
   opts.names.__addName(this.vavaIdentifier, this.vavaType);
-  return builder.joinToObject(builder.keyValue('identifier', this.vavaType), builder.keyValue('vavaType', this.vavaType));
+  return builder.joinToObject(builder.keyValue('identifier', builder.string(this.vavaIdentifier)), builder.keyValue('vavaType', builder.string(this.vavaType)));
 };
 
 FormalParameter.prototype.getSignature = function () {
@@ -665,9 +666,13 @@ var MethodInvocation = exports.MethodInvocation = function (name, argumentList) 
 MethodInvocation.inherits(ASTNode);
 
 MethodInvocation.prototype.compileNode = function (opts) {
-  // TODO Type of method invocation
-  //this.vavaType = 
-  return utils.indent('this.' + this.name.prefix() + '.send("' + this.name.simple() + '", ' + this.children[0].compile(opts) + ')', opts.indent);
+  var argumentList = this.children[0].compile(opts);
+  var methodSig = this.name.simple() + '(' + this.children[0].getVavaTypes().join(',') + ')';
+  if (this.name.isSimple()) {
+    return utils.indent('this.__self.send("' + methodSig + '", ' + argumentList + ')', opts.indent);
+  } else {
+    return utils.indent('this.' + this.name.prefix() + '.send("' + methodSig + '", ' + argumentList + ')', opts.indent);
+  }
 };
 
 MethodInvocation.prototype.getSignature = function () {
@@ -691,6 +696,17 @@ ArgumentList.inherits(ASTNode);
 
 ArgumentList.prototype.compileNode = function (opts) {
   return '[' + this.children.map(function (child) { return child.compile(opts) }).join(', ') + ']';
+};
+
+ArgumentList.prototype.compileTimeCheck = function (opts) {
+  this.vavaTypes = [];
+  for (var i = 0; i < this.children.length; i++) {
+    this.vavaTypes[i] = this.children[i].getVavaType();
+  }
+};
+
+ArgumentList.prototype.getVavaTypes = function () {
+  return this.vavaTypes || [];
 };
 
 /**
@@ -760,6 +776,13 @@ var Name = exports.Name = function (name) {
 };
 
 Name.inherits(ASTNode);
+
+/**
+ * Returns true if name is simple.
+ */
+Name.prototype.isSimple = function () {
+  return this.simple() === this.name;
+};
 
 /**
  * Return the name's last identifier.
@@ -1826,7 +1849,6 @@ LeftShift.prototype.compileNode = function (opts) {
 var RightShift = exports.RightShift = function (a, b) {
   this.type = 'RightShift';
   this.setLoc(arguments[arguments.length-1]);
-  this.vavaType = 'int';
   this.children = [];
   this.operator = '>>';
   this.appendChild(a);
@@ -1852,7 +1874,6 @@ RightShift.prototype.compileNode = function (opts) {
 var ZeroFillRightShift = exports.ZeroFillRightShift = function (a, b) {
   this.type = 'ZeroFillRightShift';
   this.setLoc(arguments[arguments.length-1]);
-  this.vavaType = 'int';
   this.children = [];
   this.operator = '>>>';
   this.appendChild(a);

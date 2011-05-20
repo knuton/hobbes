@@ -5,8 +5,8 @@ var VavaClass = exports.VavaClass = function (vavaClassName, vavaClassDefinition
   this.vavaClassName = vavaClassName;
   this.setScope(scope);
   this.addFields(vavaClassDefinition.fields);
-  this.scope.__class = this;
-  this.vavaMethods = vavaClassDefinition.methods || [];
+  this.scope.__class = this.scope.__self = this;
+  this.addMethods(vavaClassDefinition.methods);
   
   setModifiers(this, vavaClassDefinition.vavaModifiers);
   
@@ -22,6 +22,15 @@ VavaClass.prototype.addFields = function (fieldDefinitions) {
   }
 };
 
+VavaClass.prototype.addMethods = function (methodDefinitions) {
+  if (typeof methodDefinitions !== 'object' || this.vavaMethods) return;
+  this.vavaMethods = [];
+  for (methodName in methodDefinitions) {
+    var methodDef = methodDefinitions[methodName];
+    this.vavaMethods[methodDef.signature()] = methodDef;
+  }
+};
+
 
 /**
  * Sends the class a message to call its method of the provided name.
@@ -29,8 +38,8 @@ VavaClass.prototype.addFields = function (fieldDefinitions) {
  * @param methodName Name of the method to call
  * @param params Parameters to pass
  */
-VavaClass.prototype.send = function (methodName, params) {
-  return this.vavaMethods[methodName].call(this.privateScope, params);
+VavaClass.prototype.send = function (methodSignature, params) {
+  return this.vavaMethods[methodSignature].call(this.privateScope, params);
 };
 
 function setModifiers (classInstance, modifierOptions) {

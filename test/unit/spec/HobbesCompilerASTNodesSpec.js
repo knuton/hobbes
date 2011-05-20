@@ -24,6 +24,9 @@ describe('Compiler', function () {
       var mockOpts = {};
       mockOpts.mergeOpts = function () { return mockOpts; }
       mockOpts.descendScope = function () { return mockOpts; }
+      mockOpts.names = {
+        __addName : function () {}
+      };
       for (key in properties) {
         mockOpts[key] = properties[key];
       }
@@ -259,8 +262,39 @@ describe('Compiler', function () {
       it('should turn itself into a string', function () {
         expect(testNode.toString()).toBe('- <FormalParameter vavaType: int vavaIdentifier: foo>\n');
       });
+
+      it('should compile to object', function () {
+        expect(testNode.compile(mockOpts())).toBe('{identifier:"foo",vavaType:"int"}');
+      });
       
     }); // end FormalParameter spec
+    
+    describe('MethodInvocation', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.MethodInvocation(
+          mockASTNode({type: 'Name',
+            isSimple: function () { return true; }, simple: function () { return 'foo'; },
+            qualified: function () { return 'foo'; }
+          }),
+          mockASTNode({getVavaTypes: function () { return ['int', 'boolean']; }}))
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+      
+      it('should be of type `MethodInvocation`', function () {
+        expect(testNode.getType()).toBe('MethodInvocation');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <MethodInvocation name: foo>\n  - <ASTNode>\n');
+      });
+
+      it('should compile with complete signature', function () {
+        expect(testNode.compile(mockOpts())).toBe('this.__self.send("foo(int,boolean)", MOCK)');
+      });
+      
+    }); // end MethodInvocation spec
     
     describe('Block', function () {
       
@@ -834,7 +868,7 @@ describe('Compiler', function () {
       });
       
       it('should turn itself into a string', function () {
-        expect(testNode.toString()).toBe('- <InclusiveOr vavaType: boolean>\n  - <ASTNode vavaType: boolean>\n  - <ASTNode vavaType: boolean>\n');
+        expect(testNode.toString()).toBe('- <InclusiveOr>\n  - <ASTNode vavaType: boolean>\n  - <ASTNode vavaType: boolean>\n');
       });
       
       it('should compile itself', function () {
@@ -856,7 +890,7 @@ describe('Compiler', function () {
       });
       
       it('should turn itself into a string', function () {
-        expect(testNode.toString()).toBe('- <ExclusiveOr vavaType: boolean>\n  - <ASTNode vavaType: boolean>\n  - <ASTNode vavaType: boolean>\n');
+        expect(testNode.toString()).toBe('- <ExclusiveOr>\n  - <ASTNode vavaType: boolean>\n  - <ASTNode vavaType: boolean>\n');
       });
       
       it('should compile itself', function () {
@@ -900,7 +934,7 @@ describe('Compiler', function () {
       });
       
       it('should turn itself into a string', function () {
-        expect(testNode.toString()).toBe('- <BitwiseNegation vavaType: int>\n  - <ASTNode vavaType: int>\n');
+        expect(testNode.toString()).toBe('- <BitwiseNegation>\n  - <ASTNode vavaType: int>\n');
       });
       
       it('should compile itself', function () {
@@ -922,7 +956,7 @@ describe('Compiler', function () {
       });
       
       it('should turn itself into a string', function () {
-        expect(testNode.toString()).toBe('- <LeftShift vavaType: int>\n  - <ASTNode vavaType: int>\n  - <ASTNode vavaType: int>\n');
+        expect(testNode.toString()).toBe('- <LeftShift>\n  - <ASTNode vavaType: int>\n  - <ASTNode vavaType: int>\n');
       });
       
       it('should compile itself', function () {
@@ -944,7 +978,7 @@ describe('Compiler', function () {
       });
       
       it('should turn itself into a string', function () {
-        expect(testNode.toString()).toBe('- <RightShift vavaType: int>\n  - <ASTNode vavaType: int>\n  - <ASTNode vavaType: int>\n');
+        expect(testNode.toString()).toBe('- <RightShift>\n  - <ASTNode vavaType: int>\n  - <ASTNode vavaType: int>\n');
       });
       
       it('should compile itself', function () {
@@ -966,7 +1000,7 @@ describe('Compiler', function () {
       });
       
       it('should turn itself into a string', function () {
-        expect(testNode.toString()).toBe('- <ZeroFillRightShift vavaType: int>\n  - <ASTNode vavaType: int>\n  - <ASTNode vavaType: int>\n');
+        expect(testNode.toString()).toBe('- <ZeroFillRightShift>\n  - <ASTNode vavaType: int>\n  - <ASTNode vavaType: int>\n');
       });
       
       it('should compile itself', function () {

@@ -12,9 +12,26 @@ var VavaMethod = exports.VavaMethod = function (vavaMethodName, vavaReturnType, 
   
   this.vavaMethodName = vavaMethodName;
   this.vavaReturnType = vavaReturnType;
-  this.vavaFormalParameters = vavaFormalParameters;
+  this.vavaFormalParameters = vavaFormalParameters || [];
   this.vavaBlock = vavaBlock;
   
+};
+
+/**
+ * Returns the method's name.
+ */
+VavaMethod.prototype.name = function () {
+  return this.vavaMethodName;
+};
+
+VavaMethod.prototype.signature = function () {
+  return this.name() + '(' + this.formalParameterTypes().join(',') + ')';
+};
+
+VavaMethod.prototype.formalParameterTypes = function () {
+  return this.vavaFormalParameters.map(function (fp) {
+    return fp.vavaType;
+  });
 };
 
 /**
