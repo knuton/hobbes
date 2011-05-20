@@ -5,6 +5,7 @@ specifications:
   - description: "The boolean operators include relational operators and logical operators."
     test_files:
       - 'BooleanOperators.java'
+      - 'BooleanOperatorsMisused.java'
 
   - description: "Only `boolean` expressions can be used in Vava's control flow statements and as the first operand of the conditional operator ?:."
     test_files:
