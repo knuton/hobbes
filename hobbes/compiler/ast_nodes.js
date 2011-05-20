@@ -54,16 +54,19 @@ ASTNode.prototype.checkChild = function (node) {
  */
 ASTNode.prototype.compile = function (opts) {
   var result = this.__compiled || (this.__compiled = this.compileNode(opts));
-  this.compileTimeCheck();
+  this.compileTimeCheck(opts);
   return result;
 };
 
 /**
  * Implement in each node to check for compile time errors.
  *
- * @throws CompileTimeError via `throwError`
+ * @param opts Options hash
+ *
+ * @throws CompileTimeError via `fatalError`, or adds one
+ * to opts.errors via `nonFatalError`
  */
-ASTNode.prototype.compileTimeCheck = function () {};
+ASTNode.prototype.compileTimeCheck = function (opts) {};
 
 /**
  * Returns the type of node.
@@ -85,12 +88,20 @@ ASTNode.prototype.setLoc = function (locHash) {
   this.loc = locHash || {};
 };
 
-ASTNode.prototype.throwError = function (message, description, loc) {
+ASTNode.prototype.fatalError = function (message, description, loc) {
+  throw this.nonFatalError(message, description, loc);
+};
+
+ASTNode.prototype.nonFatalError = function (message, description, loc) {
   var err = new Error(message);
   err.type = 'CompileTimeError';
   err.description = description;
   err.loc = loc || this.loc;
-  throw err;
+  return err;
+};
+
+ASTNode.prototype.typeMismatchDescription = function (found, required) {
+  return 'found   : ' + found + '\nrequired: ' + required;
 };
 
 /**
@@ -146,6 +157,7 @@ CompilationUnit.inherits(ASTNode);
  */
 CompilationUnit.prototype.compileNode = function (opts) {
   var opts = opts || {};
+  opts.errors = [];
   opts.names = opts.names || new vava.scope.Scope();
   opts.mergeOpts = function (extraOptions) {
     var F = function () {};
@@ -161,12 +173,19 @@ CompilationUnit.prototype.compileNode = function (opts) {
     obj.names = this.names.__descend();
     return obj;
   };
+  opts.addError = function (err) {
+    opts.errors.push(err);
+  }
   var jsSource = '';
   
   this.children.forEach(function (child) {
     jsSource += child.compile(opts) + '\n';
   });
   
+  if (opts.errors.length > 0) {
+    throw opts.errors;
+  }
+
   return jsSource;
 };
 
@@ -522,7 +541,7 @@ Assignment.prototype.compileNode = function (opts) {
   var result = utils.indent(this.children[0].compile(opts.mergeOpts({set: true})) + '.set(' + this.children[1].compile(opts) + ')', opts.indent);
   this.vavaType = this.children[1].getVavaType();
   // TODO qualified names
-  opts.names.__addName(this.children[1].simple(), this.vavaType);
+  opts.names.__addName(this.children[0].simple(), this.vavaType);
   return result;
 };
 
@@ -1123,7 +1142,7 @@ CastExpression.prototype.compileNode = function (opts) {
 
 CastExpression.prototype.compileTimeCheck = function () {
   if (this.isVavaType('boolean') ^ this.children[0].isVavaType('boolean'))
-    this.throwError('inconvertible types', 'found   : ' + this.children[0].getVavaType() + '\nrequired: ' + this.getVavaType());
+    this.fatalError('inconvertible types', 'found   : ' + this.children[0].getVavaType() + '\nrequired: ' + this.getVavaType());
 }
 
 // Binary
@@ -1170,7 +1189,7 @@ Addition.prototype.compileTimeCheck = function () {
   if (!(this.vavaType === undefined)) {
     return true;
   } else {
-    this.throwError('wrong types in addition', 'found   : ' + this.children[0].getVavaType() + '\nrequired: ' + this.children[1].getVavaType());
+    this.fatalError('wrong types in addition', 'found   : ' + this.children[0].getVavaType() + '\nrequired: ' + this.children[1].getVavaType());
   }
 };
 
@@ -1203,7 +1222,7 @@ Subtraction.prototype.compileTimeCheck = function () {
   if (!(this.vavaType === undefined || this.vavaType === 'String')) {
     return true;
   } else {
-    this.throwError('wrong types in addition');
+    this.fatalError('wrong types in addition');
   }
 };
 
@@ -1263,7 +1282,7 @@ Division.prototype.compileTimeCheck = function () {
   if (!(this.vavaType === undefined || this.vavaType === 'String')) {
     return true;
   } else {
-    this.throwError('wrong types in addition');
+    this.fatalError('wrong types in addition');
   }
 };
 
@@ -1326,7 +1345,7 @@ LessThan.prototype.compileNode = function (opts) {
 
 LessThan.prototype.compileTimeCheck = function () {
   if (!(this.children[0].isNumber() && this.children[1].isNumber()))
-    this.throwError('expecting two numbers');
+    this.fatalError('expecting two numbers');
 };
 
 /**
@@ -1432,10 +1451,12 @@ TernaryOperator.prototype.compileNode = function (opts) {
   return ['((this.__env.BooleanValue.intern(true) === ', this.children[0].compile(opts), ') ? ', this.children[1].compile(opts), ' : ', this.children[2].compile(opts) + ')'].join('');
 };
 
-TernaryOperator.prototype.compileTimeCheck = function () {
+TernaryOperator.prototype.compileTimeCheck = function (opts) {
   this.vavaType = this.children[1].getVavaType();
   if (!this.children[0].isVavaType('boolean'))
-    this.throwError('boolean type expected');
+    opts.addError(
+      this.nonFatalError('incompatible types', this.typeMismatchDescription(this.children[0].getVavaType(), 'boolean'))
+    );
 };
 
 /**
@@ -1465,7 +1486,7 @@ LogicalAnd.prototype.compileNode = function (opts) {
 
 LogicalAnd.prototype.compileTimeCheck = function () {
   if (!this.children[0].isVavaType('boolean') || !this.children[1].isVavaType('boolean'))
-    this.throwError('boolean type expected');
+    this.fatalError('boolean type expected');
 };
 
 /**
@@ -1525,7 +1546,7 @@ InclusiveAnd.prototype.compileTimeCheck = function () {
   else if (this.children[0].isIntegral() && this.children[1].isIntegral())
     this.vavaType = BinaryOperationTypes[this.children[0].getVavaType()][this.children[1].getVavaType()];
   else
-    this.throwError('int x int or bool x bool');
+    this.fatalError('int x int or bool x bool');
 };
 
 /**
@@ -1605,7 +1626,7 @@ Negation.prototype.compileNode = function (opts) {
 
 Negation.prototype.compileTimeCheck = function () {
   if (!this.children[0].isVavaType('boolean'))
-    this.throwError('negating non-bool');
+    this.fatalError('negating non-bool');
 };
 
 /**
@@ -1629,7 +1650,7 @@ BitwiseNegation.prototype.compileNode = function (opts) {
 
 BitwiseNegation.prototype.compileTimeCheck = function () {
   if (!this.children[0].isIntegral())
-    this.throwError('bitwise negating non-int');
+    this.fatalError('bitwise negating non-int');
 };
 
 /**
@@ -1661,7 +1682,7 @@ LeftShift.prototype.compileTimeCheck = function () {
   if (this.children[0].isIntegral() && this.children[1].isIntegral())
     this.vavaType = BinaryOperationTypes[this.children[0].getVavaType()][this.children[1].getVavaType()];
   else
-    this.throwError('int x int');
+    this.fatalError('int x int');
 };
 
 /**
@@ -1745,9 +1766,11 @@ IfThen.prototype.compileNode = function (opts) {
   return utils.indent(js + '\n}\n', opts.indent);
 };
 
-IfThen.prototype.compileTimeCheck = function () {
+IfThen.prototype.compileTimeCheck = function (opts) {
   if (!this.children[0].isVavaType('boolean'))
-    this.throwError('expected bool in if');
+    opts.addError(
+      this.nonFatalError('incompatible types', this.typeMismatchDescription(this.children[0].getVavaType(),'boolean'), this.children[0].loc)
+    );
 };
 
 /**
@@ -1846,7 +1869,7 @@ DoWhileLoop.prototype.compileNode = function (opts) {
 
 DoWhileLoop.prototype.compileTimeCheck = function () {
   if (!this.children[1].isVavaType('boolean'))
-    this.throwError('expected bool in do-while');
+    this.fatalError('expected bool in do-while');
 };
 
 /**
@@ -1884,7 +1907,7 @@ ForLoop.prototype.compileNode = function (opts) {
 
 ForLoop.prototype.compileTimeCheck = function () {
   if (!this.children[1].isVavaType('boolean'))
-    this.throwError('expected bool in for condition');
+    this.fatalError('expected bool in for condition');
 };
 
 /**

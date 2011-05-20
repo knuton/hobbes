@@ -16,9 +16,8 @@ exports.run = function (vavaSrc, options) {
   try {
     var compilation = vavaAST.compile({names: scope.__descend()});
   } catch (err) {
-    if (err.type === 'CompileTimeError') {
-      err.line = err.loc.first_line;
-      err.description = errorDescription(vavaSrc, err);
+    if (err.length || err.type === 'CompileTimeError') {
+      err = enhanceErrors(err, vavaSrc);
     }
     throw err;
   }
@@ -32,11 +31,31 @@ exports.run = function (vavaSrc, options) {
   runner.call(scope);
 };
 
+function enhanceErrors (errs, source) {
+  if (typeof errs.length !== 'number') {
+    errs = [errs];
+  }
+  var enhanced = errs.map(function (err) {
+    err.line = err.loc.first_line;
+    err.description = errorDescription(source, err);
+    err.toString = errorToString;
+    return err;
+  });
+  enhanced.type = 'CompileTimeError';
+  enhanced.summary = enhanced.length + (enhanced.length > 1 ? ' errors' : ' error');
+  return enhanced;
+};
+
 function errorDescription(source, err) {
   var description = (err.description && err.description + '\n') || '';
   description += rogueLines(source, err.loc.first_line, err.loc.last_line) + '\n';
   description += pointer(err.loc.first_column);
   return description;
+}
+
+function errorToString (err) {
+  err = err || this;
+  return err.line + ': ' + err.message + '\n' + err.description + '\n';
 }
 
 function rogueLines(source, firstLine, lastLine) {
