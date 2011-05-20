@@ -18,47 +18,52 @@ public class IntegralOperatorsMisused {
     System.out.println(a >= b);
 
     // Arithmetic operators
-    System.out.println(5 + 3);
-    System.out.println(5 - 3);
-    System.out.println(5 * 3);
-    System.out.println(5 / 3);
-    System.out.println(5 % 3);
+    System.out.println(1 + false);
+    System.out.println(b + false);
+    System.out.println(a + b);
+    System.out.println(1 - false);
+    System.out.println(b - false);
+    System.out.println(a - b);
+    System.out.println(1 * false);
+    System.out.println(b * false);
+    System.out.println(a * b);
+    System.out.println(1 / false);
+    System.out.println(b / false);
+    System.out.println(a / b);
+    System.out.println(1 % false);
+    System.out.println(b % false);
+    System.out.println(a % b);
 
     // Increment and decrement
-    int c = 1;
-    System.out.println(c++);
-    System.out.println(c);
-    System.out.println(c--);
-    System.out.println(c);
+    System.out.println(b++);
+    System.out.println(b--);
 
-    System.out.println(++c);
-    System.out.println(c);
-    System.out.println(--c);
-    System.out.println(c);
+    System.out.println(++b);
+    System.out.println(--b);
 
 
     // Bitwise
-    System.out.println(1 & 0);
-    System.out.println(1 & 1);
-    System.out.println(1 & 2);
-    System.out.println(1 | 0);
-    System.out.println(1 | 1);
-    System.out.println(1 | 2);
-    System.out.println(1 ^ 0);
-    System.out.println(1 ^ 1);
-    System.out.println(1 ^ 2);
-    System.out.println(~0);
-    System.out.println(~1);
+    System.out.println(1 & false);
+    System.out.println(b & false);
+    System.out.println(a & b);
+    System.out.println(1 | false);
+    System.out.println(b | false);
+    System.out.println(a | b);
+    System.out.println(1 ^ false);
+    System.out.println(b ^ false);
+    System.out.println(a ^ b);
+    System.out.println(~false);
+    System.out.println(~b);
     System.out.println(~2);
-    System.out.println(1 << 0);
-    System.out.println(1 << 1);
-    System.out.println(1 << 2);
-    System.out.println(1 >> 0);
-    System.out.println(1 >> 1);
-    System.out.println(1 >> 2);
-    System.out.println(1 >>> 0);
-    System.out.println(1 >>> 1);
-    System.out.println(1 >>> 2);
+    System.out.println(1 << false);
+    System.out.println(b << false);
+    System.out.println(a << b);
+    System.out.println(1 >> false);
+    System.out.println(b >> false);
+    System.out.println(a >> b);
+    System.out.println(1 >>> false);
+    System.out.println(b >>> false);
+    System.out.println(a >>> b);
   }
 
 }

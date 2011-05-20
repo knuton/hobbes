@@ -778,11 +778,11 @@ relational_expression
   | relational_expression OPERATOR_LESS_THAN shift_expression
     { $$ = new yy.LessThan($1, $3, @2); }
   | relational_expression OPERATOR_LESS_THAN_EQUAL shift_expression
-    { $$ = new yy.LogicalOr(new yy.LessThan($1, $3, @2), new yy.Equals($1, $3, @2), @2); }
+    { $$ = new yy.LessThanEqual($1, $3, @2); }
   | relational_expression OPERATOR_GREATER_THAN shift_expression
     { $$ = new yy.GreaterThan($1, $3, @2); }
   | relational_expression OPERATOR_GREATER_THAN_EQUAL shift_expression
-    { $$ = new yy.LogicalOr(new yy.GreaterThan($1, $3, @2), new yy.Equals($1, $3, @2), @2); }
+    { $$ = new yy.GreaterThanEqual($1, $3, @2); }
   ;
 
 equality_expression

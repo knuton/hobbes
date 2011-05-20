@@ -485,6 +485,11 @@ var VariableDeclarator = exports.VariableDeclarator = function (vavaIdentifier, 
 
 VariableDeclarator.inherits(ASTNode);
 
+VariableDeclarator.prototype.compile = function (opts) {
+  var result = this.__compiled || (this.__compiled = this.compileNode(opts));
+  return result;
+};
+
 VariableDeclarator.prototype.compileNode = function (opts) {
   var result = builder.keyValue(
     this.vavaIdentifier,
@@ -498,6 +503,7 @@ VariableDeclarator.prototype.compileNode = function (opts) {
   );
   // TODO error on wrong type
   this.vavaType = (this.vavaInitializer && this.vavaInitializer.getVavaType()) || opts.vavaType;
+  this.compileTimeCheck(opts);
   opts.names.__addName(this.vavaIdentifier, this.vavaType);
   return result;
 };
@@ -510,8 +516,17 @@ VariableDeclarator.prototype.compileForField = function (opts) {
     false
   );
   this.vavaType = (this.vavaInitializer && this.vavaInitializer.getVavaType()) || opts.vavaType;
+  this.compileTimeCheck(opts);
   opts.names.__addName(this.vavaIdentifier, this.vavaType);
   return obj;
+};
+
+VariableDeclarator.prototype.compileTimeCheck = function (opts) {
+  // TODO Type mismatch
+  if (opts.names.hasOwnProperty(this.vavaIdentifier))
+    opts.addError(
+      this.nonFatalError(this.vavaIdentifier + ' is already defined')
+    );
 };
 
 VariableDeclarator.prototype.getSignature = function () {
@@ -991,6 +1006,7 @@ var UnaryMinus = exports.UnaryMinus = function (unaryExpression) {
   this.type = 'UnaryMinus';
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
+  this.operator = '-';
 
   this.appendChild(unaryExpression);
 };
@@ -1007,6 +1023,13 @@ UnaryMinus.prototype.compileNode = function (opts) {
   return result;
 };
 
+UnaryMinus.prototype.compileTimeCheck = function (opts) {
+  if (!this.isNumber())
+    opts.addError(
+      this.nonFatalError('operator ' + this.operator + ' cannot be applied to ' + this.children[0].getVavaType())
+    );
+};
+
 /**
  * Creates a node for a unary plus expression.
  *
@@ -1016,7 +1039,7 @@ var UnaryPlus = exports.UnaryPlus = function (unaryExpression) {
   this.type = 'UnaryPlus';
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
-
+  this.operator = '+';
   this.appendChild(unaryExpression);
 };
 
@@ -1032,6 +1055,8 @@ UnaryPlus.prototype.compileNode = function (opts) {
   return result;
 };
 
+UnaryPlus.prototype.compileTimeCheck = UnaryMinus.prototype.compileTimeCheck;
+
 /**
  * Creates a node for post incrementing.
  *
@@ -1041,6 +1066,7 @@ var PostIncrement = exports.PostIncrement = function (variable) {
   this.type = 'PostIncrement';
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
+  this.operator = '++';
   this.appendChild(variable);
 };
 
@@ -1054,6 +1080,8 @@ PostIncrement.prototype.compileNode = function (opts) {
   return result;
 };
 
+PostIncrement.prototype.compileTimeCheck = UnaryMinus.prototype.compileTimeCheck;
+
 /**
  * Creates a node for post decrementing.
  *
@@ -1063,6 +1091,7 @@ var PostDecrement = exports.PostDecrement = function (variable) {
   this.type = 'PostDecrement';
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
+  this.operator = '--';
   this.appendChild(variable);
 };
 
@@ -1076,6 +1105,8 @@ PostDecrement.prototype.compileNode = function (opts) {
   return result;
 };
 
+PostDecrement.prototype.compileTimeCheck = UnaryMinus.prototype.compileTimeCheck;
+
 /**
  * Creates a node for pre incrementing.
  *
@@ -1085,6 +1116,7 @@ var PreIncrement = exports.PreIncrement = function (variable) {
   this.type = 'PreIncrement';
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
+  this.operator = '++';
   this.appendChild(variable);
 };
 
@@ -1098,6 +1130,8 @@ PreIncrement.prototype.compileNode = function (opts) {
   return result;
 };
 
+PreIncrement.prototype.compileTimeCheck = UnaryMinus.prototype.compileTimeCheck;
+
 /**
  * Creates a node for pre decrementing.
  *
@@ -1107,6 +1141,7 @@ var PreDecrement = exports.PreDecrement = function (variable) {
   this.type = 'PreDecrement';
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
+  this.operator = '--';
   this.appendChild(variable);
 };
 
@@ -1119,6 +1154,8 @@ PreDecrement.prototype.compileNode = function (opts) {
   this.vavaType = this.children[0].getVavaType();
   return result;
 };
+
+PreDecrement.prototype.compileTimeCheck = UnaryMinus.prototype.compileTimeCheck;
 
 /**
  * Creates a node for a cast expression.
@@ -1150,6 +1187,7 @@ CastExpression.prototype.compileTimeCheck = function () {
 var NumberTypes = {'byte': true, 'short': true, 'char': true, 'int': true, 'long': true, 'float': true, 'double': true};
 
 var BinaryOperationTypes = {
+  'boolean' : {'boolean' : 'boolean'},
   'byte' : {'byte' : 'int','short' : 'int','char' : 'int','int' : 'int','long' : 'long','float' : 'float','double' : 'double','String' : 'String'},
   'short' : {'byte' : 'int','short' : 'int','char' : 'int','int' : 'int','long' : 'long','float' : 'float','double' : 'double','String' : 'String'},
   'char' : {'byte' : 'int','short' : 'int','char' : 'int','int' : 'int','long' : 'long','float' : 'float','double' : 'double','String' : 'String'},
@@ -1158,6 +1196,36 @@ var BinaryOperationTypes = {
   'float' : {'byte':'float', 'short':'float', 'char':'float', 'int':'float', 'long':'float', 'float':'float', 'double':'double', 'String':'String'},
   'double' : {'byte':'double', 'short':'double', 'char':'double', 'int':'double', 'long':'double', 'float':'double', 'double':'double', 'String':'String'},
   'String' : {'byte':'String', 'short':'String', 'char':'String', 'int':'String', 'long':'String', 'float':'String', 'double':'String', 'String':'String'},
+};
+
+var BinaryOperatorNode = function () {};
+
+BinaryOperatorNode.inherits(ASTNode);
+
+BinaryOperatorNode.prototype.compileTimeCheck = function (opts) {
+  if (!this.isApplicable())
+    opts.addError(
+      this.nonFatalError('operator ' + this.operator + ' cannot be applied to ' + this.children[0].getVavaType() + ',' + this.children[1].getVavaType())
+    );
+  else
+    this.vavaType = BinaryOperationTypes[this.children[0].getVavaType()][this.children[1].getVavaType()];
+};
+
+BinaryOperatorNode.prototype.isApplicable = function () {
+  return (!!BinaryOperationTypes[this.children[0].getVavaType()] &&
+    !!BinaryOperationTypes[this.children[0].getVavaType()][this.children[1].getVavaType()] &&
+    !this.children[0].isVavaType('String') && !this.children[1].isVavaType('String')
+  );
+};
+
+var BinaryNumberOperatorNode = function () {};
+
+BinaryNumberOperatorNode.inherits(BinaryOperatorNode);
+
+BinaryNumberOperatorNode.prototype.isApplicable = function () {
+  return (BinaryOperatorNode.prototype.isApplicable.call(this) &&
+    this.children[0].isNumber()
+  );
 };
 
 /**
@@ -1170,6 +1238,7 @@ var Addition = exports.Addition = function (numA, numB) {
   this.type = 'Addition';
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
+  this.operator = '+';
   // TODO Compile-time type checking
   if (!(numA) || !(numB)) {
     throw new TypeError('Expected two integer numbers for addition.');
@@ -1178,19 +1247,18 @@ var Addition = exports.Addition = function (numA, numB) {
   this.appendChild(numB);
 };
 
-Addition.inherits(ASTNode);
+Addition.inherits(BinaryOperatorNode);
 
 Addition.prototype.compileNode = function (opts) {
   return utils.indent(this.children[0].compile(opts) + '.add(' + this.children[1].compile(opts) + ')', opts.indent);
 };
 
-Addition.prototype.compileTimeCheck = function () {
-  this.vavaType = BinaryOperationTypes[this.children[0].getVavaType()][this.children[1].getVavaType()];
-  if (!(this.vavaType === undefined)) {
-    return true;
-  } else {
-    this.fatalError('wrong types in addition', 'found   : ' + this.children[0].getVavaType() + '\nrequired: ' + this.children[1].getVavaType());
-  }
+Addition.prototype.isApplicable = function () {
+  return (!!BinaryOperationTypes[this.children[0].getVavaType()] &&
+    !!BinaryOperationTypes[this.children[0].getVavaType()][this.children[1].getVavaType()] &&
+    // Suffices to check one, as there is no boolean-boolean in table
+    !this.children[0].isVavaType('boolean')
+  );
 };
 
 /**
@@ -1203,6 +1271,7 @@ var Subtraction = exports.Subtraction = function (numA, numB) {
   this.type = 'Subtraction';
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
+  this.operator = '-';
   // TODO Compile-time type checking
   if (!(numA) || !(numB)) {
     throw new TypeError('Expected two integer numbers for subtraction.');
@@ -1211,19 +1280,10 @@ var Subtraction = exports.Subtraction = function (numA, numB) {
   this.appendChild(numB);
 };
 
-Subtraction.inherits(ASTNode);
+Subtraction.inherits(BinaryNumberOperatorNode);
 
 Subtraction.prototype.compileNode = function (opts) {
   return utils.indent(this.children[0].compile(opts) + '.subtract(' + this.children[1].compile(opts) + ')', opts.indent);
-};
-
-Subtraction.prototype.compileTimeCheck = function () {
-  this.vavaType = BinaryOperationTypes[this.children[0].getVavaType()][this.children[1].getVavaType()];
-  if (!(this.vavaType === undefined || this.vavaType === 'String')) {
-    return true;
-  } else {
-    this.fatalError('wrong types in addition');
-  }
 };
 
 /**
@@ -1236,6 +1296,7 @@ var Multiplication = exports.Multiplication = function (numA, numB) {
   this.type = 'Multiplication';
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
+  this.operator = '*';
   // TODO Compile-time type checking
   if (!(numA) || !(numB)) {
     throw new TypeError('Expected two integer numbers for multiplication.');
@@ -1244,13 +1305,11 @@ var Multiplication = exports.Multiplication = function (numA, numB) {
   this.appendChild(numB);
 };
 
-Multiplication.inherits(ASTNode);
+Multiplication.inherits(BinaryNumberOperatorNode);
 
 Multiplication.prototype.compileNode = function (opts) {
   return utils.indent(this.children[0].compile(opts) + '.times(' + this.children[1].compile(opts) + ')', opts.indent);
 };
-
-Multiplication.prototype.compileTimeCheck = Subtraction.prototype.compileTimeCheck;
 
 /**
  * Creates a node for a division operation.
@@ -1262,6 +1321,7 @@ var Division = exports.Division = function (numA, numB) {
   this.type = 'Division';
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
+  this.operator = '/';
   // TODO Compile-time type checking
   if (!(numA) || !(numB)) {
     throw new TypeError('Expected two integer numbers for division.');
@@ -1270,21 +1330,18 @@ var Division = exports.Division = function (numA, numB) {
   this.appendChild(numB);
 };
 
-Division.inherits(ASTNode);
+Division.inherits(BinaryNumberOperatorNode);
 
 Division.prototype.compileNode = function (opts) {
   return utils.indent(this.children[0].compile(opts) + '.divide(' + this.children[1].compile(opts) + ')', opts.indent);
 };
 
-Division.prototype.compileTimeCheck = function () {
+Division.prototype.compileTimeCheck = function (opts) {
+  // General type checking
+  BinaryOperatorNode.prototype.compileTimeCheck.call(this, opts);
   // TODO division by zero
-  this.vavaType = BinaryOperationTypes[this.children[0].getVavaType()][this.children[1].getVavaType()];
-  if (!(this.vavaType === undefined || this.vavaType === 'String')) {
-    return true;
-  } else {
-    this.fatalError('wrong types in addition');
-  }
-};
+}
+
 
 /**
  * Creates a node for a modulo operation.
@@ -1296,6 +1353,7 @@ var Modulo = exports.Modulo = function (numA, numB) {
   this.type = 'Modulo';
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
+  this.operator = '%';
   // TODO Compile-time type checking
   if (!(numA) || !(numB)) {
     throw new TypeError('Expected two integer numbers for modulo.');
@@ -1304,7 +1362,7 @@ var Modulo = exports.Modulo = function (numA, numB) {
   this.appendChild(numB);
 };
 
-Modulo.inherits(ASTNode);
+Modulo.inherits(BinaryNumberOperatorNode);
 
 Modulo.prototype.compileNode = function (opts) {
   return utils.indent(this.children[0].compile(opts) + '.modulo(' + this.children[1].compile(opts) + ')', opts.indent);
@@ -1323,6 +1381,7 @@ var LessThan = exports.LessThan = function (a, b) {
   this.setLoc(arguments[arguments.length-1]);
   this.vavaType = 'boolean';
   this.children = [];
+  this.operator = '<';
   if (!a || !b) {
     throw new TypeError('Expected two values to compare (lt).');
   }
@@ -1343,10 +1402,46 @@ LessThan.prototype.compileNode = function (opts) {
   );
 };
 
-LessThan.prototype.compileTimeCheck = function () {
+LessThan.prototype.compileTimeCheck = function (opts) {
   if (!(this.children[0].isNumber() && this.children[1].isNumber()))
-    this.fatalError('expecting two numbers');
+    opts.addError(
+      this.nonFatalError('operator ' + this.operator + ' cannot be applied to ' + this.children[0].getVavaType() + ',' + this.children[1].getVavaType())
+    );
 };
+
+/**
+ * Creates a node for less than/equal comparison.
+ *
+ * @param a First value to be compared
+ * @param b Second value to be compared
+ */
+var LessThanEqual = exports.LessThanEqual = function (a, b) {
+  this.type = 'LessThanEqual';
+  this.setLoc(arguments[arguments.length-1]);
+  this.vavaType = 'boolean';
+  this.children = [];
+  this.operator = '<=';
+  if (!a || !b) {
+    throw new TypeError('Expected two values to compare (lte).');
+  }
+  this.appendChild(a);
+  this.appendChild(b);
+};
+
+LessThanEqual.inherits(ASTNode);
+
+LessThanEqual.prototype.compileNode = function (opts) {
+  return utils.indent(
+    builder.functionCall(
+      'this.__env.BooleanValue.intern',
+      [builder.functionCall('(' + this.children[0].compile(opts) + ').isLessThan', [this.children[1].compile(opts)], false) + ' || ' + this.children[0].compile(opts) + ' === ' + this.children[1].compile(opts)],
+      false
+    ),
+    opts.indent
+  );
+};
+
+LessThanEqual.prototype.compileTimeCheck = LessThan.prototype.compileTimeCheck;
 
 /**
  * Creates a node for an equality comparison.
@@ -1383,6 +1478,7 @@ var GreaterThan = exports.GreaterThan = function (a, b) {
   this.setLoc(arguments[arguments.length-1]);
   this.vavaType = 'boolean';
   this.children = [];
+  this.operator = '>';
   if (!a || !b) {
     throw new TypeError('Expected two values to compare (gt).');
   }
@@ -1404,6 +1500,40 @@ GreaterThan.prototype.compileNode = function (opts) {
 };
 
 GreaterThan.prototype.compileTimeCheck = LessThan.prototype.compileTimeCheck;
+
+/**
+ * Creates a node for greater than/equal comparison.
+ *
+ * @param a First value to be compared
+ * @param b Second value to be compared
+ */
+var GreaterThanEqual = exports.GreaterThanEqual = function (a, b) {
+  this.type = 'GreaterThanEqual';
+  this.setLoc(arguments[arguments.length-1]);
+  this.vavaType = 'boolean';
+  this.children = [];
+  this.operator = '>=';
+  if (!a || !b) {
+    throw new TypeError('Expected two values to compare (gte).');
+  }
+  this.appendChild(a);
+  this.appendChild(b);
+};
+
+GreaterThanEqual.inherits(ASTNode);
+
+GreaterThanEqual.prototype.compileNode = function (opts) {
+  return utils.indent(
+    builder.functionCall(
+      'this.__env.BooleanValue.intern',
+      [builder.functionCall('(' + this.children[0].compile(opts) + ').isGreaterThan', [this.children[1].compile(opts)], false) + ' || ' + this.children[0].compile(opts) + ' === ' + this.children[1].compile(opts)],
+      false
+    ),
+    opts.indent
+  );
+};
+
+GreaterThanEqual.prototype.compileTimeCheck = LessThan.prototype.compileTimeCheck;
 
 /**
  * Creates a node for an inequality comparison.
@@ -1470,11 +1600,12 @@ var LogicalAnd = exports.LogicalAnd = function (boolA, boolB) {
   this.setLoc(arguments[arguments.length-1]);
   this.vavaType = 'boolean';
   this.children = [];
+  this.operator = '&&';
   this.appendChild(boolA);
   this.appendChild(boolB);
 };
 
-LogicalAnd.inherits(ASTNode);
+LogicalAnd.inherits(BinaryOperatorNode);
 
 LogicalAnd.prototype.compileNode = function (opts) {
   return builder.functionCall(
@@ -1484,9 +1615,8 @@ LogicalAnd.prototype.compileNode = function (opts) {
   );
 };
 
-LogicalAnd.prototype.compileTimeCheck = function () {
-  if (!this.children[0].isVavaType('boolean') || !this.children[1].isVavaType('boolean'))
-    this.fatalError('boolean type expected');
+LogicalAnd.prototype.isApplicable = function () {
+  return this.children[0].isVavaType('boolean') && this.children[1].isVavaType('boolean');
 };
 
 /**
@@ -1500,11 +1630,12 @@ var LogicalOr = exports.LogicalOr = function (boolA, boolB) {
   this.setLoc(arguments[arguments.length-1]);
   this.vavaType = 'boolean';
   this.children = [];
+  this.operator = '||';
   this.appendChild(boolA);
   this.appendChild(boolB);
 };
 
-LogicalOr.inherits(ASTNode);
+LogicalOr.inherits(BinaryOperatorNode);
 
 LogicalOr.prototype.compileNode = function (opts) {
   return builder.functionCall(
@@ -1514,7 +1645,17 @@ LogicalOr.prototype.compileNode = function (opts) {
   );
 };
 
-LogicalOr.prototype.compileTimeCheck = LogicalAnd.prototype.compileTimeCheck;
+LogicalOr.prototype.isApplicable = LogicalAnd.prototype.isApplicable;
+
+/**
+ * Supertype for bitwise binary operators working on both booleans and integrals
+ */
+var BitwiseBinaryOperatorNode = function () {};
+BitwiseBinaryOperatorNode.inherits(BinaryOperatorNode);
+
+BitwiseBinaryOperatorNode.prototype.isApplicable = function () {
+  return BinaryOperatorNode.prototype.isApplicable.call(this) && !this.children[0].isFloatingPoint() && !this.children[1].isFloatingPoint();
+};
 
 /**
  * Creates a node for an inclusive logical AND.
@@ -1526,11 +1667,12 @@ var InclusiveAnd = exports.InclusiveAnd = function (a, b) {
   this.type = 'InclusiveAnd';
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
+  this.operator = '&';
   this.appendChild(a);
   this.appendChild(b);
 };
 
-InclusiveAnd.inherits(ASTNode);
+InclusiveAnd.inherits(BitwiseBinaryOperatorNode);
 
 InclusiveAnd.prototype.compileNode = function (opts) {
   return builder.functionCall(
@@ -1538,15 +1680,6 @@ InclusiveAnd.prototype.compileNode = function (opts) {
     [this.children[1].compile(opts)],
     false
   );
-};
-
-InclusiveAnd.prototype.compileTimeCheck = function () {
-  if (this.children[0].isVavaType('boolean') && this.children[1].isVavaType('boolean'))
-    this.vavaType = 'boolean';
-  else if (this.children[0].isIntegral() && this.children[1].isIntegral())
-    this.vavaType = BinaryOperationTypes[this.children[0].getVavaType()][this.children[1].getVavaType()];
-  else
-    this.fatalError('int x int or bool x bool');
 };
 
 /**
@@ -1558,14 +1691,13 @@ InclusiveAnd.prototype.compileTimeCheck = function () {
 var InclusiveOr = exports.InclusiveOr = function (a, b) {
   this.type = 'InclusiveOr';
   this.setLoc(arguments[arguments.length-1]);
-  // TODO depends on args
-  this.vavaType = 'boolean';
   this.children = [];
+  this.operator = '|';
   this.appendChild(a);
   this.appendChild(b);
 };
 
-InclusiveOr.inherits(ASTNode);
+InclusiveOr.inherits(BitwiseBinaryOperatorNode);
 
 InclusiveOr.prototype.compileNode = function (opts) {
   return builder.functionCall(
@@ -1574,8 +1706,6 @@ InclusiveOr.prototype.compileNode = function (opts) {
     false
   );
 };
-
-InclusiveOr.prototype.compileTimeCheck = InclusiveAnd.prototype.compileTimeCheck;
 
 /**
  * Creates a node for an exclusive logical OR.
@@ -1586,14 +1716,13 @@ InclusiveOr.prototype.compileTimeCheck = InclusiveAnd.prototype.compileTimeCheck
 var ExclusiveOr = exports.ExclusiveOr = function (a, b) {
   this.type = 'ExclusiveOr';
   this.setLoc(arguments[arguments.length-1]);
-  // TODO depends on args
-  this.vavaType = 'boolean';
   this.children = [];
+  this.operator = '^';
   this.appendChild(a);
   this.appendChild(b);
 };
 
-ExclusiveOr.inherits(ASTNode);
+ExclusiveOr.inherits(BitwiseBinaryOperatorNode);
 
 ExclusiveOr.prototype.compileNode = function (opts) {
   return builder.functionCall(
@@ -1602,8 +1731,6 @@ ExclusiveOr.prototype.compileNode = function (opts) {
     false
   );
 };
-
-ExclusiveOr.prototype.compileTimeCheck = InclusiveAnd.prototype.compileTimeCheck;
 
 /**
  * Creates a node for a logical negation.
@@ -1624,9 +1751,11 @@ Negation.prototype.compileNode = function (opts) {
   return this.children[0].compile(opts) + '.not()';
 };
 
-Negation.prototype.compileTimeCheck = function () {
+Negation.prototype.compileTimeCheck = function (opts) {
   if (!this.children[0].isVavaType('boolean'))
-    this.fatalError('negating non-bool');
+    opts.addError(
+      this.nonFatalError('operator ! cannot be applied to ' + this.children[0].getVavaType())
+    );
 };
 
 /**
@@ -1637,7 +1766,6 @@ Negation.prototype.compileTimeCheck = function () {
 var BitwiseNegation = exports.BitwiseNegation = function (num) {
   this.type = 'BitwiseNegation';
   this.setLoc(arguments[arguments.length-1]);
-  this.vavaType = 'int';
   this.children = [];
   this.appendChild(num);
 };
@@ -1648,9 +1776,20 @@ BitwiseNegation.prototype.compileNode = function (opts) {
   return this.children[0].compile(opts) + '.bitwiseNot()';
 };
 
-BitwiseNegation.prototype.compileTimeCheck = function () {
+BitwiseNegation.prototype.compileTimeCheck = function (opts) {
   if (!this.children[0].isIntegral())
-    this.fatalError('bitwise negating non-int');
+    opts.addError(
+      this.nonFatalError('operator ~ cannot be applied to ' + this.children[0].getVavaType())
+    );
+  else
+    this.vavaType = this.children[0].getVavaType();
+};
+
+var ShiftOperator = function () {};
+ShiftOperator.inherits(BitwiseBinaryOperatorNode);
+
+ShiftOperator.prototype.isApplicable = function () {
+  return BitwiseBinaryOperatorNode.prototype.isApplicable.call(this) && this.children[0].isIntegral() && this.children[1].isIntegral();
 };
 
 /**
@@ -1662,13 +1801,13 @@ BitwiseNegation.prototype.compileTimeCheck = function () {
 var LeftShift = exports.LeftShift = function (a, b) {
   this.type = 'LeftShift';
   this.setLoc(arguments[arguments.length-1]);
-  this.vavaType = 'int';
   this.children = [];
+  this.operator = '<<';
   this.appendChild(a);
   this.appendChild(b);
 }
 
-LeftShift.inherits(ASTNode);
+LeftShift.inherits(ShiftOperator);
 
 LeftShift.prototype.compileNode = function (opts) {
   return builder.functionCall(
@@ -1676,13 +1815,6 @@ LeftShift.prototype.compileNode = function (opts) {
     [this.children[1].compile(opts)],
     false
   );
-};
-
-LeftShift.prototype.compileTimeCheck = function () {
-  if (this.children[0].isIntegral() && this.children[1].isIntegral())
-    this.vavaType = BinaryOperationTypes[this.children[0].getVavaType()][this.children[1].getVavaType()];
-  else
-    this.fatalError('int x int');
 };
 
 /**
@@ -1696,11 +1828,12 @@ var RightShift = exports.RightShift = function (a, b) {
   this.setLoc(arguments[arguments.length-1]);
   this.vavaType = 'int';
   this.children = [];
+  this.operator = '>>';
   this.appendChild(a);
   this.appendChild(b);
 };
 
-RightShift.inherits(ASTNode);
+RightShift.inherits(ShiftOperator);
 
 RightShift.prototype.compileNode = function (opts) {
   return builder.functionCall(
@@ -1709,8 +1842,6 @@ RightShift.prototype.compileNode = function (opts) {
     false
   );
 };
-
-RightShift.prototype.compileTimeCheck = LeftShift.prototype.compileTimeCheck;
 
 /**
  * Creates a node for a zero-filling rightshift operation.
@@ -1723,11 +1854,12 @@ var ZeroFillRightShift = exports.ZeroFillRightShift = function (a, b) {
   this.setLoc(arguments[arguments.length-1]);
   this.vavaType = 'int';
   this.children = [];
+  this.operator = '>>>';
   this.appendChild(a);
   this.appendChild(b);
 };
 
-ZeroFillRightShift.inherits(ASTNode);
+ZeroFillRightShift.inherits(ShiftOperator);
 
 ZeroFillRightShift.prototype.compileNode = function (opts) {
   return builder.functionCall(
@@ -1736,8 +1868,6 @@ ZeroFillRightShift.prototype.compileNode = function (opts) {
     false
   );
 };
-
-ZeroFillRightShift.prototype.compileTimeCheck = LeftShift.prototype.compileTimeCheck;
 
 /**
  * Creates a node for an if-then conditional.
@@ -1867,9 +1997,11 @@ DoWhileLoop.prototype.compileNode = function (opts) {
   ) + '.call(this, true, this.__descend());', opts.indent);
 };
 
-DoWhileLoop.prototype.compileTimeCheck = function () {
+DoWhileLoop.prototype.compileTimeCheck = function (opts) {
   if (!this.children[1].isVavaType('boolean'))
-    this.fatalError('expected bool in do-while');
+    opts.addError(
+      this.nonFatalError('incompatible types', this.typeMismatchDescription(this.children[1].getVavaType(), 'boolean'), this.children[1].loc)
+    );
 };
 
 /**
@@ -1905,10 +2037,7 @@ ForLoop.prototype.compileNode = function (opts) {
   ) + '.call(this, this.__descend());', opts.indent);
 };
 
-ForLoop.prototype.compileTimeCheck = function () {
-  if (!this.children[1].isVavaType('boolean'))
-    this.fatalError('expected bool in for condition');
-};
+ForLoop.prototype.compileTimeCheck = DoWhileLoop.prototype.compileTimeCheck;
 
 /**
  * Creates a node for a list of statement expressions
