@@ -1,5 +1,6 @@
 require 'yaml'
 require 'rdiscount'
+require 'differ'
 require 'lib/pretty_print'
 
 class SpecSuite
@@ -46,6 +47,8 @@ class SpecSuite
         underlined "Got"
         puts hobbes
         newline
+        underlined "Diff"
+        puts Differ.diff_by_line(expected, hobbes)
       end
 
 
