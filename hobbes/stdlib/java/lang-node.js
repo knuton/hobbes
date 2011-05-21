@@ -38,7 +38,49 @@ exports.System = {
         new vava.env.VavaMethod(
           'println',
           'void',
+          [{identifier: 'str', vavaType: 'boolean'}],
+          function () { process.stdout.write(this.str.get() + '\n'); }
+        ),
+        new vava.env.VavaMethod(
+          'println',
+          'void',
+          [{identifier: 'str', vavaType: 'byte'}],
+          function () { process.stdout.write(this.str.get() + '\n'); }
+        ),
+        new vava.env.VavaMethod(
+          'println',
+          'void',
+          [{identifier: 'str', vavaType: 'short'}],
+          function () { process.stdout.write(this.str.get() + '\n'); }
+        ),
+        new vava.env.VavaMethod(
+          'println',
+          'void',
+          [{identifier: 'str', vavaType: 'char'}],
+          function () { process.stdout.write(this.str.get() + '\n'); }
+        ),
+        new vava.env.VavaMethod(
+          'println',
+          'void',
           [{identifier: 'str', vavaType: 'int'}],
+          function () { process.stdout.write(this.str.get() + '\n'); }
+        ),
+        new vava.env.VavaMethod(
+          'println',
+          'void',
+          [{identifier: 'str', vavaType: 'long'}],
+          function () { process.stdout.write(this.str.get() + '\n'); }
+        ),
+        new vava.env.VavaMethod(
+          'println',
+          'void',
+          [{identifier: 'str', vavaType: 'float'}],
+          function () { process.stdout.write(this.str.get() + '\n'); }
+        ),
+        new vava.env.VavaMethod(
+          'println',
+          'void',
+          [{identifier: 'str', vavaType: 'double'}],
           function () { process.stdout.write(this.str.get() + '\n'); }
         ),
         new vava.env.VavaMethod(
