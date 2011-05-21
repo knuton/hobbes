@@ -53,9 +53,19 @@ ASTNode.prototype.checkChild = function (node) {
  * Compiles the node with all its children
  */
 ASTNode.prototype.compile = function (opts) {
-  var result = this.__compiled || (this.__compiled = this.compileNode(opts));
+  var result = this.storedOrNewCompilation(opts);
   this.compileTimeCheck(opts);
   return result;
+};
+
+ASTNode.prototype.storedOrNewCompilation = function (opts) {
+  this.__compiled = this.__compiled || {};
+  var dictKey = '';
+  for (key in opts) {
+    // Not failsafe, but should cover all relevant cases
+    dictKey += key + String(opts[key]);
+  }
+  return this.__compiled[dictKey] || (this.__compiled[dictKey] = this.compileNode(opts));
 };
 
 /**
@@ -505,7 +515,7 @@ var VariableDeclarator = exports.VariableDeclarator = function (vavaIdentifier, 
 VariableDeclarator.inherits(ASTNode);
 
 VariableDeclarator.prototype.compile = function (opts) {
-  var result = this.__compiled || (this.__compiled = this.compileNode(opts));
+  var result = this.storedOrNewCompilation(opts);
   return result;
 };
 

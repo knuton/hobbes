@@ -58,6 +58,7 @@ EXPO              ([Ee][+-]?{Ds})
 "char"                {return 'PRIMITIVE_CHAR';}
 "float"               {return 'PRIMITIVE_FLOAT';}
 "double"              {return 'PRIMITIVE_DOUBLE';}
+"String"              {return 'STRING_TYPE';}
 
 
 "<<"                  {return 'OPERATOR_LEFTSHIFT';}
@@ -78,6 +79,17 @@ EXPO              ([Ee][+-]?{Ds})
 "~"                   {return 'OPERATOR_BITWISE_NEGATION';}
 "!"                   {return 'OPERATOR_NEGATION';}
 "="                   {return 'OPERATOR_ASSIGNMENT';}
+"+="                  {return '+=';}
+"-="                  {return '-=';}
+"*="                  {return '*=';}
+"/="                  {return '/=';}
+"%="                  {return '%=';}
+"&="                  {return '&=';}
+"^="                  {return '^=';}
+"|="                  {return '|=';}
+"<<="                 {return '<<=';}
+">>="                 {return '>>=';}
+">>>="                {return '>>>=';}
 "++"                  {return 'OPERATOR_INCREMENT';}
 "+"                   {return 'OPERATOR_ADDITION';}
 "--"                  {return 'OPERATOR_DECREMENT';}
@@ -395,9 +407,9 @@ variable_initializer
 type
   : primitive_type
     { $$ = $1; }
-  // TODO HAX
-  | name
-    { $$ = $1.simple(); }
+  | STRING_TYPE
+    { $$ = $1; }
+  // TODO array type
   ;
 
 primitive_type
@@ -549,14 +561,14 @@ return_statement
 
 /*** CONTROL STRUCTURES: BRANCHING ***/
 
-if_then_else_statement
-  : KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN statement_no_short_if KEYWORD_ELSE statement
-    { $$ = new yy.IfThenElse($3, $5, $7, @$); }
-  ;
-
 if_then_statement
   : KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN statement
     { $$ = new yy.IfThen($3, $5, @$); }
+  ;
+
+if_then_else_statement
+  : KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN statement_no_short_if KEYWORD_ELSE statement
+    { $$ = new yy.IfThenElse($3, $5, $7, @$); }
   ;
 
 if_then_else_statement_no_short_if
@@ -856,8 +868,12 @@ assignment_expression
   ;
 
 assignment
-  : name assignment_operator assignment_expression
+  : name OPERATOR_ASSIGNMENT assignment_expression
     { $$ = new yy.Assignment($1, $3, @1); }
+  | name '+=' assignment_expression
+    { $$ = new yy.Assignment($1, new yy.Addition($1, $3, @2), @1); }
+  | name '/=' assignment_expression
+    { $$ = new yy.Assignment($1, new yy.Division($1, $3, @2), @1); }
   // TODO FieldAccess and ArrayAccess
   ;
 
