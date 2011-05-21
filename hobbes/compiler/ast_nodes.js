@@ -334,9 +334,7 @@ ClassDeclaration.prototype.compileNode = function (opts) {
   return builder.addPairToScope(
     this.vavaClassName,
     builder.constructorCall('this.__env.VavaClass', [builder.string(this.vavaClassName), serializedBody, 'this'], false)
-    // TODO call of main method should be more robust (several classes in CU?)
-    // TODO de-bullshit
-  ) + '\n' + builder.functionCall('this["' + this.vavaClassName + '"].send', ['"main(String[])"', '[{getVavaType: function () { return true; }, to: function () {return this;}}]']);
+  ) + '\nreturn ' + 'this["' + this.vavaClassName + '"]';
 };
 
 /**

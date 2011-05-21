@@ -34,6 +34,8 @@ function execute(src) {
         process.stdout.write(filename + ':' + err[i]);
       }
       process.stdout.write(err.summary + '\n');
+    } else if (err.type === 'NoSuchMethodError') {
+      process.stdout.write(err.message + '\n');
     } else {
       process.stdout.write(filename + '\n');
       throw err;
