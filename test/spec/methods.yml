@@ -6,6 +6,11 @@ specifications:
     test_files:
       - 'InvocableCode.java'
 
+  - description: "A method has a return type which determines the type of value (if any) that is allowed to be returned."
+    test_files:
+      - 'ValidReturn.java'
+      - 'InvalidReturn.java'
+
   - description: "Every method declaration belongs to some class."
     test_files:
     # TODO Java-style parse error

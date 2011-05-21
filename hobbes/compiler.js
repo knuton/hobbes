@@ -8,6 +8,10 @@ parser.yy.utils = utils.yyUtils;
 var loadClass = function (vavaSrc, scope, options) {
   // Parse and create AST
   var vavaAST = parser.parse(vavaSrc);
+  // Debug info: print AST
+  if (options.debug && typeof console !== 'undefined') {
+    console.log(vavaAST.toString());
+  }
   // Compile AST, giving controlled error output for known error types
   try {
     var compilation = vavaAST.compile({names: scope.__descend()});

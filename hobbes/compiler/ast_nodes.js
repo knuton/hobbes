@@ -338,7 +338,7 @@ ClassDeclaration.prototype.compileNode = function (opts) {
   return builder.addPairToScope(
     this.vavaClassName,
     builder.constructorCall('this.__env.VavaClass', [builder.string(this.vavaClassName), serializedBody, 'this'], false)
-  ) + '\nreturn ' + 'this["' + this.vavaClassName + '"]';
+  ) + '\nreturn ' + 'this["' + this.vavaClassName + '"];';
 };
 
 /**
@@ -689,9 +689,18 @@ ReturnStatement.prototype.compileNode = function (opts) {
   return 'return' + (this.children[0] ? ' ' + this.children[0].compile(opts) + ';' : ';');
 };
 
-ReturnStatement.prototype.compileNode = function (opts) {
-  if (opts.returnType !== 'void');
-
+ReturnStatement.prototype.compileTimeCheck = function (opts) {
+  this.vavaType = opts.returnType;
+  if (opts.returnType === 'void' && this.children.length !== 0) {
+    opts.addError(
+      this.nonFatalError('cannot return a value from method whose result type is void', null, this.children[0].loc)
+    );
+    // TODO Too coarse
+  } else if (this.children[0] && !this.isAssignmentCompatible(this.children[0])) {
+    opts.addError(
+      this.nonFatalError('incompatible types', this.typeMismatchDescription(this.children[0].getVavaType(), this.vavaType), this.children[0].loc)
+    );
+  }
 };
 
 /**

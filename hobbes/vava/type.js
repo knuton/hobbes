@@ -71,7 +71,7 @@ var TypeChecking = exports.TypeChecking = new utils.Mixin('TypeChecking', {
     if (this.isPrimitive()) {
       if (typedValue.getVavaType() === this.getVavaType()) return true;
       if (this.isIntegral() && typedValue.isIntegral()) return true;
-      return this.isFloatingPoint() && typedValue.isFloatingPoint();
+      return this.isFloatingPoint() && typedValue.isNumber();
     } else {
       var vavaType = typedValue.getVavaType();
       return (vavaType === "null" || vavaType === this.getVavaType());

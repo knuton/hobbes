@@ -46,14 +46,10 @@ VavaMethod.prototype.call = function (scope, args) {
   var locals = {};
 
   for (var i = 0; i < this.vavaFormalParameters.length; i++) {
-    if (args[i].getVavaType() !== this.vavaFormalParameters[i].vavaType) {
-      // TODO Throw Java-style error
-    }
     var identifier = this.vavaFormalParameters[i].identifier;
     var value = args[i];
     locals[identifier] = new type.TypedVariable(value.getVavaType(), identifier, value);
   }
-  // TODO Check return type?
   return this.vavaBlock.apply(scope.__descend(locals));
   
 };
