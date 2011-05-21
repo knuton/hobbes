@@ -320,7 +320,7 @@ field_declaration
 
 method_declaration
   : method_header method_body
-    { $$ = new yy.MethodDeclaration($1, $2, @$); }
+    { $$ = new yy.MethodDeclaration($1, $2, $1.loc); }
   ;
 
 /*** METHOD DECLARATIONS ***/
@@ -339,11 +339,11 @@ method_header
 
 method_declarator
   : IDENTIFIER LEFT_PAREN formal_parameter_list RIGHT_PAREN
-    %{ $$ = {vavaIdentifier: $1, vavaFormalParameters: $3}; %}
+    %{ $$ = {vavaIdentifier: $1, vavaFormalParameters: $3, loc: @1}; %}
   | IDENTIFIER LEFT_PAREN RIGHT_PAREN
-    %{ $$ = {vavaIdentifier: $1}; %}
+    %{ $$ = {vavaIdentifier: $1, loc: @1}; %}
   | IDENTIFIER LEFT_PAREN type LEFT_BRACKET RIGHT_BRACKET IDENTIFIER RIGHT_PAREN
-    %{ $$ = {vavaIdentifier: $1, vavaFormalParameters: [new yy.FormalParameter('String[]', $6)]}; %}
+    %{ $$ = {vavaIdentifier: $1, vavaFormalParameters: [new yy.FormalParameter('String[]', $6)], loc: @1}; %}
   ;
 
 formal_parameter_list

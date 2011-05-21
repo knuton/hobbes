@@ -309,7 +309,11 @@ ClassDeclaration.prototype.compileNode = function (opts) {
   // about return types of methods declared later.
   var methods = this.children.filter(function (child) {
     if (child.getType() === 'MethodDeclaration') {
-      opts.names.__addName(child.signature(), child.getVavaType());
+      var methSig = child.signature();
+      if (opts.names[methSig]) {
+        opts.addError(child.nonFatalError(methSig + ' is already defined in ' + self.vavaClassName));
+      }
+      opts.names.__addName(methSig, child.getVavaType());
       return true;
     }
     else return false;

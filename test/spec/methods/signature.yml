@@ -3,3 +3,6 @@ section: 2
 specifications:
   
   - description: "The signature of a method consists of the name of the method and the number and type of formal parameters to the method. A class may not declare two methods with the same signature."
+    test_files:
+      - 'CompatibleSignature.java'
+      - 'IncompatibleSignature.java'
