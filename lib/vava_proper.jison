@@ -48,6 +48,7 @@ EXPO              ([Ee][+-]?{Ds})
 
 "class"               {return 'KEYWORD_CLASS';}
 
+"return"              {return 'return';}
 
 "boolean"             {return 'PRIMITIVE_BOOLEAN';}
 "byte"                {return 'PRIMITIVE_BYTE';}
@@ -340,6 +341,8 @@ method_header
 method_declarator
   : IDENTIFIER LEFT_PAREN formal_parameter_list RIGHT_PAREN
     %{ $$ = {vavaIdentifier: $1, vavaFormalParameters: $3}; %}
+  | IDENTIFIER LEFT_PAREN RIGHT_PAREN
+    %{ $$ = {vavaIdentifier: $1}; %}
   | IDENTIFIER LEFT_PAREN STRING_TYPE LEFT_BRACKET RIGHT_BRACKET IDENTIFIER RIGHT_PAREN
     %{ $$ = {vavaIdentifier: $1, vavaFormalParameters: [new yy.FormalParameter('String[]', $6)]}; %}
   ;
@@ -504,7 +507,8 @@ statement_without_trailing_substatement
     { $$ = $1; }
   // TODO break_statement
   // TODO continue_statement
-  // TODO return_statement
+  | return_statement
+    { $$ = $1; }
   // TODO throw_statement
   // TODO try_statement
   ;
@@ -533,6 +537,13 @@ statement_expression
   | method_invocation
     { $$ = $1; }
   // TODO class_instance_creation_expression
+  ;
+
+return_statement
+  : 'return' expression
+    { $$ = new yy.ReturnStatement($2, @$); }
+  | 'return'
+    { $$ = new yy.ReturnStatement(@$); }
   ;
 
 /*** CONTROL STRUCTURES: BRANCHING ***/
@@ -670,7 +681,7 @@ argument_list
 
 method_invocation
   : name LEFT_PAREN RIGHT_PAREN
-    { $$ = new yy.MethodInvocation($1, @$); }
+    { $$ = new yy.MethodInvocation($1, new yy.ArgumentList(), @$); }
   | name LEFT_PAREN argument_list RIGHT_PAREN
     { $$ = new yy.MethodInvocation($1, $3, @$); }
   ;

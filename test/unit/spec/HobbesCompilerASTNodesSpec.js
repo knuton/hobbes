@@ -232,7 +232,10 @@ describe('Compiler', function () {
     describe('MethodDeclaration', function () {
       
       beforeEach(function () {
-        testNode = new astNodes.MethodDeclaration({vavaType: 'int', vavaIdentifier: 'foo'}, mockASTNode({type: 'Block'}));
+        testNode = new astNodes.MethodDeclaration(
+          {vavaType: 'int', vavaIdentifier: 'foo', vavaFormalParameters: [{identifier: 'bar', vavaType: 'byte'}]},
+          mockASTNode({type: 'Block'})
+        );
       });
       
       it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
@@ -243,6 +246,10 @@ describe('Compiler', function () {
       
       it('should turn itself into a string', function () {
         expect(testNode.toString()).toBe('- <MethodDeclaration vavaType: int vavaIdentifier: foo>\n  - <Block>\n');
+      });
+
+      it('should return its signature', function () {
+        expect(testNode.signature()).toBe('foo(byte)');
       });
       
     }); // end MethodDeclaration spec
@@ -268,6 +275,33 @@ describe('Compiler', function () {
       });
       
     }); // end FormalParameter spec
+
+    describe('ReturnStatement', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.ReturnStatement(mockASTNode());
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+      
+      it('should be of type `ReturnStatement`', function () {
+        expect(testNode.getType()).toBe('ReturnStatement');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <ReturnStatement>\n  - <ASTNode>\n');
+      });
+
+      it('should compile with child expression', function () {
+        expect(testNode.compile(mockOpts())).toBe('return MOCK;');
+      });
+      
+      it('should compile without child expression', function () {
+        testNode = new astNodes.ReturnStatement();
+        expect(testNode.compile(mockOpts())).toBe('return;');
+      });
+      
+    }); // end ReturnStatement spec
     
     describe('MethodInvocation', function () {
       

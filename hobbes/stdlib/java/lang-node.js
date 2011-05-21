@@ -13,14 +13,14 @@ exports.System = {
   'in' : new vava.env.VavaClass(
     'In',
     {
-      methods : {
-        readln : new vava.env.VavaMethod(
+      methods : [
+        new vava.env.VavaMethod(
           'readln',
           'int',
           [],
           function () { return new this.__env.IntValue(Number(5)); }
         )
-      }
+      ]
     },
     new vava.scope.Scope({__env : vava.env})
   ),
@@ -28,20 +28,26 @@ exports.System = {
   'out' : new vava.env.VavaClass(
     'Out',
     {
-      methods : {
-        print : new vava.env.VavaMethod(
+      methods : [
+        new vava.env.VavaMethod(
           'print',
           'void',
           [{identifier: 'str', vavaType: 'int'}],
-          function () { process.stdout.write(this.str.get()); }
+          function () { process.stdout.write(this.str.toString()); }
         ),
-        println : new vava.env.VavaMethod(
+        new vava.env.VavaMethod(
           'println',
           'void',
           [{identifier: 'str', vavaType: 'int'}],
           function () { process.stdout.write(this.str.get() + '\n'); }
+        ),
+        new vava.env.VavaMethod(
+          'println',
+          'void',
+          [{identifier: 'str', vavaType: 'String'}],
+          function () { process.stdout.write(this.str.get() + '\n'); }
         )
-      }
+      ]
     },
     new vava.scope.Scope({__env : vava.env})
   )

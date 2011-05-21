@@ -59,6 +59,11 @@ ASTNode.prototype.compile = function (opts) {
 };
 
 /**
+ * Default compilation: empty string
+ */
+ASTNode.prototype.compileNode = function () { return ''; };
+
+/**
  * Implement in each node to check for compile time errors.
  *
  * @param opts Options hash
@@ -293,24 +298,35 @@ ClassDeclaration.prototype.compileNode = function (opts) {
   // Add class name to compilation unit scope
   opts.names.__addName(this.vavaClassName, this);
   var classOpts = opts.descendScope();
-  
+
+  var fields = this.children.filter(function (child) {
+    return child.getType() === 'FieldDeclaration';
+  });
+  // Need to add this information now as execution is vertically linear only in
+  // methods, but not in classes. i.e. a method appearing earlier in the source
+  // might call a method declared later. If we added types while regularly
+  // compiling down the tree, an earlier method might not have information
+  // about return types of methods declared later.
+  var methods = this.children.filter(function (child) {
+    if (child.getType() === 'MethodDeclaration') {
+      opts.names.__addName(child.signature(), child.getVavaType());
+      return true;
+    }
+    else return false;
+  });
   var serializedBody = builder.joinToObject(
     // Field Declarations
     builder.keyValue(
       'fields',
       builder.array(
-        self.children.filter(function (child) {
-          return child.getType() === 'FieldDeclaration';
-        }).map(function (field) { return field.compile(classOpts) })
+        fields.map(function (field) { return field.compile(classOpts) })
       )
     ),
     // Method Declarations
     builder.keyValue(
       'methods',
-      builder.joinToObject(
-        self.children.filter(function (child) {
-          return child.getType() === 'MethodDeclaration';
-        }).map(function (method) { return method.compile(classOpts) })
+      builder.array(
+        methods.map(function (method) { return method.compile(classOpts) })
       )
     )
   );
@@ -591,22 +607,26 @@ var MethodDeclaration = exports.MethodDeclaration = function (vavaHeader, vavaBl
 
 MethodDeclaration.inherits(ASTNode);
 
+MethodDeclaration.prototype.signature = function () {
+  return [
+    this.vavaIdentifier, '(',
+    this.vavaFormalParameters.map(function (fP) {
+      return fP.vavaType;
+    }).join(','), ')'
+  ].join('');
+};
+
 MethodDeclaration.prototype.compileNode = function (opts) {
-  var methodOpts = opts.descendScope();
-  // TODO This will not roll with method overriding (using vavaIdentifier as hash name)
-  // Better: this.vavaIdentifier + this.vavaFormalParameters.map(vavaType)
-  return builder.keyValue(
-    this.vavaIdentifier,
-    builder.constructorCall(
-      'this.__env.VavaMethod',
-      [
-        builder.string(this.vavaIdentifier),
-        builder.string(this.vavaType),
-        builder.array(this.vavaFormalParameters.map(function (fP) { return fP.compile(methodOpts); })),
-        builder.wrapAsFunction(this.children[0].compile(methodOpts))
-      ],
-      false
-    )
+  var methodOpts = opts.descendScope({returnType: this.vavaType});
+  return builder.constructorCall(
+    'this.__env.VavaMethod',
+    [
+      builder.string(this.vavaIdentifier),
+      builder.string(this.vavaType),
+      builder.array(this.vavaFormalParameters.map(function (fP) { return fP.compile(methodOpts); })),
+      builder.wrapAsFunction(this.children[0].compile(methodOpts))
+    ],
+    false
   );
 };
 
@@ -650,6 +670,29 @@ FormalParameter.prototype.getSignature = function () {
 };
 
 /**
+ * Creates a node for a return statement. 
+ *
+ * @param expression Optional expression giving return value
+ */
+var ReturnStatement = exports.ReturnStatement = function (expression) {
+  this.type = 'ReturnStatement';
+  this.setLoc(arguments[arguments.length-1]);
+  this.children = [];
+  if (expression && expression.compile) this.appendChild(expression);
+};
+
+ReturnStatement.inherits(ASTNode);
+
+ReturnStatement.prototype.compileNode = function (opts) {
+  return 'return' + (this.children[0] ? ' ' + this.children[0].compile(opts) + ';' : ';');
+};
+
+ReturnStatement.prototype.compileNode = function (opts) {
+  if (opts.returnType !== 'void');
+
+};
+
+/**
  * Creates a node for a method invocation.
  *
  * @param name The name of the method
@@ -668,6 +711,7 @@ MethodInvocation.inherits(ASTNode);
 MethodInvocation.prototype.compileNode = function (opts) {
   var argumentList = this.children[0].compile(opts);
   var methodSig = this.name.simple() + '(' + this.children[0].getVavaTypes().join(',') + ')';
+  this.vavaType = opts.names[methodSig];
   if (this.name.isSimple()) {
     return utils.indent('this.__self.send("' + methodSig + '", ' + argumentList + ')', opts.indent);
   } else {
@@ -689,7 +733,7 @@ var ArgumentList = exports.ArgumentList = function (firstArg) {
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   
-  if (firstArg) this.appendChild(firstArg);
+  if (firstArg && firstArg.compile) this.appendChild(firstArg);
 };
 
 ArgumentList.inherits(ASTNode);

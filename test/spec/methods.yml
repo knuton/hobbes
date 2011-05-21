@@ -3,8 +3,13 @@ section: 10
 specifications:
   
   - description: "A method declares executable code that can be invoked, passing a fixed number of values as arguments."
+    test_files:
+      - 'InvocableCode.java'
 
   - description: "Every method declaration belongs to some class."
+    test_files:
+    # TODO Java-style parse error
+    #  - 'FirstClassFunction.java'
 
   - description: "A class inherits from its direct superclass and any direct superinterfaces all the accessible methods of the superclass and superinterfaces, with one exception: if a name is declared as a method in the new class, then no method with the same signature is inherited. Instead, the newly declared method is said to override any such method declaration."
 

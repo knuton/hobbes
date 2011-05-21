@@ -23,10 +23,10 @@ VavaClass.prototype.addFields = function (fieldDefinitions) {
 };
 
 VavaClass.prototype.addMethods = function (methodDefinitions) {
-  if (typeof methodDefinitions !== 'object' || this.vavaMethods) return;
+  if (!methodDefinitions || !methodDefinitions.length || this.vavaMethods) return;
   this.vavaMethods = [];
-  for (methodName in methodDefinitions) {
-    var methodDef = methodDefinitions[methodName];
+  for (var i = 0; i < methodDefinitions.length; i++) {
+    var methodDef = methodDefinitions[i];
     this.vavaMethods[methodDef.signature()] = methodDef;
   }
 };

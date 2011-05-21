@@ -142,7 +142,10 @@ TypedVariable.prototype.set = function (typedValue) {
  */
 TypedVariable.prototype._setAdjusted = function (typedValue) {
   // Leave it to specific types to convert themselves
-  this.typedValue = typedValue.to(this.vavaType);
+  if (this.getVavaType() === typedValue.getVavaType())
+    this.typedValue = typedValue;
+  else
+    this.typedValue = typedValue.to(this.vavaType);
 };
 
 /**
