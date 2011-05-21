@@ -58,7 +58,6 @@ EXPO              ([Ee][+-]?{Ds})
 "char"                {return 'PRIMITIVE_CHAR';}
 "float"               {return 'PRIMITIVE_FLOAT';}
 "double"              {return 'PRIMITIVE_DOUBLE';}
-"String"              {return 'STRING_TYPE';}
 
 
 "<<"                  {return 'OPERATOR_LEFTSHIFT';}
@@ -343,14 +342,14 @@ method_declarator
     %{ $$ = {vavaIdentifier: $1, vavaFormalParameters: $3}; %}
   | IDENTIFIER LEFT_PAREN RIGHT_PAREN
     %{ $$ = {vavaIdentifier: $1}; %}
-  | IDENTIFIER LEFT_PAREN STRING_TYPE LEFT_BRACKET RIGHT_BRACKET IDENTIFIER RIGHT_PAREN
+  | IDENTIFIER LEFT_PAREN type LEFT_BRACKET RIGHT_BRACKET IDENTIFIER RIGHT_PAREN
     %{ $$ = {vavaIdentifier: $1, vavaFormalParameters: [new yy.FormalParameter('String[]', $6)]}; %}
   ;
 
 formal_parameter_list
   : formal_parameter
     { $$ = [$1]; }
-  | formal_parameters COMMA formal_parameter
+  | formal_parameter_list COMMA formal_parameter
     { $$ = $1; $$.push($3); }
   ;
 
@@ -395,8 +394,9 @@ variable_initializer
 type
   : primitive_type
     { $$ = $1; }
+  // TODO HAX
   | name
-    { $$ = $1; }
+    { $$ = $1.simple(); }
   ;
 
 primitive_type
