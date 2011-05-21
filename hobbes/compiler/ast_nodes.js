@@ -1264,8 +1264,12 @@ CastExpression.prototype.compileTimeCheck = function () {
 
 var NumberTypes = {'byte': true, 'short': true, 'char': true, 'int': true, 'long': true, 'float': true, 'double': true};
 
-var BinaryOperationTypes = {
-  'boolean' : {'boolean' : 'boolean'},
+var BinaryOperatorNode = function () {};
+
+BinaryOperatorNode.inherits(ASTNode);
+
+BinaryOperatorNode.table = {
+  'boolean' : {'boolean':'boolean'},
   'byte' : {'byte' : 'int','short' : 'int','char' : 'int','int' : 'int','long' : 'long','float' : 'float','double' : 'double','String' : 'String'},
   'short' : {'byte' : 'int','short' : 'int','char' : 'int','int' : 'int','long' : 'long','float' : 'float','double' : 'double','String' : 'String'},
   'char' : {'byte' : 'int','short' : 'int','char' : 'int','int' : 'int','long' : 'long','float' : 'float','double' : 'double','String' : 'String'},
@@ -1276,22 +1280,18 @@ var BinaryOperationTypes = {
   'String' : {'byte':'String', 'short':'String', 'char':'String', 'int':'String', 'long':'String', 'float':'String', 'double':'String', 'String':'String'},
 };
 
-var BinaryOperatorNode = function () {};
-
-BinaryOperatorNode.inherits(ASTNode);
-
 BinaryOperatorNode.prototype.compileTimeCheck = function (opts) {
   if (!this.isApplicable())
     opts.addError(
       this.nonFatalError('operator ' + this.operator + ' cannot be applied to ' + this.children[0].getVavaType() + ',' + this.children[1].getVavaType())
     );
   else
-    this.vavaType = BinaryOperationTypes[this.children[0].getVavaType()][this.children[1].getVavaType()];
+    this.vavaType = this.constructor.table[this.children[0].getVavaType()][this.children[1].getVavaType()];
 };
 
 BinaryOperatorNode.prototype.isApplicable = function () {
-  return (!!BinaryOperationTypes[this.children[0].getVavaType()] &&
-    !!BinaryOperationTypes[this.children[0].getVavaType()][this.children[1].getVavaType()] &&
+  return (!!this.constructor.table[this.children[0].getVavaType()] &&
+    !!this.constructor.table[this.children[0].getVavaType()][this.children[1].getVavaType()] &&
     !this.children[0].isVavaType('String') && !this.children[1].isVavaType('String')
   );
 };
@@ -1327,15 +1327,25 @@ var Addition = exports.Addition = function (numA, numB) {
 
 Addition.inherits(BinaryOperatorNode);
 
+Addition.table = {
+  'boolean' : {'String':'String'},
+  'byte' : {'byte' : 'int','short' : 'int','char' : 'int','int' : 'int','long' : 'long','float' : 'float','double' : 'double','String' : 'String'},
+  'short' : {'byte' : 'int','short' : 'int','char' : 'int','int' : 'int','long' : 'long','float' : 'float','double' : 'double','String' : 'String'},
+  'char' : {'byte' : 'int','short' : 'int','char' : 'int','int' : 'int','long' : 'long','float' : 'float','double' : 'double','String' : 'String'},
+  'int' : {'byte' : 'int','short' : 'int','char' : 'int','int' : 'int','long' : 'long','float' : 'float','double' : 'double','String' : 'String'},
+  'long' : {'byte':'long', 'short':'long', 'char':'long', 'int':'long', 'long':'long', 'float':'float', 'double':'double', 'String':'String'},
+  'float' : {'byte':'float', 'short':'float', 'char':'float', 'int':'float', 'long':'float', 'float':'float', 'double':'double', 'String':'String'},
+  'double' : {'byte':'double', 'short':'double', 'char':'double', 'int':'double', 'long':'double', 'float':'double', 'double':'double', 'String':'String'},
+  'String' : {'boolean':'String', 'byte':'String', 'short':'String', 'char':'String', 'int':'String', 'long':'String', 'float':'String', 'double':'String', 'String':'String'},
+};
+
 Addition.prototype.compileNode = function (opts) {
   return utils.indent(this.children[0].compile(opts) + '.add(' + this.children[1].compile(opts) + ')', opts.indent);
 };
 
 Addition.prototype.isApplicable = function () {
-  return (!!BinaryOperationTypes[this.children[0].getVavaType()] &&
-    !!BinaryOperationTypes[this.children[0].getVavaType()][this.children[1].getVavaType()] &&
-    // Suffices to check one, as there is no boolean-boolean in table
-    !this.children[0].isVavaType('boolean')
+  return (!!this.constructor.table[this.children[0].getVavaType()] &&
+    !!this.constructor.table[this.children[0].getVavaType()][this.children[1].getVavaType()]
   );
 };
 

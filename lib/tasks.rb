@@ -1,3 +1,3 @@
-%w(annotations build spec test).each do |taskgroup|
+%w(annotations build spec test swiss).each do |taskgroup|
   load "lib/tasks/#{taskgroup}.rake"
 end

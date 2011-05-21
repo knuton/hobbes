@@ -91,6 +91,7 @@ EXPO              ([Ee][+-]?{Ds})
 [a-zA-Z][a-zA-Z0-9_]* {return 'IDENTIFIER'; /* Varying form */}
 ({Ds}"."{Ds}?{EXPO}?[fFdD]?|"."{Ds}{EXPO}?[fFdD]?|{Ds}{EXPO}[fFdD]?|{Ds}{EXPO}?[fFdD])/([^\w]|$)   {return 'FLOATING_POINT_LITERAL';}
 {Ds}[lL]?\b           {return 'DECIMAL_INTEGER_LITERAL';}
+"\"\""                {return 'STRING_LITERAL';}
 "\"".*"\""            {return 'STRING_LITERAL';}
 "'"."'"               {return 'CHAR_LITERAL';}
 
@@ -548,14 +549,14 @@ return_statement
 
 /*** CONTROL STRUCTURES: BRANCHING ***/
 
-if_then_statement
-  : KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN statement
-    { $$ = new yy.IfThen($3, $5, @$); }
-  ;
-
 if_then_else_statement
   : KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN statement_no_short_if KEYWORD_ELSE statement
     { $$ = new yy.IfThenElse($3, $5, $7, @$); }
+  ;
+
+if_then_statement
+  : KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN statement
+    { $$ = new yy.IfThen($3, $5, @$); }
   ;
 
 if_then_else_statement_no_short_if

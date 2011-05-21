@@ -39,7 +39,7 @@ var TypeChecking = exports.TypeChecking = new utils.Mixin('TypeChecking', {
    */
   isIntegral : function () {
     var vT = this.getVavaType();
-    return (vT === "byte" || vT === "short" || vT === "int" || vT === "long");
+    return (vT === "byte" || vT === "short" || vT === "char" || vT === "int" || vT === "long");
   },
 
   /**
@@ -318,6 +318,15 @@ BooleanValue.prototype.xor = function (other) {
   return BooleanValue.intern(!!(this.get() ^ other.get()));
 };
 
+// STRING CONCATENATION
+BooleanValue.prototype.add = function (other) {
+  if (other.isVavaType('String')) {
+     return StringValue.intern(this.toString()).add(other);
+  } else {
+    throw Error('Called BooleanValue#add with other than String value');
+  }
+};
+
 //// NUMBER TYPES
 
 var NumberValue = function () {
@@ -439,10 +448,13 @@ IntegralValue.integerDivision = function (a, b) {
 
 // ARITHMETIC
 IntegralValue.prototype.add = function (other) {
-  if (other.isIntegral())
+  if (other.isIntegral()) {
     return (other.isVavaType('long') || this.isVavaType('long') ? LongValue : IntValue).intern(this.get() + other.get());
-  else
+  } else if (other.isVavaType('String')) {
+    return StringValue.intern(this.toString()).add(other);
+  } else {
     return other.add(this);
+  }
 };
 
 IntegralValue.prototype.subtract = function (other) {
@@ -602,6 +614,9 @@ FloatingPointValue.prototype.checkedValue = function (rawValue, sign) {
 };
 
 FloatingPointValue.prototype.add = function (other) {
+  if (other.isVavaType('String')) {
+     return StringValue.intern(this.toString()).add(other);
+  }
   return (other.isVavaType('double') ? other : this).constructor.intern(this.get() + other.get());
 };
 
@@ -686,8 +701,26 @@ var StringValue = exports.StringValue = function (rawValue) {
 
 StringValue.inherits(TypedValue);
 
+StringValue.stored = {};
+
 StringValue.prototype.add = function (other) {
-  return new StringValue(this.get() + other.get());
+  return StringValue.intern(this.toString() + other.toString());
+};
+
+StringValue.prototype.toString = function () {
+  return this.rawValue;
+};
+
+/**
+ * Used to intern StringValues.
+ *
+ * @param rawStr The string value to lookup/insert
+ */
+StringValue.intern = function (rawStr) {
+  if (this.stored[rawStr])
+    return this.stored[rawStr];
+  else
+    return (this.stored[rawStr] = new this(rawStr));
 };
 
 //// REFERENCE TYPES

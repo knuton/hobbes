@@ -41,7 +41,12 @@ exports.run = function (vavaSrc, options) {
   }
   var scope = new vava.scope.Scope({__env : vava.env}).__add(stdlib).__add(stdlib.java.lang);
 
-  var vavaClass = loadClass(vavaSrc, scope, options);
+  var algoTools = {
+    AlgoTools : {
+      IO : loadClass(stdlib.AlgoTools.source.IO, scope, {})
+    }
+  };
+  var vavaClass = loadClass(vavaSrc, scope.__add(algoTools), options);
 
   // Invoke `main`
   if (vavaClass.hasMethod('main(String[])')) {
