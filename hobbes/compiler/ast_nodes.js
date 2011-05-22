@@ -433,7 +433,7 @@ var LocalVariableDeclaration = exports.LocalVariableDeclaration = function (vava
 LocalVariableDeclaration.inherits(ASTNode);
 
 LocalVariableDeclaration.prototype.compileNode = function (opts) {
-  return utils.indent('this.__add({' + this.children[0].compile(opts.mergeOpts({vavaType: this.vavaType, valuedness: this.valuedness})) + '})', opts.indent);
+  return utils.indent('this.__add({' + this.children[0].compile(opts.mergeOpts({vavaType: this.vavaType, valuedness: this.valuedness, local: true})) + '})', opts.indent);
 };
 
 /**
@@ -535,10 +535,12 @@ VariableDeclarator.prototype.compileNode = function (opts) {
     )
   );
   // TODO error on wrong type
-  this.vavaType = (this.vavaInitializer && this.vavaInitializer.getVavaType()) || opts.vavaType;
+  this.vavaType = opts.vavaType;
   this.compileTimeCheck(opts);
   opts.names.__addName(this.vavaIdentifier, this.vavaType);
   opts.setModifier('final', this.vavaIdentifier, opts.valuedness === 'final');
+  opts.setModifier('local', this.vavaIdentifier, true);
+  opts.setModifier('initialized', this.vavaIdentifier, !!this.vavaInitializer);
   return result;
 };
 
@@ -546,12 +548,15 @@ VariableDeclarator.prototype.compileForField = function (opts) {
   var obj = {};
   obj[this.vavaIdentifier] = builder.constructorCall(
     'this.__env.TypedVariable',
-    [builder.string(opts.vavaType), builder.string(this.vavaIdentifier), this.vavaInitializer && this.vavaInitializer.compile(opts), builder.objectToLiteral({modifier: opts.valuedness})].filter(function (value) { return !!value; }),
+    [builder.string(opts.vavaType), builder.string(this.vavaIdentifier), this.vavaInitializer && this.vavaInitializer.compile(opts)].filter(
+      function (value) { return !!value; }
+    ),
     false
   );
-  this.vavaType = (this.vavaInitializer && this.vavaInitializer.getVavaType()) || opts.vavaType;
+  this.vavaType = opts.vavaType;
   this.compileTimeCheck(opts);
   opts.names.__addName(this.vavaIdentifier, this.vavaType);
+  opts.setModifier('final', this.vavaIdentifier, opts.valuedness === 'final');
   return obj;
 };
 
@@ -914,6 +919,14 @@ Name.prototype.compileNode = function (opts) {
   // TODO Too simplified
   this.vavaType = opts.names[this.simple()];
   return result;
+};
+
+Name.prototype.compileTimeCheck = function (opts) {
+  if (opts.hasModifier('local', this.simple()) && !opts.hasModifier('initialized', this.simple())) {
+    opts.addError(
+      this.nonFatalError('variable ' + this.simple() + ' might not have been initialized')
+    );
+  }
 };
 
 Name.prototype.getSignature = function () {
