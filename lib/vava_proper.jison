@@ -47,6 +47,7 @@ EXPO              ([Ee][+-]?{Ds})
 "while"               {return 'KEYWORD_WHILE';}
 "do"                  {return 'KEYWORD_DO';}
 "for"                 {return 'KEYWORD_FOR';}
+"switch"              {return 'switch';}
 "true"                {return 'TRUE_LITERAL';}
 "false"               {return 'FALSE_LITERAL';}
 
@@ -299,7 +300,7 @@ class_declaration
 /*** CLASS ***/
 
 class_body
-  : EMBRACE class_body_declarations UNBRACE
+  : EMBRACE class_body_declarations UNBRACE 
     { $$ = $2; }
   ;
 
@@ -521,7 +522,8 @@ statement_without_trailing_substatement
     { $$ = $1; }
   | expression_statement
     { $$ = $1; }
-  // TODO switch_statement
+  | switch_statement
+    { $$ = $1; }
   | do_statement
     { $$ = $1; }
   // TODO break_statement
@@ -582,6 +584,53 @@ if_then_else_statement_no_short_if
   : KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN statement_no_short_if KEYWORD_ELSE statement_no_short_if
     { $$ = new yy.IfThenElse($3, $5, $7, @$); }
   ;
+
+switch_statement
+  : 'switch' LEFT_PAREN expression RIGHT_PAREN switch_block
+    { $$ = new yy.Switch($3, $5, @$); }
+  ;
+
+switch_block
+  : EMBRACE UNBRACE
+    { $$ = new yy.SwitchBlock(@$); }
+  | EMBRACE switch_block_statement_groups switch_labels UNBRACE
+    { $$ = new yy.SwitchBlock($2, $3, @$); }
+  | EMBRACE switch_labels UNBRACE
+    { $$ = new yy.SwitchBlock(undefined, $3, @$); }
+  | EMBRACE switch_block_statement_groups UNBRACE
+    { $$ = new yy.SwitchBlock($2, undefined, @$); }
+  ;
+
+switch_block_statements_groups
+  : switch_block_statement_group
+    { $$ = [$1]; }
+  | switch_block_statement_groups switch_block_statement_group
+    { $1.push($2); $$ = $1; } 
+  ;
+
+switch_block_statement_group
+  : switch_labels block_statements
+    { $$ = new yy.SwitchBlockStatementGroup($1, $2, @$); }
+  ;
+    
+
+/**
+SwitchBlockStatementGroup:
+
+  SwitchLabels BlockStatements
+
+SwitchLabels:
+
+  SwitchLabel
+
+  SwitchLabels SwitchLabel
+
+SwitchLabel:
+
+  case ConstantExpression :
+
+  default :
+*/
 
 /*** CONTROL STRUCTURES: LOOPS ***/
 
