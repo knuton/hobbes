@@ -19,6 +19,12 @@ exports.System = {
           'int',
           [],
           function () { return new this.__env.IntValue(Number(5)); }
+        ),
+        new vava.env.VavaMethod(
+          'readInt',
+          'int',
+          [],
+          function () { var max = 9, min = 0; return this.__env.IntValue.intern(Math.floor(Math.random() * (max - min + 1)) + min); }
         )
       ]
     },
