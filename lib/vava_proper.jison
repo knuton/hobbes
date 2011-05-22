@@ -8,10 +8,14 @@ NZ                [1-9]
 Ds                ("0"|{NZ}{D}*)
 EXPO              ([Ee][+-]?{Ds})
 
+%s                comment
+
 %%
 
 "//".*                {/* skip comments */}
-"/*"(.|\n)*"*/"       {/* skip comments */}
+"/*"                  {this.begin('comment');}
+<comment>"*/"         {this.popState();}
+<comment>.            {/* skip comment content*/}
 \s+                   {/* skip whitespace */}
 
 "{"                   {return 'EMBRACE'; /* Basic Syntax */}
@@ -567,6 +571,7 @@ if_then_statement
   ;
 
 if_then_else_statement
+  // TODO replace statement_no_short_if with statement to make this work. Need to investigate consequences
   : KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN statement_no_short_if KEYWORD_ELSE statement
     { $$ = new yy.IfThenElse($3, $5, $7, @$); }
   ;
