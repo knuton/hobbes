@@ -596,6 +596,7 @@ Assignment.prototype.compileNode = function (opts) {
   this.vavaType = this.children[1].getVavaType();
   // TODO qualified names
   opts.names.__addName(this.children[0].simple(), this.vavaType);
+  opts.setModifier('initialized', this.children[0].qualified(), true);
   return result;
 };
 
@@ -922,7 +923,7 @@ Name.prototype.compileNode = function (opts) {
 };
 
 Name.prototype.compileTimeCheck = function (opts) {
-  if (opts.hasModifier('local', this.simple()) && !opts.hasModifier('initialized', this.simple())) {
+if (!opts.noGet && opts.hasModifier('local', this.simple()) && !opts.hasModifier('initialized', this.simple())) {
     opts.addError(
       this.nonFatalError('variable ' + this.simple() + ' might not have been initialized')
     );
