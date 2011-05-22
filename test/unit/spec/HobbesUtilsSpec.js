@@ -82,6 +82,20 @@ describe('Utils', function () {
     
   });
   
+  describe('Object Path', function () {
+    
+    var obj = {hi: {hey: {ha: 5}}};
+
+    it('should resolve path', function () {
+      expect(utils.objectPath(obj, ['hi', 'hey']).ha).toBe(5);
+    });
+    
+    it('should resolve missing path to undefined', function () {
+      expect(utils.objectPath(obj, ['hi', 'hey', 'huh'])).toBe(undefined);
+    });
+    
+  });
+  
   describe('JS builder helpers', function () {
     
     describe('Variable declaration', function () {

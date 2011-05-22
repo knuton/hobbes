@@ -178,7 +178,7 @@ CompilationUnit.prototype.compileNode = function (opts) {
     var F = function () {};
     F.prototype = this;
     var obj = new F();
-    for (key in (extraOptions || {})) {
+    for (var key in (extraOptions || {})) {
       obj[key] = extraOptions[key];
     }
     return obj;
@@ -267,12 +267,8 @@ ImportDeclaration.prototype.checkChild = function (name) {
 
 ImportDeclaration.prototype.compileNode = function (opts) {
   for (var i = 0; i < this.children.length; i++) {
-    var parts = this.children[i].parts();
-    var tmpObj = opts.names[parts[0]];
-    for (var j = 1; j < parts.length; j++) {
-      tmpObj = tmpObj[parts[j]];
-    }
-    opts.names[parts[j]] = tmpObj;
+    var name = this.children[i];
+    opts.names[name.simple()] = utils.objectPath(opts.names, name.parts());
   }
   return 'this.' + this.children[0].simple() + ' = this.' + this.children[0].qualified() + ';';
 };
@@ -732,10 +728,12 @@ MethodInvocation.inherits(ASTNode);
 MethodInvocation.prototype.compileNode = function (opts) {
   var argumentList = this.children[0].compile(opts);
   var methodSig = this.name.simple() + '(' + this.children[0].getVavaTypes().join(',') + ')';
-  this.vavaType = opts.names[methodSig];
   if (this.name.isSimple()) {
+    this.vavaType = opts.names[methodSig];
     return utils.indent('this.__self.send("' + methodSig + '", ' + argumentList + ')', opts.indent);
   } else {
+    // TODO error handling for non-existent paths
+    this.vavaType = utils.objectPath(opts.names, this.name.prefixParts()).hasMethod(methodSig);
     return utils.indent('this.' + this.name.prefix() + '.send("' + methodSig + '", ' + argumentList + ')', opts.indent);
   }
 };
@@ -878,6 +876,13 @@ Name.prototype.qualified = function () {
  */
 Name.prototype.parts = function () {
   return this.name.split('.');
+};
+
+/**
+ * Return an array of the name's prefix's parts.
+ */
+Name.prototype.prefixParts = function () {
+  return this.parts().slice(0, -1);
 };
 
 /**

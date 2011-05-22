@@ -172,6 +172,23 @@ var merge = exports.merge = function () {
 
 exports.builder = require('./utils/code_builder');
 
+/**
+ * Returns the value found in a given object under a chain of names.
+ *
+ * e.g. for {hi: {hey: {ha: 5}}}, ['hi', hey'] returns {ha: 5}
+ *      for          ''         , ['hi', 'huh'] returns undefined
+ * @param obj Object to look up in
+ * @param nameChain Array of strings to use as keys
+ */
+var objectPath = exports.objectPath = function (obj, nameChain) {
+  var curr = obj;
+  for (var i = 0; i < nameChain.length; i++) {
+    curr = curr[nameChain[i]];
+    if (typeof curr !== 'object') return undefined;
+  }
+  return curr;
+};
+
 exports.yyUtils = {
   merge: merge
 };

@@ -32,12 +32,15 @@ VavaClass.prototype.addMethods = function (methodDefinitions) {
 };
 
 /**
- * Returns whether this class possesses a method with this signature.
+ * Returns a truthy/false value depending on the class possessing a method
+ * with the given signature.
+ *
+ * Returns the method's return type, if it does, otherwise returns false.
  *
  * e.g. vavaClass.hasMethod('fib(int)')
  */
 VavaClass.prototype.hasMethod = function (methodSignature) {
-  return !!this.vavaMethods[methodSignature];
+  return !!this.vavaMethods[methodSignature] && this.vavaMethods[methodSignature].getVavaType();
 };
 
 /**

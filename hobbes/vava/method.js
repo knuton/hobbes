@@ -30,6 +30,10 @@ VavaMethod.prototype.signature = function () {
   return this.name() + '(' + this.formalParameterTypes().join(',') + ')';
 };
 
+VavaMethod.prototype.getVavaType = function () {
+  return this.vavaReturnType;
+};
+
 VavaMethod.prototype.formalParameterTypes = function () {
   return this.vavaFormalParameters.map(function (fp) {
     return fp.vavaType;
