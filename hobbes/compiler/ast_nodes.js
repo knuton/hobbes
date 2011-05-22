@@ -188,6 +188,12 @@ CompilationUnit.prototype.compileNode = function (opts) {
     obj.names = this.names.__descend();
     return obj;
   };
+  opts.setModifier = function (modifier, name, onOrOff) {
+    this.names['__' + modifier + '-' + name] = !!onOrOff;
+  };
+  opts.hasModifier = function (modifier, name) {
+    return this.names['__' + modifier + '-' + name];
+  };
   opts.addError = function (err) {
     opts.errors.push(err);
   }
@@ -406,8 +412,9 @@ FieldDeclaration.prototype.getSignature = function () {
  *
  * @param vavaType The Vava type of the declared fields
  * @param variableDeclarators Array of VariableDeclaration objects
+ * @param modifiers Optional modifiers, s.a. `final` as object
  */
-var LocalVariableDeclaration = exports.LocalVariableDeclaration = function (vavaType, variableDeclarators) {
+var LocalVariableDeclaration = exports.LocalVariableDeclaration = function (vavaType, variableDeclarators, modifiers) {
   if (typeof vavaType !== 'string') {
     throw new TypeError('Expected Vava type to be string.');
   }
@@ -418,14 +425,15 @@ var LocalVariableDeclaration = exports.LocalVariableDeclaration = function (vava
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   this.vavaType = vavaType;
-
+  // For `final`
+  this.valuedness = modifiers && modifiers.valuedness;
   this.appendChild(variableDeclarators);
 };
 
 LocalVariableDeclaration.inherits(ASTNode);
 
 LocalVariableDeclaration.prototype.compileNode = function (opts) {
-  return utils.indent('this.__add({' + this.children[0].compile(opts.mergeOpts({vavaType: this.vavaType})) + '})', opts.indent);
+  return utils.indent('this.__add({' + this.children[0].compile(opts.mergeOpts({vavaType: this.vavaType, valuedness: this.valuedness})) + '})', opts.indent);
 };
 
 /**
@@ -530,6 +538,7 @@ VariableDeclarator.prototype.compileNode = function (opts) {
   this.vavaType = (this.vavaInitializer && this.vavaInitializer.getVavaType()) || opts.vavaType;
   this.compileTimeCheck(opts);
   opts.names.__addName(this.vavaIdentifier, this.vavaType);
+  opts.setModifier('final', this.vavaIdentifier, opts.valuedness === 'final');
   return result;
 };
 
@@ -583,6 +592,15 @@ Assignment.prototype.compileNode = function (opts) {
   // TODO qualified names
   opts.names.__addName(this.children[0].simple(), this.vavaType);
   return result;
+};
+
+Assignment.prototype.compileTimeCheck = function (opts) {
+  // TODO Type mismatch
+  if (opts.hasModifier('final', this.children[0].simple())) {
+    opts.addError(
+      this.nonFatalError('cannot assign a value to final variable ' + this.children[0].simple())
+    );
+  }
 };
 
 /**

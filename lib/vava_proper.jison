@@ -481,6 +481,8 @@ local_variable_declaration_statement
 local_variable_declaration
   : type variable_declarators
     { $$ = new yy.LocalVariableDeclaration($1, $2, @$); }
+  | modifiers type variable_declarators
+    { $$ = new yy.LocalVariableDeclaration($2, $3, $1, @$); }
   ;
 
 /*** STATEMENTS ***/
