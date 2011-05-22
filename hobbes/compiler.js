@@ -5,7 +5,44 @@ var parser = exports.parser = require('./compiler/parser').parser;
 parser.yy = require('./compiler/ast_nodes');
 parser.yy.utils = utils.yyUtils;
 
+// Simple interface
+exports.run = function (vavaSrc, options) {
+  options = options || {};
+  if (typeof vavaSrc !== 'string') {
+    throw new TypeError('Expected Vava source to be provided as string.');
+  }
+  var scope = new vava.scope.Scope({__env : vava.env}).__add(stdlib).__add(stdlib.java.lang);
+
+  var algoTools = {
+    AlgoTools : {
+      IO : loadClass(stdlib.AlgoTools.source.IO, scope, {})
+    }
+  };
+  var vavaClass = loadClass(vavaSrc, scope.__add(algoTools), options);
+
+  // Invoke `main`
+  if (vavaClass.hasMethod('main(String[])')) {
+    // TODO replace args for main with yet-to-come array
+    vavaClass.send('main(String[])', [{getVavaType: function () { return true; }, to: function () {return this;}}]);
+  } else {
+    throw {type: 'NoSuchMethodError', message: 'Exception in thread "main" java.lang.NoSuchMethodError: main'};
+  }
+};
+
 var loadClass = function (vavaSrc, scope, options) {
+  // Overwrite parseError each time to have vavaSrc in closure
+  parser.yy.parseError = function (message, hash) {
+    var err = new Error(message);
+    err.message = hash.expected.join(',') + ' expected';
+    err.line = hash.line;
+    err.description = errorDescription(vavaSrc, hash);
+    err.toString = errorToString;
+    var errArr = [err];
+    errArr.type = 'ParseError';
+    errArr.summary = '1 error';
+    throw errArr;
+  }
+
   // Parse and create AST
   var vavaAST = parser.parse(vavaSrc);
   // Debug info: print AST
@@ -31,30 +68,6 @@ var loadClass = function (vavaSrc, scope, options) {
   // statements
   var runner = new Function (compilation);
   return runner.call(scope);
-};
-
-// Simple interface for now
-exports.run = function (vavaSrc, options) {
-  options = options || {};
-  if (typeof vavaSrc !== 'string') {
-    throw new TypeError('Expected Vava source to be provided as string.');
-  }
-  var scope = new vava.scope.Scope({__env : vava.env}).__add(stdlib).__add(stdlib.java.lang);
-
-  var algoTools = {
-    AlgoTools : {
-      IO : loadClass(stdlib.AlgoTools.source.IO, scope, {})
-    }
-  };
-  var vavaClass = loadClass(vavaSrc, scope.__add(algoTools), options);
-
-  // Invoke `main`
-  if (vavaClass.hasMethod('main(String[])')) {
-    // TODO replace args for main with yet-to-come array
-    vavaClass.send('main(String[])', [{getVavaType: function () { return true; }, to: function () {return this;}}]);
-  } else {
-    throw {type: 'NoSuchMethodError', message: 'Exception in thread "main" java.lang.NoSuchMethodError: main'};
-  }
 };
 
 function enhanceErrors (errs, source) {

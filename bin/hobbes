@@ -29,7 +29,7 @@ function execute(src) {
   try {
     hobbes.compiler.run(src, options);
   } catch (err) {
-    if (err.type === 'CompileTimeError') {
+    if (err.type === 'ParseError' || err.type === 'CompileTimeError') {
       for (var i = 0; i < err.length; i++) {
         process.stdout.write(filename + ':' + err[i]);
       }
