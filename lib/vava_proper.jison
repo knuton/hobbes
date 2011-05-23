@@ -47,7 +47,11 @@ EXPO              ([Ee][+-]?{Ds})
 "while"               {return 'KEYWORD_WHILE';}
 "do"                  {return 'KEYWORD_DO';}
 "for"                 {return 'KEYWORD_FOR';}
+"break"               {return 'break';}
 "switch"              {return 'switch';}
+"case"                {return 'case';}
+"default"             {return 'default';}
+
 "true"                {return 'TRUE_LITERAL';}
 "false"               {return 'FALSE_LITERAL';}
 
@@ -526,7 +530,8 @@ statement_without_trailing_substatement
     { $$ = $1; }
   | do_statement
     { $$ = $1; }
-  // TODO break_statement
+  | break_statement
+    { $$ = $1; }
   // TODO continue_statement
   | return_statement
     { $$ = $1; }
@@ -542,6 +547,11 @@ empty_statement
 expression_statement
   : statement_expression LINE_TERMINATOR
     { $$ = new yy.ExpressionStatement($1, @1); }
+  ;
+
+break_statement
+  : 'break' LINE_TERMINATOR
+    { $$ = new yy.BreakStatement(@1); }
   ;
 
 statement_expression
@@ -592,16 +602,16 @@ switch_statement
 
 switch_block
   : EMBRACE UNBRACE
-    { $$ = new yy.SwitchBlock(@$); }
+    { $$ = new yy.SwitchBlock([], [], @$); }
   | EMBRACE switch_block_statement_groups switch_labels UNBRACE
     { $$ = new yy.SwitchBlock($2, $3, @$); }
   | EMBRACE switch_labels UNBRACE
-    { $$ = new yy.SwitchBlock(undefined, $3, @$); }
+    { $$ = new yy.SwitchBlock([], $3, @$); }
   | EMBRACE switch_block_statement_groups UNBRACE
-    { $$ = new yy.SwitchBlock($2, undefined, @$); }
+    { $$ = new yy.SwitchBlock($2, [], @$); }
   ;
 
-switch_block_statements_groups
+switch_block_statement_groups
   : switch_block_statement_group
     { $$ = [$1]; }
   | switch_block_statement_groups switch_block_statement_group
@@ -612,25 +622,21 @@ switch_block_statement_group
   : switch_labels block_statements
     { $$ = new yy.SwitchBlockStatementGroup($1, $2, @$); }
   ;
+
+switch_labels
+  : switch_label
+    { $$ = [$1]; }
+  | switch_labels switch_label
+    { $1.push($2); $$ = $1; }
+  ;
+
+switch_label
+  : 'case' constant_expression COLON
+    { $$ = new yy.SwitchLabel($2, @$); }
+  | 'default' COLON
+    { $$ = new yy.SwitchLabel(@$); }
+  ;
     
-
-/**
-SwitchBlockStatementGroup:
-
-  SwitchLabels BlockStatements
-
-SwitchLabels:
-
-  SwitchLabel
-
-  SwitchLabels SwitchLabel
-
-SwitchLabel:
-
-  case ConstantExpression :
-
-  default :
-*/
 
 /*** CONTROL STRUCTURES: LOOPS ***/
 
@@ -940,6 +946,11 @@ assignment_operator
 
 expression
   : assignment_expression
+    { $$ = $1; }
+  ;
+
+constant_expression
+  : expression
     { $$ = $1; }
   ;
 
