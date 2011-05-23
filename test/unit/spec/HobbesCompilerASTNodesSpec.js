@@ -1,5 +1,12 @@
 require('../../../hobbes/extensions');
 var astNodes = require('../../../hobbes/compiler/ast_nodes');
+var indent = function (str, n) {
+  while (--n > 0) {
+    str = ' ' + str;
+  }
+  return str;
+};
+
 
 describe('Compiler', function () {
   
@@ -11,7 +18,7 @@ describe('Compiler', function () {
     function mockASTNode(properties) {
       properties = properties || {};
       var mockNode = new astNodes.ASTNode();
-      mockNode.compileNode = function () { return properties.__mock || 'MOCK'; }
+      mockNode.compileNode = function (opts) { return properties.__mock || 'MOCK'; }
       for (key in properties) {
         if (key.substr(0,2) !== '__')
           mockNode[key] = properties[key];
@@ -1043,6 +1050,28 @@ describe('Compiler', function () {
       
     }); // end ZeroFillRightShift spec
 
+    describe('BreakStatement', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.BreakStatement();
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `BreakStatement`', function () {
+        expect(testNode.getType()).toBe('BreakStatement');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <BreakStatement>\n');
+      });
+      
+      it('should compile to default', function () {
+        expect(testNode.compile(mockOpts())).toBe('break;');
+      });
+
+    }); // end BreakStatement spec
+
     describe('IfThen', function () {
       
       beforeEach(function () {
@@ -1078,6 +1107,99 @@ describe('Compiler', function () {
       });
       
     }); // end IfThenElse spec
+    
+    describe('Switch', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.Switch(mockASTNode({__mock: 'EXPR'}), mockASTNode({__mock: 'BLOCK'}));
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `Switch`', function () {
+        expect(testNode.getType()).toBe('Switch');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <Switch>\n  - <ASTNode>\n  - <ASTNode>\n');
+      });
+      
+      it('should compile itself', function () {
+        expect(testNode.compile(mockOpts())).toBe('switch (EXPR) { (function () {\nBLOCK\n}).call(this.__descend()); }');
+      });
+
+    }); // end Switch spec
+    
+    describe('SwitchBlock', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.SwitchBlock([mockASTNode({__mock: 'GROUP_A'})], [mockASTNode({__mock: 'LABELS_A'}), mockASTNode({__mock: 'LABELS_B'})]);
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `SwitchBlock`', function () {
+        expect(testNode.getType()).toBe('SwitchBlock');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <SwitchBlock>\n  - <ASTNode>\n  - <ASTNode>\n  - <ASTNode>\n');
+      });
+      
+      it('should compile itself', function () {
+        expect(testNode.compile(mockOpts())).toBe('GROUP_A\nLABELS_A\nLABELS_B');
+      });
+
+    }); // end SwitchBlock spec
+    
+    describe('SwitchBlockStatementGroup', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.SwitchBlockStatementGroup([mockASTNode({__mock: 'CASE:'}),mockASTNode({__mock: 'DEFAULT:'})], [mockASTNode()]);
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `SwitchBlockStatementGroup`', function () {
+        expect(testNode.getType()).toBe('SwitchBlockStatementGroup');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <SwitchBlockStatementGroup>\n  - <ASTNode>\n  - <ASTNode>\n  - <ASTNode>\n');
+      });
+      
+      it('should compile itself', function () {
+        expect(testNode.compile(mockOpts())).toBe('CASE: DEFAULT: MOCK');
+      });
+
+    }); // end SwitchBlockStatementGroup spec
+    
+    describe('SwitchLabel', function () {
+      
+      beforeEach(function () {
+        testNode = new astNodes.SwitchLabel();
+      });
+      
+      it('should satisfy common requirements for ASTNodes', commonASTNodeTests);
+
+      it('should be of type `SwitchLabel`', function () {
+        expect(testNode.getType()).toBe('SwitchLabel');
+      });
+      
+      it('should turn itself into a string', function () {
+        expect(testNode.toString()).toBe('- <SwitchLabel>\n');
+      });
+      
+      it('should compile to default', function () {
+        expect(testNode.compile(mockOpts())).toBe('default:');
+      });
+
+      it('should compile to case', function () {
+        testNode = new astNodes.SwitchLabel(mockASTNode());
+        expect(testNode.compile(mockOpts())).toBe('case MOCK:');
+      });
+
+    }); // end SwitchLabel spec
     
     describe('WhileLoop', function () {
       

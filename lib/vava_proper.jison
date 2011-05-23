@@ -47,6 +47,11 @@ EXPO              ([Ee][+-]?{Ds})
 "while"               {return 'KEYWORD_WHILE';}
 "do"                  {return 'KEYWORD_DO';}
 "for"                 {return 'KEYWORD_FOR';}
+"break"               {return 'break';}
+"switch"              {return 'switch';}
+"case"                {return 'case';}
+"default"             {return 'default';}
+
 "true"                {return 'TRUE_LITERAL';}
 "false"               {return 'FALSE_LITERAL';}
 
@@ -299,7 +304,7 @@ class_declaration
 /*** CLASS ***/
 
 class_body
-  : EMBRACE class_body_declarations UNBRACE
+  : EMBRACE class_body_declarations UNBRACE 
     { $$ = $2; }
   ;
 
@@ -521,10 +526,12 @@ statement_without_trailing_substatement
     { $$ = $1; }
   | expression_statement
     { $$ = $1; }
-  // TODO switch_statement
+  | switch_statement
+    { $$ = $1; }
   | do_statement
     { $$ = $1; }
-  // TODO break_statement
+  | break_statement
+    { $$ = $1; }
   // TODO continue_statement
   | return_statement
     { $$ = $1; }
@@ -540,6 +547,11 @@ empty_statement
 expression_statement
   : statement_expression LINE_TERMINATOR
     { $$ = new yy.ExpressionStatement($1, @1); }
+  ;
+
+break_statement
+  : 'break' LINE_TERMINATOR
+    { $$ = new yy.BreakStatement(@1); }
   ;
 
 statement_expression
@@ -605,6 +617,49 @@ if_then_else_statement_no_short_if
   | KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN for_statement_no_short_if KEYWORD_ELSE statement_no_short_if
     { $$ = new yy.IfThenElse($3, $5, $7, @$); }
   ;
+
+switch_statement
+  : 'switch' LEFT_PAREN expression RIGHT_PAREN switch_block
+    { $$ = new yy.Switch($3, $5, @$); }
+  ;
+
+switch_block
+  : EMBRACE UNBRACE
+    { $$ = new yy.SwitchBlock([], [], @$); }
+  | EMBRACE switch_block_statement_groups switch_labels UNBRACE
+    { $$ = new yy.SwitchBlock($2, $3, @$); }
+  | EMBRACE switch_labels UNBRACE
+    { $$ = new yy.SwitchBlock([], $3, @$); }
+  | EMBRACE switch_block_statement_groups UNBRACE
+    { $$ = new yy.SwitchBlock($2, [], @$); }
+  ;
+
+switch_block_statement_groups
+  : switch_block_statement_group
+    { $$ = [$1]; }
+  | switch_block_statement_groups switch_block_statement_group
+    { $1.push($2); $$ = $1; } 
+  ;
+
+switch_block_statement_group
+  : switch_labels block_statements
+    { $$ = new yy.SwitchBlockStatementGroup($1, $2, @$); }
+  ;
+
+switch_labels
+  : switch_label
+    { $$ = [$1]; }
+  | switch_labels switch_label
+    { $1.push($2); $$ = $1; }
+  ;
+
+switch_label
+  : 'case' constant_expression COLON
+    { $$ = new yy.SwitchLabel($2, @$); }
+  | 'default' COLON
+    { $$ = new yy.SwitchLabel(@$); }
+  ;
+    
 
 /*** CONTROL STRUCTURES: LOOPS ***/
 
@@ -914,6 +969,11 @@ assignment_operator
 
 expression
   : assignment_expression
+    { $$ = $1; }
+  ;
+
+constant_expression
+  : expression
     { $$ = $1; }
   ;
 

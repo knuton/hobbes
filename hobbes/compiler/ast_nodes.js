@@ -848,6 +848,22 @@ ExpressionStatement.prototype.compileNode = function (opts) {
 };
 
 /**
+ * Creates a node for a break statement.
+ *
+ */
+var BreakStatement = exports.BreakStatement = function () {
+  this.type = 'BreakStatement';
+  this.setLoc(arguments[arguments.length-1]);
+  this.children = [];
+};
+
+BreakStatement.inherits(ASTNode);
+
+BreakStatement.prototype.compileNode = function (opts) {
+  return 'break;';
+};
+
+/**
  * Creates a node for a name, i.e. a named reference.
  *
  * @param name The name in question
@@ -2069,6 +2085,96 @@ IfThenElse.prototype.compileNode = function (opts) {
 };
 
 IfThenElse.prototype.compileTimeCheck = IfThen.prototype.compileTimeCheck;
+
+/**
+ * Creates a node for a switch statement.
+ *
+ * @param expression Expression whose value to compare with cases 
+ * @param switchBlock
+ */
+var Switch = exports.Switch = function (expression, switchBlock) {
+  this.type = 'Switch';
+  this.setLoc(arguments[arguments.length-1]);
+  this.children = [];
+  this.appendChild(expression);
+  this.appendChild(switchBlock);
+};
+
+Switch.inherits(ASTNode);
+
+Switch.prototype.compileNode = function (opts) {
+  return 'switch (' + this.children[0].compile(opts) + ') { (' + builder.wrapAsFunction(this.children[1].compile(opts.mergeOpts({indent: (opts.indent || 0) + 2}))) + ').call(this.__descend()); }';
+};
+
+/**
+ * Creates a node for a switch block.
+ *
+ * @param switchBlockStatementGroups Array of switch block statements groups 
+ * @param switchLabels Array of switch labels
+ */
+var SwitchBlock = exports.SwitchBlock = function (switchBlockStatementGroups, switchLabels) {
+  this.type = 'SwitchBlock';
+  this.setLoc(arguments[arguments.length-1]);
+  this.children = [];
+  if (typeof switchBlockStatementGroups.length === 'undefined' || typeof switchLabels.length === 'undefined') {
+    throw new Error('Expected arrays for block statement groups and switch labels.');
+  }
+  for (var i = 0; i < switchBlockStatementGroups.length; i++) this.appendChild(switchBlockStatementGroups[i]);
+  for (var j = 0; j < switchLabels.length; j++) this.appendChild(switchLabels[j]);
+};
+
+SwitchBlock.inherits(ASTNode);
+
+SwitchBlock.prototype.compileNode = function (opts) {
+  return this.children.map(function (child) { return child.compile(opts); }).join('\n');
+};
+
+/**
+ * Creates a node for switch block statement group.
+ *
+ * @param switchLabels Array of switch labels
+ * @param blockStatements Array of block statements
+ */
+var SwitchBlockStatementGroup = exports.SwitchBlockStatementGroup = function (switchLabels, blockStatements) {
+  this.type = 'SwitchBlockStatementGroup';
+  this.setLoc(arguments[arguments.length-1]);
+  this.children = [];
+  for (var i = 0; i < switchLabels.length; i++) this.appendChild(switchLabels[i]);
+  for (var j = 0; j < blockStatements.length; j++) this.appendChild(blockStatements[j]);
+};
+
+SwitchBlockStatementGroup.inherits(ASTNode);
+
+SwitchBlockStatementGroup.prototype.compileNode = function (opts) {
+  return this.children.map(function (child) { return child.compile(opts); }).join(' ');
+};
+
+/**
+ * Creates a node for switch label.
+ *
+ * With an expression as argument becomes
+ *   `case <expression>:`
+ * without becomes
+ *   `default:` 
+ *
+ * @param expression Optional expression
+ */
+var SwitchLabel = exports.SwitchLabel = function (expression) {
+  this.type = 'SwitchLabel';
+  this.setLoc(arguments[arguments.length-1]);
+  this.children = [];
+  if (expression && expression.compile) this.appendChild(expression); 
+};
+
+SwitchLabel.inherits(ASTNode);
+
+SwitchLabel.prototype.compileNode = function (opts) {
+  if (this.children[0]) {
+    return 'case ' + this.children[0].compile(opts) + ':';
+  } else {
+    return 'default:';
+  }
+};
 
 /**
  * Creates a node for a while loop.
