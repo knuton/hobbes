@@ -1345,7 +1345,7 @@ BinaryOperatorNode.table = {
   'long' : {'byte':'long', 'short':'long', 'char':'long', 'int':'long', 'long':'long', 'float':'float', 'double':'double', 'String':'String'},
   'float' : {'byte':'float', 'short':'float', 'char':'float', 'int':'float', 'long':'float', 'float':'float', 'double':'double', 'String':'String'},
   'double' : {'byte':'double', 'short':'double', 'char':'double', 'int':'double', 'long':'double', 'float':'double', 'double':'double', 'String':'String'},
-  'String' : {'byte':'String', 'short':'String', 'char':'String', 'int':'String', 'long':'String', 'float':'String', 'double':'String', 'String':'String'},
+  'String' : {'byte':'String', 'short':'String', 'char':'String', 'int':'String', 'long':'String', 'float':'String', 'double':'String', 'String':'String'}
 };
 
 BinaryOperatorNode.prototype.compileTimeCheck = function (opts) {
@@ -1404,7 +1404,7 @@ Addition.table = {
   'long' : {'byte':'long', 'short':'long', 'char':'long', 'int':'long', 'long':'long', 'float':'float', 'double':'double', 'String':'String'},
   'float' : {'byte':'float', 'short':'float', 'char':'float', 'int':'float', 'long':'float', 'float':'float', 'double':'double', 'String':'String'},
   'double' : {'byte':'double', 'short':'double', 'char':'double', 'int':'double', 'long':'double', 'float':'double', 'double':'double', 'String':'String'},
-  'String' : {'boolean':'String', 'byte':'String', 'short':'String', 'char':'String', 'int':'String', 'long':'String', 'float':'String', 'double':'String', 'String':'String'},
+  'String' : {'boolean':'String', 'byte':'String', 'short':'String', 'char':'String', 'int':'String', 'long':'String', 'float':'String', 'double':'String', 'String':'String'}
 };
 
 Addition.prototype.compileNode = function (opts) {
