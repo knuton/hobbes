@@ -188,6 +188,11 @@ CompilationUnit.prototype.compileNode = function (opts) {
     obj.names = this.names.__descend();
     return obj;
   };
+  opts.changeIndent = function (num) {
+    if (typeof num === 'number' && num !== 0) return this.mergeOpts({indent: (this.indent || 0) + num});
+    if (num === 0) return this.mergeOpts({indent: 0});
+    return this;
+  }
   opts.setModifier = function (modifier, name, onOrOff) {
     this.names['__' + modifier + '-' + name] = !!onOrOff;
   };
@@ -716,7 +721,7 @@ var ReturnStatement = exports.ReturnStatement = function (expression) {
 ReturnStatement.inherits(ASTNode);
 
 ReturnStatement.prototype.compileNode = function (opts) {
-  return 'return' + (this.children[0] ? ' ' + this.children[0].compile(opts) + ';' : ';');
+  return utils.indent('return' + (this.children[0] ? ' ' + this.children[0].compile(opts) + ';' : ';'), opts.indent);
 };
 
 ReturnStatement.prototype.compileTimeCheck = function (opts) {
@@ -939,7 +944,7 @@ Name.prototype.compileNode = function (opts) {
 };
 
 Name.prototype.compileTimeCheck = function (opts) {
-if (!opts.noGet && opts.hasModifier('local', this.simple()) && !opts.hasModifier('initialized', this.simple())) {
+  if (!opts.noGet && opts.hasModifier('local', this.simple()) && !opts.hasModifier('initialized', this.simple())) {
     opts.addError(
       this.nonFatalError('variable ' + this.simple() + ' might not have been initialized')
     );
@@ -2103,7 +2108,7 @@ var Switch = exports.Switch = function (expression, switchBlock) {
 Switch.inherits(ASTNode);
 
 Switch.prototype.compileNode = function (opts) {
-  return 'switch (' + this.children[0].compile(opts) + ') { (' + builder.wrapAsFunction(this.children[1].compile(opts.mergeOpts({indent: (opts.indent || 0) + 2}))) + ').call(this.__descend()); }';
+  return utils.indent('(' + builder.wrapAsFunction(' switch (' + this.children[0].compile(opts) + ') {\n' + this.children[1].compile(opts.changeIndent(2)) + '\n', [], 'noNewline') + '}).call(this.__descend());', opts.indent);
 };
 
 /**
@@ -2146,7 +2151,7 @@ var SwitchBlockStatementGroup = exports.SwitchBlockStatementGroup = function (sw
 SwitchBlockStatementGroup.inherits(ASTNode);
 
 SwitchBlockStatementGroup.prototype.compileNode = function (opts) {
-  return this.children.map(function (child) { return child.compile(opts); }).join(' ');
+  return this.children.map(function (child) { return child.compile(opts.changeIndent(0)); }).join(' ');
 };
 
 /**
@@ -2196,7 +2201,7 @@ var WhileLoop = exports.WhileLoop = function (condition, statement) {
 WhileLoop.inherits(ASTNode);
 
 WhileLoop.prototype.compileNode = function (opts) {
-  var blockOpts = opts.descendScope({indent: (opts.indent || 0) + 2});
+  var blockOpts = opts.changeIndent(2);
   return utils.indent(builder.wrapParens(
     builder.wrapAsFunction(
       utils.indentSpaces(opts.indent + 2) + 'while (this.__env.BooleanValue.intern(true) === ' + this.children[0].compile(blockOpts) + ') { ' + builder.wrapParens(builder.wrapAsFunction(this.children[1].compile(blockOpts))) + '.call(blockScope); }',
@@ -2227,7 +2232,7 @@ var DoWhileLoop = exports.DoWhileLoop = function (statement, condition) {
 DoWhileLoop.inherits(ASTNode);
 
 DoWhileLoop.prototype.compileNode = function (opts) {
-  var blockOpts = opts.descendScope({indent: (opts.indent || 0) + 2});
+  var blockOpts = opts.changeIndent(2);
   return utils.indent(builder.wrapParens(
     builder.wrapAsFunction(
       utils.indentSpaces(opts.indent + 2) + 'while (freeRide || this.__env.BooleanValue.intern(true) === ' + this.children[1].compile(blockOpts) + ') { ' + builder.wrapParens(builder.wrapAsFunction(this.children[0].compile(blockOpts))) + '.call(blockScope); freeRide = false; }',
@@ -2267,7 +2272,7 @@ var ForLoop = exports.ForLoop = function (init, condition, update, statement) {
 ForLoop.inherits(ASTNode);
 
 ForLoop.prototype.compileNode = function (opts) {
-  var blockOpts = opts.descendScope({indent: (opts.indent || 0) + 2});
+  var blockOpts = opts.changeIndent(2);
   return utils.indent(builder.wrapParens(
     builder.wrapAsFunction(
       utils.indentSpaces(opts.indent + 2) + 'for (' + this.children[0].compile(blockOpts) + '; this.__env.BooleanValue.intern(true) === ' + this.children[1].compile(blockOpts) + '; ' + this.children[2].compile(blockOpts) + ') { ' + builder.wrapParens(builder.wrapAsFunction(this.children[3].compile(blockOpts))) + '.call(blockScope); }',

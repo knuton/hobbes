@@ -31,6 +31,7 @@ describe('Compiler', function () {
       var mockOpts = {};
       mockOpts.mergeOpts = function () { return mockOpts; }
       mockOpts.descendScope = function () { return mockOpts; }
+      mockOpts.changeIndent = function () { return mockOpts; }
       mockOpts.names = {
         __addName : function () {}
       };
@@ -1125,7 +1126,7 @@ describe('Compiler', function () {
       });
       
       it('should compile itself', function () {
-        expect(testNode.compile(mockOpts())).toBe('switch (EXPR) { (function () {\nBLOCK\n}).call(this.__descend()); }');
+        expect(testNode.compile(mockOpts())).toBe('(function () { switch (EXPR) {\nBLOCK\n}}).call(this.__descend());');
       });
 
     }); // end Switch spec

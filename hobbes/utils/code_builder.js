@@ -41,11 +41,13 @@ var declarationAssignment = exports.declarationAssignment = function (identifier
  *
  * @param code The string of expressions or array of strings of expressions
  * @param params Optional array of paramater list
+ * @param noNewline if truthy, no newline is introduced
  */
-var wrapAsFunction = exports.wrapAsFunction = function (code, params) {
+var wrapAsFunction = exports.wrapAsFunction = function (code, params, noNewline) {
   code = Array.isArray(code) ? code : [code];
   params = params || [];
-  return 'function (' + params.join(', ') + ') {\n' + code.join('\n') + '\n}';
+  var nlChar = noNewline ? '' : '\n';
+  return 'function (' + params.join(', ') + ') {' + nlChar + code.join('\n') + nlChar + '}';
 };
  
 

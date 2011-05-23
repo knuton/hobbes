@@ -21,7 +21,7 @@ exports.run = function (vavaSrc, options) {
   var vavaClass = loadClass(vavaSrc, scope.__add(algoTools), options);
 
   // Invoke `main`
-  if (vavaClass.hasMethod('main(String[])')) {
+  if (vavaClass && vavaClass.hasMethod('main(String[])')) {
     // TODO replace args for main with yet-to-come array
     vavaClass.send('main(String[])', [{getVavaType: function () { return true; }, to: function () {return this;}}]);
   } else {
