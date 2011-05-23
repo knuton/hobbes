@@ -568,18 +568,41 @@ return_statement
 /*** CONTROL STRUCTURES: BRANCHING ***/
 
 if_then_statement
-  : KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN statement
+  : KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN statement_without_trailing_substatement
+    { $$ = new yy.IfThen($3, $5, @$); }
+  | KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN if_then_statement
+    { $$ = new yy.IfThen($3, $5, @$); }
+  | KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN if_then_else_statement
+    { $$ = new yy.IfThen($3, $5, @$); }
+  | KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN while_statement
+    { $$ = new yy.IfThen($3, $5, @$); }
+  | KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN for_statement
     { $$ = new yy.IfThen($3, $5, @$); }
   ;
 
 if_then_else_statement
-  // TODO replace statement_no_short_if with statement to make this work. Need to investigate consequences
-  : KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN statement_no_short_if KEYWORD_ELSE statement
+  : KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN statement_without_trailing_substatement KEYWORD_ELSE statement
+    { $$ = new yy.IfThenElse($3, $5, $7, @$); }
+  | KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN labeled_statement_no_short_if KEYWORD_ELSE statement
+    { $$ = new yy.IfThenElse($3, $5, $7, @$); }
+  | KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN if_then_else_statement_no_short_if KEYWORD_ELSE statement
+    { $$ = new yy.IfThenElse($3, $5, $7, @$); }
+  | KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN while_statement_no_short_if KEYWORD_ELSE statement
+    { $$ = new yy.IfThenElse($3, $5, $7, @$); }
+  | KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN for_statement_no_short_if KEYWORD_ELSE statement
     { $$ = new yy.IfThenElse($3, $5, $7, @$); }
   ;
 
 if_then_else_statement_no_short_if
-  : KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN statement_no_short_if KEYWORD_ELSE statement_no_short_if
+  : KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN statement_without_trailing_substatement KEYWORD_ELSE statement_no_short_if
+    { $$ = new yy.IfThenElse($3, $5, $7, @$); }
+  | KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN labeled_statement_no_short_if KEYWORD_ELSE statement_no_short_if
+    { $$ = new yy.IfThenElse($3, $5, $7, @$); }
+  | KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN if_then_else_statement_no_short_if KEYWORD_ELSE statement_no_short_if
+    { $$ = new yy.IfThenElse($3, $5, $7, @$); }
+  | KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN while_statement_no_short_if KEYWORD_ELSE statement_no_short_if
+    { $$ = new yy.IfThenElse($3, $5, $7, @$); }
+  | KEYWORD_IF LEFT_PAREN expression RIGHT_PAREN for_statement_no_short_if KEYWORD_ELSE statement_no_short_if
     { $$ = new yy.IfThenElse($3, $5, $7, @$); }
   ;
 
