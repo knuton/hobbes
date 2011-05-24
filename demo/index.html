@@ -57,7 +57,7 @@
 import AlgoTools.IO;
 
 /**  Berechnet Collatz-Funktion, d.h.                     
- *   Anzahl der Iterationen der Funktion g: N -> N        
+ *   Anzahl der Iterationen der Funktion g: N -&gt; N        
  *   bis die Eingabe auf 1 transformiert ist              
  *   mit g(x) = x/2 falls x gerade, 3*x+1 sonst          
  */
@@ -88,11 +88,11 @@ public class Collatz {
 
 /**  Verzweigung durch Bedingung (if-Anweisung, Bedingungsoperator)
  *
- *   Vergleichsoperatoren:   <    kleiner                  
- *                           <=   kleiner gleich      
+ *   Vergleichsoperatoren:   &lt;    kleiner                  
+ *                           &lt;=   kleiner gleich      
  *                           ==   gleich             
- *                           >    groesser          
- *                           >=   groesser gleich  
+ *                           &gt;    groesser          
+ *                           &gt;=   groesser gleich  
  *                           !=   ungleich        
  *                                              
  *   logische Operatoren:    &&   und           
@@ -109,15 +109,15 @@ public class Bedingung {
     int x = -5, y, m;                     // definiere 3 Integer-Variablen
                                           // davon eine initialisiert
  
-    if (x < 0) x = -x;                    // setze x auf Absolutbetrag
+    if (x &lt; 0) x = -x;                    // setze x auf Absolutbetrag
  
-    if (x < 0) y = -x; else y = x;        // setze y auf den
+    if (x &lt; 0) y = -x; else y = x;        // setze y auf den
                                           // Absolutbetrag von x
 
     m = IO.readInt("Bitte Monatszahl: ");
-    if      ((3 <= m) && (m <=  5)) IO.println("Fruehling");
-    else if ((6 <= m) && (m <=  8)) IO.println("Sommer");
-    else if ((9 <= m) && (m <= 11)) IO.println("Herbst");
+    if      ((3 &lt;= m) && (m &lt;=  5)) IO.println("Fruehling");
+    else if ((6 &lt;= m) && (m &lt;=  8)) IO.println("Sommer");
+    else if ((9 &lt;= m) && (m &lt;= 11)) IO.println("Herbst");
     else if (m==12 || m==1 || m==2) IO.println("Winter");
     else                            IO.println("unbekannte Jahreszeit");
     
@@ -185,7 +185,7 @@ public class Schleife {
 
     int i, x=10, y=2, summe;                  // 4 Integer-Variablen
        
-    while (x > 0) {                           // solange x groesser als 0 
+    while (x &gt; 0) {                           // solange x groesser als 0 
         x--;                                  // erniedrige x um eins 
         y = y + 2;                            // erhoehe y um zwei
     }
@@ -193,7 +193,7 @@ public class Schleife {
     do {                                                               
         x++;                                  // erhoehe x um eins
         y += 2;                               // erhoehe y um 2
-    } while (x < 10);                         // solange x kleiner als 10 
+    } while (x &lt; 10);                         // solange x kleiner als 10 
         
     IO.println("Bitte Zahlen eingeben. 0 als Abbruch");
     summe = 0;                                // initialisiere summe
@@ -205,10 +205,10 @@ public class Schleife {
     IO.println("Die Summe lautet " + summe);
 
     do {
-        x=IO.readInt("Bitte 1<= Zahl <=12");  // lies x ein
-    } while (( x < 1) || (x > 12));           // solange x unzulaessig 
+        x=IO.readInt("Bitte 1&lt;= Zahl <=12");  // lies x ein
+    } while (( x &lt; 1) || (x &gt; 12));           // solange x unzulaessig 
 
-    for (i=1; i<=10; i++) IO.println(i*i,6);  // drucke 10 Quadratzahlen
+    for (i=1; i&lt;=10; i++) IO.println(i*i,6);  // drucke 10 Quadratzahlen
   }
 }
         </textarea>
@@ -234,14 +234,14 @@ public class Fakultaet {
  
 
     fakultaet = 1;                         // berechne n! mit for-Schleife
-    for (i = 1; i <= n; i++)              
+    for (i = 1; i &lt;= n; i++)              
         fakultaet = fakultaet * i;
     IO.println(n + " ! = " + fakultaet);
 
 
     fakultaet = 1;                         // berechne n! mit while-Schleife
     i = 1;
-    while (i <= n) { 
+    while (i &lt;= n) { 
         fakultaet = fakultaet * i;
         i++;
     }
@@ -253,7 +253,7 @@ public class Fakultaet {
     do { 
         fakultaet = fakultaet * i;
         i++;
-    } while (i <= n);
+    } while (i &lt;= n);
     IO.println(n + " ! = " + fakultaet);
   }
 }
@@ -294,7 +294,7 @@ public class GGT {
         IO.println("GGT = " + teiler);
  
         while (a != b)                              // solange a ungleich b 
-            if (a > b) a = a - b;                   // subtrahiere die kleinere
+            if (a &gt; b) a = a - b;                   // subtrahiere die kleinere
             else       b = b - a;                   // Zahl von der groesseren 
         IO.println("GGT = " + a);                
 
@@ -318,7 +318,7 @@ public class Ueberlauf {
   public static void main (String [] argv) {
 
     int n = 1;                            // initialisiere n
-    while (n > 0) {                       // solange n positiv ist
+    while (n &gt; 0) {                       // solange n positiv ist
         n = n * 10;                       // verzehnfache n
         IO.println(n, 20);                // drucke n auf 20 Stellen
     }                                     // letzter Wert ist negativ ! 
@@ -339,7 +339,7 @@ public class Zeichen {
 
   public static void main (String [] argv) {
 
-    for (int i=0; i<=255; i++) {                // fuer den Latin-1-Zeichensatz 
+    for (int i=0; i&lt;=255; i++) {                // fuer den Latin-1-Zeichensatz 
         IO.print(i,7);                          // drucke laufende Nummer
         IO.print( " " + (char) i );             // drucke zugehoeriges Zeichen
         if (i % 8 == 0) IO.println();           // nach 8 Zeichen neue Zeile 
@@ -419,7 +419,7 @@ public class Konstanten {
     
     IO.print(PIEP);                            // erzeuge Piep
 
-    for (grad=0; grad <= MAX_GRAD; grad++) {   // fuer jeden ganzzahligen Winkel
+    for (grad=0; grad &lt;= MAX_GRAD; grad++) {   // fuer jeden ganzzahligen Winkel
         r = Math.sin (grad/360.0*2*PI);        // berechne Sinus vom Bogenmass
         IO.println(grad + " " + r);            // gib Winkel und Sinus aus
     }
