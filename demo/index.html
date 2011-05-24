@@ -39,6 +39,8 @@
         $('#examples *.runner').click(function (e) {
           e.preventDefault();
           if (current) {
+            var term = document.getElementById('terminal');
+            term.innerHTML = "";
             hobbes.web.execute(current.getValue(), document.getElementById('terminal'));
           }
         });
