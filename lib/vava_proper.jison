@@ -7,6 +7,7 @@ D                 [0-9]
 NZ                [1-9]
 Ds                ("0"|{NZ}{D}*)
 EXPO              ([Ee][+-]?{Ds})
+BSL               "\\".
 
 %s                comment
 
@@ -114,7 +115,7 @@ EXPO              ([Ee][+-]?{Ds})
 {Ds}[lL]?\b           {return 'DECIMAL_INTEGER_LITERAL';}
 "\"\""                {return 'STRING_LITERAL';}
 "\"".*"\""            {return 'STRING_LITERAL';}
-"'"."'"               {return 'CHAR_LITERAL';}
+"'"(.|{BSL})"'"       {return 'CHAR_LITERAL';}
 
 "."                   {return 'SEPARATOR_DOT';}
 
