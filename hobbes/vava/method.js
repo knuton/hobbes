@@ -1,4 +1,4 @@
-var type = (typeof hobbes !== 'undefined' && hobbes.vava.type) || require('./type');
+var type = (typeof vavaType !== 'undefined' && vavaType) || require('./type');
 
 /**
  * Creates a VavaMethod object.

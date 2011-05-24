@@ -184,7 +184,7 @@ var objectPath = exports.objectPath = function (obj, nameChain) {
   var curr = obj;
   for (var i = 0; i < nameChain.length; i++) {
     curr = curr[nameChain[i]];
-    if (typeof curr !== 'object') return undefined;
+    if (typeof curr !== 'object' && typeof curr !== 'function') return undefined;
   }
   return curr;
 };

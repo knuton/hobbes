@@ -761,9 +761,12 @@ MethodInvocation.prototype.compileNode = function (opts) {
     this.vavaType = opts.names[methodSig];
     return utils.indent('this.__self.send("' + methodSig + '", ' + argumentList + ')', opts.indent);
   } else {
-    // TODO error handling for non-existent paths
-    this.vavaType = utils.objectPath(opts.names, this.name.prefixParts()).hasMethod(methodSig);
-    return utils.indent('this.' + this.name.prefix() + '.send("' + methodSig + '", ' + argumentList + ')', opts.indent);
+    var resolvedName = utils.objectPath(opts.names, this.name.prefixParts());
+    if (resolvedName && (this.vavaType = resolvedName.hasMethod(methodSig))) {
+      return utils.indent('this.' + this.name.prefix() + '.send("' + methodSig + '", ' + argumentList + ')', opts.indent);
+    } else {
+      throw {message: "Called non-existent method on class " + this.name.qualified()};
+    }
   }
 };
 
@@ -1349,6 +1352,7 @@ BinaryOperatorNode.table = {
 };
 
 BinaryOperatorNode.prototype.compileTimeCheck = function (opts) {
+  console.log(this, String(this.isApplicable));
   if (!this.isApplicable())
     opts.addError(
       this.nonFatalError('operator ' + this.operator + ' cannot be applied to ' + this.children[0].getVavaType() + ',' + this.children[1].getVavaType())
@@ -1369,7 +1373,9 @@ var BinaryNumberOperatorNode = function () {};
 BinaryNumberOperatorNode.inherits(BinaryOperatorNode);
 
 BinaryNumberOperatorNode.prototype.isApplicable = function () {
-  return (BinaryOperatorNode.prototype.isApplicable.call(this) &&
+  return (!!this.constructor.table[this.children[0].getVavaType()] &&
+    !!this.constructor.table[this.children[0].getVavaType()][this.children[1].getVavaType()] &&
+    !this.children[0].isVavaType('String') && !this.children[1].isVavaType('String') &&
     this.children[0].isNumber()
   );
 };
@@ -1412,8 +1418,8 @@ Addition.prototype.compileNode = function (opts) {
 };
 
 Addition.prototype.isApplicable = function () {
-  return (!!this.constructor.table[this.children[0].getVavaType()] &&
-    !!this.constructor.table[this.children[0].getVavaType()][this.children[1].getVavaType()]
+  return (!!Addition.table[this.children[0].getVavaType()] &&
+    !!Addition.table[this.children[0].getVavaType()][this.children[1].getVavaType()]
   );
 };
 
@@ -1489,15 +1495,9 @@ var Division = exports.Division = function (numA, numB) {
 Division.inherits(BinaryNumberOperatorNode);
 
 Division.prototype.compileNode = function (opts) {
+  // TODO division by zero
   return utils.indent(this.children[0].compile(opts) + '.divide(' + this.children[1].compile(opts) + ')', opts.indent);
 };
-
-Division.prototype.compileTimeCheck = function (opts) {
-  // General type checking
-  BinaryOperatorNode.prototype.compileTimeCheck.call(this, opts);
-  // TODO division by zero
-}
-
 
 /**
  * Creates a node for a modulo operation.
@@ -1523,8 +1523,6 @@ Modulo.inherits(BinaryNumberOperatorNode);
 Modulo.prototype.compileNode = function (opts) {
   return utils.indent(this.children[0].compile(opts) + '.modulo(' + this.children[1].compile(opts) + ')', opts.indent);
 };
-
-Modulo.prototype.compileTimeCheck = Division.prototype.compileTimeCheck;
 
 /**
  * Creates a node for less than comparison.
@@ -1771,7 +1769,7 @@ LogicalAnd.prototype.compileNode = function (opts) {
   );
 };
 
-LogicalAnd.prototype.isApplicable = function () {
+LogicalAnd.prototype.iisApplicable = function () {
   return this.children[0].isVavaType('boolean') && this.children[1].isVavaType('boolean');
 };
 
@@ -1801,7 +1799,7 @@ LogicalOr.prototype.compileNode = function (opts) {
   );
 };
 
-LogicalOr.prototype.isApplicable = LogicalAnd.prototype.isApplicable;
+LogicalOr.prototype.iisApplicable = LogicalAnd.prototype.isApplicable;
 
 /**
  * Supertype for bitwise binary operators working on both booleans and integrals
@@ -1809,8 +1807,12 @@ LogicalOr.prototype.isApplicable = LogicalAnd.prototype.isApplicable;
 var BitwiseBinaryOperatorNode = function () {};
 BitwiseBinaryOperatorNode.inherits(BinaryOperatorNode);
 
-BitwiseBinaryOperatorNode.prototype.isApplicable = function () {
-  return BinaryOperatorNode.prototype.isApplicable.call(this) && !this.children[0].isFloatingPoint() && !this.children[1].isFloatingPoint();
+BitwiseBinaryOperatorNode.prototype.iisApplicable = function () {
+  return (!!this.constructor.table[this.children[0].getVavaType()] &&
+    !!this.constructor.table[this.children[0].getVavaType()][this.children[1].getVavaType()] &&
+    !this.children[0].isVavaType('String') && !this.children[1].isVavaType('String') &&
+    !this.children[0].isFloatingPoint() && !this.children[1].isFloatingPoint()
+  );
 };
 
 /**
@@ -1944,8 +1946,12 @@ BitwiseNegation.prototype.compileTimeCheck = function (opts) {
 var ShiftOperator = function () {};
 ShiftOperator.inherits(BitwiseBinaryOperatorNode);
 
-ShiftOperator.prototype.isApplicable = function () {
-  return BitwiseBinaryOperatorNode.prototype.isApplicable.call(this) && this.children[0].isIntegral() && this.children[1].isIntegral();
+ShiftOperator.prototype.iisApplicable = function () {
+  return (!!this.constructor.table[this.children[0].getVavaType()] &&
+    !!this.constructor.table[this.children[0].getVavaType()][this.children[1].getVavaType()] &&
+    !this.children[0].isVavaType('String') && !this.children[1].isVavaType('String') &&
+    this.children[0].isIntegral() && this.children[1].isIntegral()
+  );
 };
 
 /**

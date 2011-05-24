@@ -50,11 +50,15 @@ namespace :build do
       begin
         src = File.read(file_name)
       rescue
-        puts "Error reading #{file_name}."
+        puts "!!! Error reading #{file_name} !!!"
       end
         # Replace assigned requires with assigned wrapped objects
       src.gsub(/[a-z]+\s*=\s*(require\(['"]\.((?:\/[a-z0-9_]+)+)['"]\))/) { |require_assignment|
         require_path = $2
+        require_assignment.gsub($1) { |whole_match| replace_require_assignment(require_path, pwd) }
+        # Replace requires splitting up between CommonJS and web
+      }.gsub(/[a-z]+\s*=\s*(typeof\s+require\s*===\s*'function'\s*\?\s*[^:]+:\s*(require\(['"]\.((?:\/[a-z0-9_-]+)+)['"]\)))/) { |require_assignment|
+        require_path = $3
         require_assignment.gsub($1) { |whole_match| replace_require_assignment(require_path, pwd) }
         # Replace non-assigned require statements by the required source
       }.gsub(/^(require\(['"]\.((?:\/[a-z0-9_]+)+)['"]\));/) { |require_call|

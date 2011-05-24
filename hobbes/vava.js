@@ -1,8 +1,9 @@
 var utils = (typeof hobbes !== 'undefined' && hobbes.utils) || require('./utils');
 
+var vavaEntity = require('./vava/entity');
+var vavaType = require('./vava/type');
 var vavaClass = require('./vava/class');
 var vavaMethod = require('./vava/method');
-var vavaType = require('./vava/type');
 
 exports.scope = require('./vava/scope');
 

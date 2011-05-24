@@ -1,4 +1,4 @@
-var entity = (typeof hobbes !== 'undefined' && hobbes.vava.entity) || require('./entity');
+var entity = (typeof vavaEntity !== 'undefined' && vavaEntity) || require('./entity');
 
 var VavaClass = exports.VavaClass = function (vavaClassName, vavaClassDefinition, scope) {
   

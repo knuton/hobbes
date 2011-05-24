@@ -6,11 +6,6 @@ var hobbes = function (exports) {
    * v0.1
    */
   
-  // TODO
-  //  - HTML- und CLI-Umgebungen
-  //  - Vernuenftige Grammatik
-  //  - Anschliessend Laufzeit-Umgebung nachfuegen
-  
   exports.version = '0.1';
   
   
@@ -1552,7 +1547,7 @@ var hobbes = function (exports) {
     var curr = obj;
     for (var i = 0; i < nameChain.length; i++) {
       curr = curr[nameChain[i]];
-      if (typeof curr !== 'object') return undefined;
+      if (typeof curr !== 'object' && typeof curr !== 'function') return undefined;
     }
     return curr;
   };
@@ -1567,129 +1562,50 @@ var hobbes = function (exports) {
   exports.vava     = function (exports) {
   var utils = (typeof hobbes !== 'undefined' && hobbes.utils);
   
-  var vavaClass = function (exports) {
-    var entity = (typeof hobbes !== 'undefined' && hobbes.vava.entity);
+  var vavaEntity = function (exports) {
+    /**
+     * IDEA
+     *
+     * Access control is implemented through a chain of scopes, the outermost being
+     *
     
-    var VavaClass = exports.VavaClass = function (vavaClassName, vavaClassDefinition, scope) {
-      
-      this.vavaClassName = vavaClassName;
-      this.setScope(scope);
-      this.addFields(vavaClassDefinition.fields);
-      this.scope.__class = this.scope.__self = this;
-      this.addMethods(vavaClassDefinition.methods);
-      
-      setModifiers(this, vavaClassDefinition.vavaModifiers);
-      
+    /**
+     * Names are used to refer to entities declared in a program. A declared entity
+     * is a package, class type, interface type, member (class, interface, field,
+     * or method) of a reference type, parameter (to a method, constructor, or
+     * exception handler), or local variable.
+     */
+    var Entity = exports.Entity = function () {
+      this.scope = {};
     };
     
-    VavaClass.inherits(entity.AccessControlledEntity);
-    
-    VavaClass.prototype.addFields = function (fieldDefinitions) {
-      if (!fieldDefinitions || !fieldDefinitions.length) return;
-      for (var i = 0; i < fieldDefinitions.length; i++) {
-        var fieldDef = fieldDefinitions[i];
-        this.privateScope['__' + fieldDef.visibility].__add(fieldDef.variables);
-      }
-    };
-    
-    VavaClass.prototype.addMethods = function (methodDefinitions) {
-      if (!methodDefinitions || !methodDefinitions.length || this.vavaMethods) return;
-      this.vavaMethods = [];
-      for (var i = 0; i < methodDefinitions.length; i++) {
-        var methodDef = methodDefinitions[i];
-        this.vavaMethods[methodDef.signature()] = methodDef;
-      }
+    Entity.prototype.setScope = function (scope) {
+      this.scope = scope;
     };
     
     /**
-     * Returns a truthy/false value depending on the class possessing a method
-     * with the given signature.
+     * Allows access to an entity's scope.
+     * Access control can be specified in a class, interface, method, or field
+     * declaration to control when access to a member is allowed.
      *
-     * Returns the method's return type, if it does, otherwise returns false.
-     *
-     * e.g. vavaClass.hasMethod('fib(int)')
+     * @param name Name to look up
      */
-    VavaClass.prototype.hasMethod = function (methodSignature) {
-      return !!this.vavaMethods[methodSignature] && this.vavaMethods[methodSignature].getVavaType();
+    Entity.prototype.access = function (name) {
+      return this.scope[name];
     };
     
-    /**
-     * Sends the class a message to call its method of the provided name.
-     *
-     * @param methodName Name of the method to call
-     * @param params Parameters to pass
-     */
-    VavaClass.prototype.send = function (methodSignature, params) {
-      return this.vavaMethods[methodSignature].call(this.privateScope, params);
+    var AccessControlledEntity = exports.AccessControlledEntity = function () {
+    
     };
     
-    function setModifiers (classInstance, modifierOptions) {
-      modifierOptions = modifierOptions || {};
-      classInstance.vavaVisibility = modifierOptions.vavaVisibility || 'default';
-    }
-  
-    return exports;
-  
-  }({});
-  var vavaMethod = function (exports) {
-    var type = (typeof hobbes !== 'undefined' && hobbes.vava.type);
+    AccessControlledEntity.inherits(Entity);
     
-    /**
-     * Creates a VavaMethod object.
-     *
-     * @param vavaMethodName The name of the method
-     * @param vavaFormalParameters An array containing dictionaries of name and type of the formal parameters
-     * @param vavaBlock A function to be called when the method gets called
-     *
-     *   new VavaMethod('main', int, [{identifier:'foo',vavaType:'int'}], function (foo) {return 1;})
-     */
-     // TODO modifiers
-    var VavaMethod = exports.VavaMethod = function (vavaMethodName, vavaReturnType, vavaFormalParameters, vavaBlock) {
-      
-      this.vavaMethodName = vavaMethodName;
-      this.vavaReturnType = vavaReturnType;
-      this.vavaFormalParameters = vavaFormalParameters || [];
-      this.vavaBlock = vavaBlock;
-      
-    };
-    
-    /**
-     * Returns the method's name.
-     */
-    VavaMethod.prototype.name = function () {
-      return this.vavaMethodName;
-    };
-    
-    VavaMethod.prototype.signature = function () {
-      return this.name() + '(' + this.formalParameterTypes().join(',') + ')';
-    };
-    
-    VavaMethod.prototype.getVavaType = function () {
-      return this.vavaReturnType;
-    };
-    
-    VavaMethod.prototype.formalParameterTypes = function () {
-      return this.vavaFormalParameters.map(function (fp) {
-        return fp.vavaType;
-      });
-    };
-    
-    /**
-     * Calls its block after checking type validity of arguments.
-     *
-     * @param args Array of parameters
-     */
-    VavaMethod.prototype.call = function (scope, args) {
-      
-      var locals = {};
-    
-      for (var i = 0; i < this.vavaFormalParameters.length; i++) {
-        var identifier = this.vavaFormalParameters[i].identifier;
-        var value = args[i];
-        locals[identifier] = new type.TypedVariable(value.getVavaType(), identifier, value);
-      }
-      return this.vavaBlock.apply(scope.__descend(locals));
-      
+    AccessControlledEntity.prototype.setScope = function (scope) {
+      this.scope = scope.__descend();
+      this.protectedScope = this.scope.__descend({__public: this.scope});
+      this.defaultScope = this.protectedScope.__descend({__protected: this.protectedScope});
+      this.privateScope = this.defaultScope.__descend({__default: this.defaultScope});
+      this.privateScope.__private = this.privateScope;
     };
   
     return exports;
@@ -2455,6 +2371,134 @@ var hobbes = function (exports) {
     return exports;
   
   }({});
+  var vavaClass = function (exports) {
+    var entity = (typeof vavaEntity !== 'undefined' && vavaEntity);
+    
+    var VavaClass = exports.VavaClass = function (vavaClassName, vavaClassDefinition, scope) {
+      
+      this.vavaClassName = vavaClassName;
+      this.setScope(scope);
+      this.addFields(vavaClassDefinition.fields);
+      this.scope.__class = this.scope.__self = this;
+      this.addMethods(vavaClassDefinition.methods);
+      
+      setModifiers(this, vavaClassDefinition.vavaModifiers);
+      
+    };
+    
+    VavaClass.inherits(entity.AccessControlledEntity);
+    
+    VavaClass.prototype.addFields = function (fieldDefinitions) {
+      if (!fieldDefinitions || !fieldDefinitions.length) return;
+      for (var i = 0; i < fieldDefinitions.length; i++) {
+        var fieldDef = fieldDefinitions[i];
+        this.privateScope['__' + fieldDef.visibility].__add(fieldDef.variables);
+      }
+    };
+    
+    VavaClass.prototype.addMethods = function (methodDefinitions) {
+      if (!methodDefinitions || !methodDefinitions.length || this.vavaMethods) return;
+      this.vavaMethods = [];
+      for (var i = 0; i < methodDefinitions.length; i++) {
+        var methodDef = methodDefinitions[i];
+        this.vavaMethods[methodDef.signature()] = methodDef;
+      }
+    };
+    
+    /**
+     * Returns a truthy/false value depending on the class possessing a method
+     * with the given signature.
+     *
+     * Returns the method's return type, if it does, otherwise returns false.
+     *
+     * e.g. vavaClass.hasMethod('fib(int)')
+     */
+    VavaClass.prototype.hasMethod = function (methodSignature) {
+      return !!this.vavaMethods[methodSignature] && this.vavaMethods[methodSignature].getVavaType();
+    };
+    
+    /**
+     * Sends the class a message to call its method of the provided name.
+     *
+     * @param methodName Name of the method to call
+     * @param params Parameters to pass
+     */
+    VavaClass.prototype.send = function (methodSignature, params) {
+      return this.vavaMethods[methodSignature].call(this.privateScope, params);
+    };
+    
+    function setModifiers (classInstance, modifierOptions) {
+      modifierOptions = modifierOptions || {};
+      classInstance.vavaVisibility = modifierOptions.vavaVisibility || 'default';
+    }
+  
+    return exports;
+  
+  }({});
+  var vavaMethod = function (exports) {
+    var type = (typeof vavaType !== 'undefined' && vavaType);
+    
+    /**
+     * Creates a VavaMethod object.
+     *
+     * @param vavaMethodName The name of the method
+     * @param vavaFormalParameters An array containing dictionaries of name and type of the formal parameters
+     * @param vavaBlock A function to be called when the method gets called
+     *
+     *   new VavaMethod('main', int, [{identifier:'foo',vavaType:'int'}], function (foo) {return 1;})
+     */
+     // TODO modifiers
+    var VavaMethod = exports.VavaMethod = function (vavaMethodName, vavaReturnType, vavaFormalParameters, vavaBlock) {
+      
+      this.vavaMethodName = vavaMethodName;
+      this.vavaReturnType = vavaReturnType;
+      this.vavaFormalParameters = vavaFormalParameters || [];
+      this.vavaBlock = vavaBlock;
+      
+    };
+    
+    /**
+     * Returns the method's name.
+     */
+    VavaMethod.prototype.name = function () {
+      return this.vavaMethodName;
+    };
+    
+    VavaMethod.prototype.signature = function () {
+      return this.name() + '(' + this.formalParameterTypes().join(',') + ')';
+    };
+    
+    VavaMethod.prototype.getVavaType = function () {
+      return this.vavaReturnType;
+    };
+    
+    VavaMethod.prototype.formalParameterTypes = function () {
+      return this.vavaFormalParameters.map(function (fp) {
+        return fp.vavaType;
+      });
+    };
+    
+    /**
+     * Calls its block after checking type validity of arguments.
+     *
+     * @param args Array of parameters
+     */
+    VavaMethod.prototype.call = function (scope, args) {
+      
+      var locals = {};
+    
+      for (var i = 0; i < this.vavaFormalParameters.length; i++) {
+        var identifier = this.vavaFormalParameters[i].identifier;
+        var value = args[i];
+        locals[identifier] = new type.TypedVariable(value.getVavaType(), identifier, value);
+      }
+      return this.vavaBlock.apply(scope.__descend(locals));
+      
+    };
+  
+    return exports;
+  
+  }({});
   
   exports.scope = function (exports) {
     var Scope = exports.Scope = function (initialize) {
@@ -2503,8 +2547,284 @@ var hobbes = function (exports) {
   }({});
   exports.stdlib   = function (exports) {
   exports.java = function (exports) {
-    // TODO That's cute! How can I make this look less stupid?
-    exports.lang = typeof require === 'function' ? require('./java/lang-node') : require('./java/lang-web');
+    exports.lang = function (exports) {
+        var vava = (typeof hobbes !== 'undefined' && hobbes.vava);
+        
+        exports.System = function (exports) {
+              var vava = (typeof hobbes !== 'undefined' && hobbes.vava);
+              
+              var System = exports.System = function (elem) {
+                // Determine type of output
+                if (elem && typeof elem.innerHTML !== 'undefined') {
+                  elem.print = function (str) {
+                    this.innerHTML += str;
+                  };
+                // Use browser console
+                } else if (console && console.log) {
+                  function F () {};
+                  F.prototype = console;
+                  elem = new F();
+                  elem.print = function (str) { this.log(str); };
+                // Getting desperate now
+                } else {
+                  elem = { print : function (arg) { alert(arg); } };
+                }
+              
+                // Return classes with elem as output element
+                return {
+                  'in' : new vava.env.VavaClass(
+                    'In',
+                    {
+                      methods : [
+                        new vava.env.VavaMethod(
+                          'readln',
+                          'String',
+                          [],
+                          function () { return new this.__env.StringValue("5"); }
+                        ),
+                        new vava.env.VavaMethod(
+                          'readInt',
+                          'int',
+                          [],
+                          function () { var max = 9, min = 0; return this.__env.IntValue.intern(Number(prompt())); }
+                        )
+                      ]
+                    },
+                    new vava.scope.Scope({__env : vava.env})
+                  ),
+              
+                  'out' : new vava.env.VavaClass(
+                    'Out',
+                    {
+                      methods : [
+                        new vava.env.VavaMethod(
+                          'print',
+                          'void',
+                          [{identifier: 'c', vavaType: 'char'}],
+                          function () { elem.print(this.c.get().toString()); }
+                        ),
+                        new vava.env.VavaMethod(
+                          'print',
+                          'void',
+                          [{identifier: 'str', vavaType: 'int'}],
+                          function () { elem.print(this.str.get()); }
+                        ),
+                        new vava.env.VavaMethod(
+                          'print',
+                          'void',
+                          [{identifier: 'str', vavaType: 'String'}],
+                          function () { elem.print(this.str.get().toString()); }
+                        ),
+                        new vava.env.VavaMethod(
+                          'println',
+                          'void',
+                          [{identifier: 'str', vavaType: 'boolean'}],
+                          function () { elem.print(this.str.get() + '\n'); }
+                        ),
+                        new vava.env.VavaMethod(
+                          'println',
+                          'void',
+                          [{identifier: 'str', vavaType: 'byte'}],
+                          function () { elem.print(this.str.get() + '\n'); }
+                        ),
+                        new vava.env.VavaMethod(
+                          'println',
+                          'void',
+                          [{identifier: 'str', vavaType: 'short'}],
+                          function () { elem.print(this.str.get() + '\n'); }
+                        ),
+                        new vava.env.VavaMethod(
+                          'println',
+                          'void',
+                          [{identifier: 'str', vavaType: 'char'}],
+                          function () { elem.print(this.str.get() + '\n'); }
+                        ),
+                        new vava.env.VavaMethod(
+                          'println',
+                          'void',
+                          [{identifier: 'str', vavaType: 'int'}],
+                          function () { elem.print(this.str.get() + '\n'); }
+                        ),
+                        new vava.env.VavaMethod(
+                          'println',
+                          'void',
+                          [{identifier: 'str', vavaType: 'long'}],
+                          function () { elem.print(this.str.get() + '\n'); }
+                        ),
+                        new vava.env.VavaMethod(
+                          'println',
+                          'void',
+                          [{identifier: 'str', vavaType: 'float'}],
+                          function () { elem.print(this.str.get() + '\n'); }
+                        ),
+                        new vava.env.VavaMethod(
+                          'println',
+                          'void',
+                          [{identifier: 'str', vavaType: 'double'}],
+                          function () { elem.print(this.str.get() + '\n'); }
+                        ),
+                        new vava.env.VavaMethod(
+                          'println',
+                          'void',
+                          [{identifier: 'str', vavaType: 'String'}],
+                          function () { elem.print(this.str.get() + '\n'); }
+                        )
+                      ]
+                    },
+                    new vava.scope.Scope({__env : vava.env})
+                  )
+                } // end 'out'
+              
+              };
+              
+              var defaultIO = System();
+              System['in'] = defaultIO['in'];
+              System['out'] = defaultIO['out'];
+              
+        
+          return exports;
+        
+        }({}).System;
+        
+        exports.Byte = new vava.env.VavaClass(
+          'Byte',
+          {
+            methods : [
+              new vava.env.VavaMethod(
+                'parseByte',
+                'byte',
+                [{identifier: 'str', vavaType: 'String'}],
+                function () { return this.__self.send('parseByte(String,int)', [this.str.get(), this.__env.IntValue.intern(10)]); }
+              ),
+              new vava.env.VavaMethod(
+                'parseByte',
+                'byte',
+                [{identifier: 'str', vavaType: 'String'}, {identifier: 'radix', vavaType: 'int'}],
+                function () { return this.__env.ByteValue.intern(parseInt(this.str.get(), this.radix.get())); }
+              )
+            ]
+          },
+          new vava.scope.Scope({__env : vava.env})
+        );
+        
+        exports.Short = new vava.env.VavaClass(
+          'Short',
+          {
+            methods : [
+              new vava.env.VavaMethod(
+                'parseShort',
+                'short',
+                [{identifier: 'str', vavaType: 'String'}],
+                function () { return this.__self.send('parseShort(String,int)', [this.str.get(), this.__env.IntValue.intern(10)]); }
+              ),
+              new vava.env.VavaMethod(
+                'parseShort',
+                'short',
+                [{identifier: 'str', vavaType: 'String'}, {identifier: 'radix', vavaType: 'int'}],
+                function () { return this.__env.ShortValue.intern(parseInt(this.str.get(), this.radix.get())); }
+              )
+            ]
+          },
+          new vava.scope.Scope({__env : vava.env})
+        );
+        
+        exports.Integer = new vava.env.VavaClass(
+          'Integer',
+          {
+            methods : [
+              new vava.env.VavaMethod(
+                'parseInt',
+                'int',
+                [{identifier: 'str', vavaType: 'String'}],
+                function () { return this.__self.send('parseInt(String,int)', [this.str.get(), this.__env.IntValue.intern(10)]); }
+              ),
+              new vava.env.VavaMethod(
+                'parseInt',
+                'int',
+                [{identifier: 'str', vavaType: 'String'}, {identifier: 'radix', vavaType: 'int'}],
+                function () { return this.__env.IntValue.intern(parseInt(this.str.get(), this.radix.get())); }
+              )
+            ]
+          },
+          new vava.scope.Scope({__env : vava.env})
+        );
+        
+        exports.Long = new vava.env.VavaClass(
+          'Long',
+          {
+            methods : [
+              new vava.env.VavaMethod(
+                'parseLong',
+                'long',
+                [{identifier: 'str', vavaType: 'String'}],
+                function () { return this.__self.send('parseLong(String,int)', [this.str.get(), this.__env.IntValue.intern(10)]); }
+              ),
+              new vava.env.VavaMethod(
+                'parseLong',
+                'long',
+                [{identifier: 'str', vavaType: 'String'}, {identifier: 'radix', vavaType: 'int'}],
+                function () { return this.__env.LongValue.intern(parseInt(this.str.get(), this.radix.get())); }
+              )
+            ]
+          },
+          new vava.scope.Scope({__env : vava.env})
+        );
+        
+        exports.Float = new vava.env.VavaClass(
+          'Float',
+          {
+            methods : [
+              new vava.env.VavaMethod(
+                'parseFloat',
+                'float',
+                [{identifier: 'str', vavaType: 'String'}],
+                function () { return this.__env.FloatValue.intern(parseFloat(this.str.get(), 10)); }
+              )
+            ]
+          },
+          new vava.scope.Scope({__env : vava.env})
+        );
+        
+        exports.Double = new vava.env.VavaClass(
+          'Double',
+          {
+            methods : [
+              new vava.env.VavaMethod(
+                'parseDouble',
+                'double',
+                [{identifier: 'str', vavaType: 'String'}],
+                function () { return this.__env.DoubleValue.intern(parseFloat(this.str.get(), 10)); }
+              )
+            ]
+          },
+          new vava.scope.Scope({__env : vava.env})
+        );
+        
+        exports.Math = new vava.env.VavaClass(
+          'Math',
+          {
+            methods : [
+              new vava.env.VavaMethod(
+                'pow',
+                'double',
+                [{identifier: 'a', vavaType: 'double'}, {identifier: 'b', vavaType: 'double'}],
+                function () { return this.__env.DoubleValue.intern(Math.pow(this.a.get(), this.b.get())); }
+              ),
+              new vava.env.VavaMethod(
+                'sin',
+                'double',
+                [{identifier: 'a', vavaType: 'double'}],
+                function () { return this.__env.DoubleValue.intern(Math.sin(this.a.get())); }
+              )
+            ]
+          },
+          new vava.scope.Scope({__env : vava.env})
+        );
+        
+    
+      return exports;
+    
+    }({});
   
     return exports;
   
@@ -4281,9 +4601,12 @@ var hobbes = function (exports) {
         this.vavaType = opts.names[methodSig];
         return utils.indent('this.__self.send("' + methodSig + '", ' + argumentList + ')', opts.indent);
       } else {
-        // TODO error handling for non-existent paths
-        this.vavaType = utils.objectPath(opts.names, this.name.prefixParts()).hasMethod(methodSig);
-        return utils.indent('this.' + this.name.prefix() + '.send("' + methodSig + '", ' + argumentList + ')', opts.indent);
+        var resolvedName = utils.objectPath(opts.names, this.name.prefixParts());
+        if (resolvedName && (this.vavaType = resolvedName.hasMethod(methodSig))) {
+          return utils.indent('this.' + this.name.prefix() + '.send("' + methodSig + '", ' + argumentList + ')', opts.indent);
+        } else {
+          throw {message: "Called non-existent method on class " + this.name.qualified()};
+        }
       }
     };
     
@@ -4869,6 +5192,7 @@ var hobbes = function (exports) {
     };
     
     BinaryOperatorNode.prototype.compileTimeCheck = function (opts) {
+      console.log(this, String(this.isApplicable));
       if (!this.isApplicable())
         opts.addError(
           this.nonFatalError('operator ' + this.operator + ' cannot be applied to ' + this.children[0].getVavaType() + ',' + this.children[1].getVavaType())
@@ -4889,7 +5213,9 @@ var hobbes = function (exports) {
     BinaryNumberOperatorNode.inherits(BinaryOperatorNode);
     
     BinaryNumberOperatorNode.prototype.isApplicable = function () {
-      return (BinaryOperatorNode.prototype.isApplicable.call(this) &&
+      return (!!this.constructor.table[this.children[0].getVavaType()] &&
+        !!this.constructor.table[this.children[0].getVavaType()][this.children[1].getVavaType()] &&
+        !this.children[0].isVavaType('String') && !this.children[1].isVavaType('String') &&
         this.children[0].isNumber()
       );
     };
@@ -4932,8 +5258,8 @@ var hobbes = function (exports) {
     };
     
     Addition.prototype.isApplicable = function () {
-      return (!!this.constructor.table[this.children[0].getVavaType()] &&
-        !!this.constructor.table[this.children[0].getVavaType()][this.children[1].getVavaType()]
+      return (!!Addition.table[this.children[0].getVavaType()] &&
+        !!Addition.table[this.children[0].getVavaType()][this.children[1].getVavaType()]
       );
     };
     
@@ -5009,15 +5335,9 @@ var hobbes = function (exports) {
     Division.inherits(BinaryNumberOperatorNode);
     
     Division.prototype.compileNode = function (opts) {
+      // TODO division by zero
       return utils.indent(this.children[0].compile(opts) + '.divide(' + this.children[1].compile(opts) + ')', opts.indent);
     };
-    
-    Division.prototype.compileTimeCheck = function (opts) {
-      // General type checking
-      BinaryOperatorNode.prototype.compileTimeCheck.call(this, opts);
-      // TODO division by zero
-    }
-    
     
     /**
      * Creates a node for a modulo operation.
@@ -5043,8 +5363,6 @@ var hobbes = function (exports) {
     Modulo.prototype.compileNode = function (opts) {
       return utils.indent(this.children[0].compile(opts) + '.modulo(' + this.children[1].compile(opts) + ')', opts.indent);
     };
-    
-    Modulo.prototype.compileTimeCheck = Division.prototype.compileTimeCheck;
     
     /**
      * Creates a node for less than comparison.
@@ -5291,7 +5609,7 @@ var hobbes = function (exports) {
       );
     };
     
-    LogicalAnd.prototype.isApplicable = function () {
+    LogicalAnd.prototype.iisApplicable = function () {
       return this.children[0].isVavaType('boolean') && this.children[1].isVavaType('boolean');
     };
     
@@ -5321,7 +5639,7 @@ var hobbes = function (exports) {
       );
     };
     
-    LogicalOr.prototype.isApplicable = LogicalAnd.prototype.isApplicable;
+    LogicalOr.prototype.iisApplicable = LogicalAnd.prototype.isApplicable;
     
     /**
      * Supertype for bitwise binary operators working on both booleans and integrals
@@ -5329,8 +5647,12 @@ var hobbes = function (exports) {
     var BitwiseBinaryOperatorNode = function () {};
     BitwiseBinaryOperatorNode.inherits(BinaryOperatorNode);
     
-    BitwiseBinaryOperatorNode.prototype.isApplicable = function () {
-      return BinaryOperatorNode.prototype.isApplicable.call(this) && !this.children[0].isFloatingPoint() && !this.children[1].isFloatingPoint();
+    BitwiseBinaryOperatorNode.prototype.iisApplicable = function () {
+      return (!!this.constructor.table[this.children[0].getVavaType()] &&
+        !!this.constructor.table[this.children[0].getVavaType()][this.children[1].getVavaType()] &&
+        !this.children[0].isVavaType('String') && !this.children[1].isVavaType('String') &&
+        !this.children[0].isFloatingPoint() && !this.children[1].isFloatingPoint()
+      );
     };
     
     /**
@@ -5464,8 +5786,12 @@ var hobbes = function (exports) {
     var ShiftOperator = function () {};
     ShiftOperator.inherits(BitwiseBinaryOperatorNode);
     
-    ShiftOperator.prototype.isApplicable = function () {
-      return BitwiseBinaryOperatorNode.prototype.isApplicable.call(this) && this.children[0].isIntegral() && this.children[1].isIntegral();
+    ShiftOperator.prototype.iisApplicable = function () {
+      return (!!this.constructor.table[this.children[0].getVavaType()] &&
+        !!this.constructor.table[this.children[0].getVavaType()][this.children[1].getVavaType()] &&
+        !this.children[0].isVavaType('String') && !this.children[1].isVavaType('String') &&
+        this.children[0].isIntegral() && this.children[1].isIntegral()
+      );
     };
     
     /**
@@ -5834,6 +6160,9 @@ var hobbes = function (exports) {
     if (typeof vavaSrc !== 'string') {
       throw new TypeError('Expected Vava source to be provided as string.');
     }
+    // Replace stdlib with customized version if passed
+    stdlib = options.stdlib || stdlib;
+  
     var scope = new vava.scope.Scope({__env : vava.env}).__add(stdlib).__add(stdlib.java.lang);
   
     var algoTools = {
@@ -5929,6 +6258,94 @@ var hobbes = function (exports) {
     for (i = 0; i < colnum; i++) pointerString = ' ' + pointerString;
     return pointerString;
   }
+  
+    return exports;
+  
+  }({});
+  
+  exports.web = function (exports) {
+  exports.setup = function (ioElem) {
+  
+    var sources = getElementsByClass('hobbesecutable');
+  
+    for (var i = 0; i < sources.length; i++) {
+      var sourceElem = sources[i];
+      var sourceElemStyle = window.getComputedStyle(sourceElem);
+      var outerContainer = sourceElem.parentNode;
+      var sourceContainer = document.createElement('div');
+      sourceContainer.setAttribute('style', 'position: relative; padding: 0; margin: auto;');
+      var linkContainer = document.createElement('p');
+      linkContainer.setAttribute('style', 'width:' + sourceElemStyle.width + '; position: absolute; top: 3px; right: 3px; text-align:right;');
+      var execButton = document.createElement('a');
+      execButton.innerText = 'Run';
+      execButton.setAttribute('href', '#run');
+      execButton.setAttribute('class', 'runner');
+      linkContainer.appendChild(execButton);
+      sourceContainer.appendChild(sourceElem);
+      sourceContainer.appendChild(linkContainer);
+      outerContainer.appendChild(sourceContainer);
+      execButton.addEventListener('click', function (e) {
+        e.cancelBubble = true;
+        if (e.stopPropagation) {
+          e.stopPropagation();
+        } else {
+          e.cancelBubble = true;
+        } 
+        exports.execute(sourceElem, ioElem);
+      });
+    }
+  
+  };
+  
+  exports.execute = function (srcOrElem, ioElem) {
+    var source;
+    if (typeof srcOrElem === 'string') {
+      source = srcOrElem;
+    } else {
+      source = srcOrElem.value || srcOrElem.innerHTML;
+    }
+  
+    if (!ioElem) {
+      ioElem = srcOrElem;
+    }
+    //// Shadow parts that need to be customized
+    // Need to shadow stdlib
+    var F = function () {};
+    F.prototype = hobbes.stdlib;
+    var stdlib = new F();
+    // Need to shadow stdlib.java
+    F.prototype = stdlib.java;
+    var java = new F();
+    // Need to shadow stdlib.java.lang
+    F.prototype = stdlib.java.lang;
+    var lang = new F();
+    // Overwrite shadowed stdlib.java.lang's System with one bound to ioElem
+    lang.System = hobbes.stdlib.java.lang.System(ioElem);
+    java.lang = lang;
+    stdlib.java = java;
+    // Call compiler with modified stdlib
+    hobbes.compiler.run(source, {stdlib: stdlib});
+  
+  };
+  
+  /*** Helper functions ***/
+  function getElementsByClass(className,node,tag) {
+    var classElements = [];
+    node = node || document;
+    tag  = tag  || '*';
+  
+    var tagElems = node.getElementsByTagName(tag);
+    var numTagElems = tagElems.length;
+    var pattern = new RegExp("(^|\\s)"+className+"(\\s|$)");
+  
+    for (i = 0, j = 0; i < numTagElems; i++) {
+      if (pattern.test(tagElems[i].className)) {
+        classElements[j++] = tagElems[i];
+      }
+    }
+    return classElements;
+  }
+  
   
     return exports;
   

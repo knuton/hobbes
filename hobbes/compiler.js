@@ -11,6 +11,9 @@ exports.run = function (vavaSrc, options) {
   if (typeof vavaSrc !== 'string') {
     throw new TypeError('Expected Vava source to be provided as string.');
   }
+  // Replace stdlib with customized version if passed
+  stdlib = options.stdlib || stdlib;
+
   var scope = new vava.scope.Scope({__env : vava.env}).__add(stdlib).__add(stdlib.java.lang);
 
   var algoTools = {

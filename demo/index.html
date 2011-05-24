@@ -1,0 +1,219 @@
+<html>
+  <head>
+    <title>hobbes &ndash; Demo</title>
+    <style type="text/css">
+      body {
+        background-color: #777;
+      }
+      a.runner {
+        display: inline-block;
+        width: 32px;
+        height: 32px;
+        padding: 2px;
+        text-indent: 100000px;
+        background-color: #FAFAEB;
+        background-image: url('images/gears.gif');
+        background-repeat: no-repeat;
+        background-position: 2px 2px;
+      }
+      a.runner:hover {
+        background-image: url('images/gears-active.gif');
+      }
+      #examples, #output {
+        width: 50%;
+        margin: 0;
+        padding: 1em 0;
+        float: left;
+        text-align: center;
+      }
+      *.toolbar {
+        width: 90%;
+        min-height: 36px;
+        margin: 0 auto;
+        position: relative;
+        text-align: right;
+      }
+      *.toolbar *.runner {
+        position: absolute;
+        bottom: 0px;
+        right: 0px;
+      }
+      *.toolbar *.selector {
+        min-height: 32px;
+        padding: 2px;
+        position: absolute;
+        bottom: 0px;
+        right: 38px;
+        line-height: 36px;
+        background-color: #FAFAEB;
+      }
+      #examples *.hobbesecutable,  #terminal {
+        font-size: 10px;
+        font-family: monospace;
+        width: 90%;
+        min-height: 500px;
+        margin: 0 auto;
+        text-align: left;
+      }
+      *.hobbesecutable {
+        border-width: 1px 0 0 0;
+        border-color: #342E6B;
+        border-style: solid;
+        background-color: #fff;
+      }
+      #terminal {
+        margin-top: 36px;
+        min-height: 400px;
+        padding: 5px;
+        color: #fff;
+        background-color: #000;
+      }
+    </style>
+    <script type="text/javascript" src="jquery.min.js"></script>
+    <script type="text/javascript" src="codemirror/lib/codemirror.js"></script>
+    <link rel="stylesheet" href="codemirror/lib/codemirror.css">
+    <script type="text/javascript" src="codemirror/mode/clike/clike.js"></script>
+    <link rel="stylesheet" href="codemirror/mode/clike/clike.css">
+    <script type="text/javascript" src="../hobbes-web.js"></script>
+    <script type="text/javascript">
+      $(document).ready(function () {
+        // add file selector
+        var fileSelectorContainer = $('<div class="selector"></div>');
+        var fileSelector = $('<select></select>');
+        var i = 0;
+        
+        // for faster access
+        var filenameToElem = {};
+        var current;
+        $('#examples .hobbesecutable').each(function () {
+          var filename = $(this).data('filename');
+          var codeArea = CodeMirror.fromTextArea(this);
+          filenameToElem[filename] = codeArea;
+          $(codeArea.getWrapperElement()).addClass('hobbesecutable');
+          fileSelector.append('<option>' + filename + '</option>');
+          if (i === 0) {
+            current = codeArea;
+            $(codeArea.getWrapperElement()).addClass('current');
+          } else {
+            $(codeArea.getWrapperElement()).hide();
+          }
+          i++;
+        });
+        fileSelector.change(function () {
+          $(current.getWrapperElement()).removeClass("current").hide();
+          $((current = filenameToElem[$(this).val()]).getWrapperElement()).addClass("current").show().focus();
+        });
+        // add selector to toolbar
+        $('#examples .toolbar').prepend(fileSelectorContainer.prepend(fileSelector));
+        // add runner handler
+        $('#examples *.runner').click(function (e) {
+          if (current) {
+            hobbes.web.execute(current.getValue(), document.getElementById('terminal'));
+          }
+          return false;
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <div id="examples">
+      <form action="" id="source">
+        <div class="toolbar">
+          <a class="runner" href="#run" alt="Run" title="Run">Run</a>
+        </div>
+        <textarea data-filename="Fall.java" class="hobbesecutable current">
+/****************************  Fall.java  *************************************/
+
+import AlgoTools.IO;
+
+/**  Verzweigung durch Fallunterscheidung (switch/case-Anweisung) 
+ *
+ */  
+
+public class Fall {
+
+  public static void main (String [] argv) {
+
+    int zahl  = 42;
+    int monat = 11;
+
+   switch (zahl % 10) {// verzweige in Abhaengigkeit der letzten Ziffer von zahl
+
+        case 0:  IO.println("null  "); break;
+        case 1:  IO.println("eins  "); break;
+        case 2:  IO.println("zwei  "); break;
+        case 3:  IO.println("drei  "); break;
+        case 4:  IO.println("vier  "); break;
+        case 5:  IO.println("fuenf "); break;
+        case 6:  IO.println("sechs "); break;
+        case 7:  IO.println("sieben"); break;
+        case 8:  IO.println("acht  "); break;
+        case 9:  IO.println("neun  "); break;
+    }
+
+
+    switch(monat) {                  // verzweige in Abhaengigkeit von monat
+        
+        case  3: case  4: case  5:   IO.println("Fruehling"); break;        
+        case  6: case  7: case  8:   IO.println("Sommer   "); break;        
+        case  9: case 10: case 11:   IO.println("Herbst   "); break;        
+        case 12: case  1: case  2:   IO.println("Winter   "); break;        
+        default:                     IO.println("unbekannte Jahreszeit"); 
+    }
+                     
+  }
+}
+        </textarea>
+        <textarea data-filename="Bedingung.java" class="hobbesecutable">
+/*****************************  Bedingung.java  *******************************/
+
+
+/**  Verzweigung durch Bedingung (if-Anweisung, Bedingungsoperator)
+ *
+ *   Vergleichsoperatoren:   <    kleiner                  
+ *                           <=   kleiner gleich      
+ *                           ==   gleich             
+ *                           >    groesser          
+ *                           >=   groesser gleich  
+ *                           !=   ungleich        
+ *                                              
+ *   logische Operatoren:    &&   und           
+ *                           ||   oder  
+ *                           ^    exklusives oder
+ *                           !    nicht       
+ */  
+
+import AlgoTools.IO;
+public class Bedingung {
+
+  public static void main (String [] argv) {
+
+    int x = -5, y, m;                     // definiere 3 Integer-Variablen
+                                          // davon eine initialisiert
+ 
+    if (x < 0) x = -x;                    // setze x auf Absolutbetrag
+ 
+    if (x < 0) y = -x; else y = x;        // setze y auf den
+                                          // Absolutbetrag von x
+
+    m = IO.readInt("Bitte Monatszahl: ");
+    if      ((3 <= m) && (m <=  5)) IO.println("Fruehling");
+    else if ((6 <= m) && (m <=  8)) IO.println("Sommer");
+    else if ((9 <= m) && (m <= 11)) IO.println("Herbst");
+    else if (m==12 || m==1 || m==2) IO.println("Winter");
+    else                            IO.println("unbekannte Jahreszeit");
+    
+    x = x % 2 == 0 ? x/2 : 3*x + 1;       // bedingter Ausdruck:
+                                          // weise der linken Seite
+                                          // den Ausdruck vor ':' zu,
+                                          // falls Bedingung vor '?' wahr;
+  }                                       // sonst Ausdruck hinter ':'
+}
+        </textarea>
+      </form>
+    </div>
+    <div id="output">
+      <pre id="terminal"></pre>
+    </div>
+  </body>
+</html>
