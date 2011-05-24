@@ -2623,7 +2623,7 @@ var hobbes = function (exports) {
                           'String',
                           [],
                           function () {
-                            var input = prompt();
+                            var input = prompt('');
                             return this.__env.StringValue.intern(!!input && input || '\n');
                           }
                         ),

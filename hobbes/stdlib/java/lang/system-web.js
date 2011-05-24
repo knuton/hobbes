@@ -36,7 +36,7 @@ var System = exports.System = function (elem) {
             'String',
             [],
             function () {
-              var input = prompt();
+              var input = prompt('');
               return this.__env.StringValue.intern(!!input && input || '\n');
             }
           ),
