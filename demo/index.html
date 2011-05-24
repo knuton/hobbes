@@ -328,6 +328,174 @@ public class Fakultaet {
   }
 }
         </textarea>
+        <textarea data-filename="GGT.java" class="hobbesecutable">
+/***************************  GGT.java  ***************************************/
+
+import AlgoTools.IO;
+
+/**  Berechnung des GGT 
+ *  
+ *   ggt(x,y) =     groesster gemeinsamer Teiler von x und y
+ *   
+ *                  x                 falls x = y
+ *   ggt(x,y) =     ggt(x-y, y)       falls x > y
+ *                  ggt(x, y-x)       falls y > x
+ *
+ *                  denn wegen x=t*f1 und y=t*f2 folgt (x-y) = t*(f1-f2)
+ *
+ *                  x                 falls y = 0
+ *   ggt(x,y) =     ggt(y, x mod y)   sonst 
+ * 
+ */
+
+public class GGT {
+
+    public static void main (String [] argv) {
+
+        int teiler, a, b, x, y, z;                  // 6 Integer-Variablen
+
+        IO.println("Bitte zwei Zahlen: ");
+        a=x=IO.readInt();  b=y=IO.readInt();        // lies 2 Zahlen ein
+
+        teiler = x;                                 // beginne mit einem teiler
+        while ((x % teiler != 0) ||                 // solange x nicht aufgeht 
+               (y % teiler != 0))                   // oder y nicht aufgeht
+            teiler--;                               // probiere Naechstkleineren
+        IO.println("GGT = " + teiler);
+ 
+        while (a != b)                              // solange a ungleich b 
+            if (a > b) a = a - b;                   // subtrahiere die kleinere
+            else       b = b - a;                   // Zahl von der groesseren 
+        IO.println("GGT = " + a);                
+
+        while (y != 0) {                            // solange y ungleich 0
+            z = x % y;                              // ersetze x durch y 
+            x = y;                                  // und y durch x modulo y 
+            y = z;
+        }
+        IO.println("GGT = " + x);
+    }
+}
+        </textarea>
+        <textarea data-filename="Ueberlauf.java" class="hobbesecutable">
+/**************************  Ueberlauf.java ***********************************/
+import AlgoTools.IO;
+
+/**  Integer-Ueberlauf */
+ 
+public class Ueberlauf {
+
+  public static void main (String [] argv) {
+
+    int n = 1;                            // initialisiere n
+    while (n > 0) {                       // solange n positiv ist
+        n = n * 10;                       // verzehnfache n
+        IO.println(n, 20);                // drucke n auf 20 Stellen
+    }                                     // letzter Wert ist negativ ! 
+
+  } 
+}
+        </textarea>
+        <textarea data-filename="Zeichen.java" class="hobbesecutable">
+/**************************  Zeichen.java  ************************************/
+
+import AlgoTools.IO;
+
+/**  Umwandlung von Character zur Zahl
+ *   Umwandlung von Zahl zum Character
+ */
+ 
+public class Zeichen {
+
+  public static void main (String [] argv) {
+
+    for (int i=0; i<=255; i++) {                // fuer den Latin-1-Zeichensatz 
+        IO.print(i,7);                          // drucke laufende Nummer
+        IO.print( " " + (char) i );             // drucke zugehoeriges Zeichen
+        if (i % 8 == 0) IO.println();           // nach 8 Zeichen neue Zeile 
+    }
+    IO.println();
+
+    char c;                                     
+    do {
+        c = IO.readChar("Bitte ein Zeichen: "); // lies ein Zeichen ein
+        IO.print("Der ASCII-Code lautet : ");   // gib den zugehoerigen
+        IO.println((int) c,3);                  // ASCII-Code aus
+    } while (c != '\n' );                       // bis ein Newline kommt
+  }
+}
+        </textarea>
+        <textarea data-filename="Umwandlung.java" class="hobbesecutable">
+/**************************  Umwandlung.java  *********************************/
+
+import AlgoTools.IO;
+
+/**  implizite und explizite Typumwandlungen zwischen einfachen Datentypen
+ */
+
+ 
+public class Umwandlung {
+
+  public static void main (String [] argv) {
+
+    char   c = '?';                  // das Fragezeichen 
+    byte   b = 100;                  // ca.  3 Stellen 
+    short  s = 10000;                // ca.  5 Stellen
+    int    i = 1000000000;           // ca.  9 Stellen
+    long   l = 100000000000000000L;  // ca. 18 Stellen 
+    float  f = 3.14159f;             // ca.  6 Stellen Genauigkeit
+    double d = 3.141592653589793;    // ca. 15 Stellen Genauigkeit
+
+    i = s ;                          // implizite Typumwandlung ohne Verlust
+    i = c ;                          // implizite Typumwandlung ohne Verlust
+    s = (short) c;                   // explizite Typumwandlung ohne Verlust 
+    s = (short) i;                   // explizite Typumwandlung  mit Verlust
+    d = i;                           // implizite Typumwandlung ohne Verlust
+    i = (int) d;                     // explizite Typumwandlung  mit Verlust
+    
+    d = f;                           // implizite Typumwandlung ohne Verlust
+    f = (float) d;                   // explizite Typumwandlung  mit Verlust
+
+    d = 1/2;                         // ergibt 0 wegen ganzzahliger Division
+    IO.println(d);
+    d = 1/2.0;                       // ergibt 0.5 wegen Gleitkommadivision
+    IO.println(d);
+
+    IO.println(2 * b + c );          // Ausdruck ist vom Typ int, Wert = 263
+    IO.println(i + 1.5);             // Ausdruck ist vom Typ double
+
+  }
+}
+        </textarea>
+        <textarea data-filename="Konstanten.java" class="hobbesecutable">
+/**************************  Konstanten.java  *********************************/
+
+import AlgoTools.IO;
+
+/**  Einsatz von Konstanten fuer ganze Zahlen, Gleitkomma und Character 
+ */
+
+ 
+public class Konstanten {
+
+  public static void main (String [] argv) {
+
+    final int    MAX_GRAD = 360;               // Integer-Konstante
+    final double PI       = 3.141592653589793; // Double Konstante 
+    final char   PIEP     = (char) 7;          // Character-Konstante 
+
+    int grad;
+    double r;
+    
+    IO.print(PIEP);                            // erzeuge Piep
+
+    for (grad=0; grad <= MAX_GRAD; grad++) {   // fuer jeden ganzzahligen Winkel
+        r = Math.sin (grad/360.0*2*PI);        // berechne Sinus vom Bogenmass
+        IO.println(grad + " " + r);            // gib Winkel und Sinus aus
+    }
+  }
+}
+        </textarea>
       </form>
     </div>
     <div id="output">

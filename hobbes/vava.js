@@ -8,7 +8,7 @@ var vavaMethod = require('./vava/method');
 // Add some String instance methods
 vavaType.StringValue.prototype.vavaMethods['length()'] = new vavaMethod.VavaMethod('length', 'int', [], function () {});
 vavaType.StringValue.prototype.vavaMethods['length()'].call = function (stringObj, args) {
-  return vavaType.IntValue.intern(stringObj.length);
+  return stringObj.length();
 };
 
 exports.scope = require('./vava/scope');

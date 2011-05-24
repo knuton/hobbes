@@ -779,7 +779,7 @@ MethodInvocation.prototype.compileNode = function (opts) {
     if (!this.vavaType) {
       for (var i = 0; !this.vavaType && i < vavaTypes.length; i++) {
         for (var j = 0; !this.vavaType && MethodInvocation.autoCast[vavaTypes[i]] && j < MethodInvocation.autoCast[vavaTypes[i]]; j++) {
-          methodSig = this.name.simple() + '(' + vavaTypes.splice(0, i).concat(MethodInvocation.autoCast[vavaTypes[i]][j], vavaTypes.splice(i+1, 0)).join(',') + ')';
+          methodSig = this.name.simple() + '(' + vavaTypes.slice(0, i).concat(MethodInvocation.autoCast[vavaTypes[i]][j], vavaTypes.slice(i+1)).join(',') + ')';
           this.vavaType = opts.names[methodSig];
         }
       }
@@ -797,13 +797,14 @@ MethodInvocation.prototype.compileNode = function (opts) {
     } else if (resolvedName) {
       for (var i = 0; !this.vavaType && i < vavaTypes.length; i++) {
         for (var j = 0; !this.vavaType && MethodInvocation.autoCast[vavaTypes[i]] && j < MethodInvocation.autoCast[vavaTypes[i]].length; j++) {
-          methodSig = this.name.simple() + '(' + vavaTypes.splice(0, i).concat(MethodInvocation.autoCast[vavaTypes[i]][j], vavaTypes.splice(i+1, 0)).join(',') + ')';
+          methodSig = this.name.simple() + '(' + vavaTypes.slice(0, i).concat(MethodInvocation.autoCast[vavaTypes[i]][j], vavaTypes.slice(i+1)).join(',') + ')';
           this.vavaType = resolvedName.hasMethod(methodSig);
         }
       }
     // I am really sorry :'(
     } else if (opts.names[this.name.prefix()] === 'String') {
       if (this.name.simple() === 'length') this.vavaType = 'int';
+      return utils.indent('this.' + this.name.prefix() + '.get().send("' + methodSig + '", ' + argumentList + ')', opts.indent);
     }
   }
 
@@ -811,7 +812,9 @@ MethodInvocation.prototype.compileNode = function (opts) {
     return utils.indent('this.' + this.name.prefix() + '.send("' + methodSig + '", ' + argumentList + ')', opts.indent);
   }
 
-  this.fatalError('non-existent method on ' + this.name.qualified(), this.typeMismatchDescription(this.children[0].getVavaType(), this.vavaType), this.children[0].loc);
+  opts.addError(
+    this.nonFatalError('non-existent method on ' + this.name.qualified(), this.typeMismatchDescription(this.children[0].getVavaType(), this.vavaType), this.children[0].loc)
+  );
 };
 
 MethodInvocation.prototype.getSignature = function () {
@@ -1077,7 +1080,7 @@ var CharLiteral = exports.CharLiteral = function (character) {
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   this.vavaType = 'char';
-  this.character = character.substr(1,1);
+  this.character = character.replace(/'/g, '');
 };
 
 CharLiteral.inherits(ASTNode);
@@ -1661,7 +1664,14 @@ var Equals = exports.Equals = function (a, b) {
 Equals.inherits(ASTNode);
 
 Equals.prototype.compileNode = function (opts) {
-  return utils.indent('this.__env.BooleanValue.intern(' + this.children[0].compile(opts) + ' === ' + this.children[1].compile(opts) + ')', opts.indent);
+  var childOne = this.children[0].compile(opts);
+  var childTwo = this.children[1].compile(opts);
+  if (this.children[0].isNumber() && this.children[0].isNumber()) {
+    var commonType = BinaryOperatorNode.table[this.children[0].getVavaType()][this.children[1].getVavaType()];
+    return utils.indent('this.__env.BooleanValue.intern(' + childOne + '.to("' + commonType + '") === ' + childTwo + '.to("' + commonType + '"))', opts.indent);
+  }
+  else
+    return utils.indent('this.__env.BooleanValue.intern(' + childOne + ' === ' + childTwo + ')', opts.indent);
 };
 
 /**
@@ -1753,7 +1763,14 @@ var NotEquals = exports.NotEquals = function (a, b) {
 NotEquals.inherits(ASTNode);
 
 NotEquals.prototype.compileNode = function (opts) {
-  return utils.indent('this.__env.BooleanValue.intern(' + this.children[0].compile(opts) + ' !== ' + this.children[1].compile(opts) + ')', opts.indent);
+  var childOne = this.children[0].compile(opts);
+  var childTwo = this.children[1].compile(opts);
+  if (this.children[0].isNumber() && this.children[0].isNumber()) {
+    var commonType = BinaryOperatorNode.table[this.children[0].getVavaType()][this.children[1].getVavaType()];
+    return utils.indent('this.__env.BooleanValue.intern(' + childOne + '.to("' + commonType + '") !== ' + childTwo + '.to("' + commonType + '"))', opts.indent);
+  }
+  else
+    return utils.indent('this.__env.BooleanValue.intern(' + childOne + ' !== ' + childTwo + ')', opts.indent);
 };
 
 /**
@@ -2282,9 +2299,11 @@ DoWhileLoop.inherits(ASTNode);
 
 DoWhileLoop.prototype.compileNode = function (opts) {
   var blockOpts = opts.changeIndent(2);
+  // Need to compile before condition for name insertion
+  var blockCompilation = this.children[0].compile(blockOpts);
   return utils.indent(builder.wrapParens(
     builder.wrapAsFunction(
-      utils.indentSpaces(opts.indent + 2) + 'while (freeRide || this.__env.BooleanValue.intern(true) === ' + this.children[1].compile(blockOpts) + ') { ' + builder.wrapParens(builder.wrapAsFunction(this.children[0].compile(blockOpts))) + '.call(blockScope); freeRide = false; }',
+      utils.indentSpaces(opts.indent + 2) + 'while (freeRide || this.__env.BooleanValue.intern(true) === ' + this.children[1].compile(blockOpts) + ') { ' + builder.wrapParens(builder.wrapAsFunction(blockCompilation)) + '.call(blockScope); freeRide = false; }',
       ['freeRide', 'blockScope']
     )
   ) + '.call(this, true, this.__descend());', opts.indent);

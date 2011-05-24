@@ -29,6 +29,27 @@ exports.Byte = new vava.env.VavaClass(
   new vava.scope.Scope({__env : vava.env})
 );
 
+exports.Character = new vava.env.VavaClass(
+  'Character',
+  {
+    methods : [
+      new vava.env.VavaMethod(
+        'parseChar',
+        'char',
+        [{identifier: 'str', vavaType: 'String'}],
+        function () { return this.__env.CharValue.intern(this.str.get().toString()); }
+      ),
+      new vava.env.VavaMethod(
+        'toString',
+        'String',
+        [{identifier: 'n', vavaType: 'char'}],
+        function () { return this.__env.StringValue.intern(this.n.get().toString()); }
+      )
+    ]
+  },
+  new vava.scope.Scope({__env : vava.env})
+);
+
 exports.Short = new vava.env.VavaClass(
   'Short',
   {

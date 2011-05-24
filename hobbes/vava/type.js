@@ -731,6 +731,10 @@ StringValue.prototype.add = function (other) {
   return StringValue.intern(this.toString() + other.toString());
 };
 
+StringValue.prototype.length = function () {
+  return IntValue.intern(this.rawValue.length);
+};
+
 StringValue.prototype.toString = function () {
   return this.rawValue;
 };

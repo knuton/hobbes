@@ -36,7 +36,8 @@ var System = exports.System = function (elem) {
             'String',
             [],
             function () {
-              return this.__env.StringValue.intern(prompt());
+              var input = prompt();
+              return this.__env.StringValue.intern(!!input && input || '\n');
             }
           ),
           new vava.env.VavaMethod(
@@ -44,7 +45,8 @@ var System = exports.System = function (elem) {
             'String',
             [{identifier: 's', vavaType: 'String'}],
             function () {
-              return this.__env.StringValue.intern(prompt(this.s.get()));
+              var input = prompt(this.s.get());
+              return this.__env.StringValue.intern(!!input && input || '\n');
             }
           )
         ]

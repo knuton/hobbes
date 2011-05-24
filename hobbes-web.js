@@ -2345,6 +2345,10 @@ var hobbes = function (exports) {
       return StringValue.intern(this.toString() + other.toString());
     };
     
+    StringValue.prototype.length = function () {
+      return IntValue.intern(this.rawValue.length);
+    };
+    
     StringValue.prototype.toString = function () {
       return this.rawValue;
     };
@@ -2527,7 +2531,7 @@ var hobbes = function (exports) {
   // Add some String instance methods
   vavaType.StringValue.prototype.vavaMethods['length()'] = new vavaMethod.VavaMethod('length', 'int', [], function () {});
   vavaType.StringValue.prototype.vavaMethods['length()'].call = function (stringObj, args) {
-    return vavaType.IntValue.intern(stringObj.length);
+    return stringObj.length();
   };
   
   exports.scope = function (exports) {
@@ -2619,7 +2623,8 @@ var hobbes = function (exports) {
                           'String',
                           [],
                           function () {
-                            return this.__env.StringValue.intern(prompt());
+                            var input = prompt();
+                            return this.__env.StringValue.intern(!!input && input || '\n');
                           }
                         ),
                         new vava.env.VavaMethod(
@@ -2627,7 +2632,8 @@ var hobbes = function (exports) {
                           'String',
                           [{identifier: 's', vavaType: 'String'}],
                           function () {
-                            return this.__env.StringValue.intern(prompt(this.s.get()));
+                            var input = prompt(this.s.get());
+                            return this.__env.StringValue.intern(!!input && input || '\n');
                           }
                         )
                       ]
@@ -2748,6 +2754,27 @@ var hobbes = function (exports) {
                 'toString',
                 'String',
                 [{identifier: 'n', vavaType: 'byte'}],
+                function () { return this.__env.StringValue.intern(this.n.get().toString()); }
+              )
+            ]
+          },
+          new vava.scope.Scope({__env : vava.env})
+        );
+        
+        exports.Character = new vava.env.VavaClass(
+          'Character',
+          {
+            methods : [
+              new vava.env.VavaMethod(
+                'parseChar',
+                'char',
+                [{identifier: 'str', vavaType: 'String'}],
+                function () { return this.__env.CharValue.intern(this.str.get().toString()); }
+              ),
+              new vava.env.VavaMethod(
+                'toString',
+                'String',
+                [{identifier: 'n', vavaType: 'char'}],
                 function () { return this.__env.StringValue.intern(this.n.get().toString()); }
               )
             ]
@@ -2910,7 +2937,7 @@ var hobbes = function (exports) {
   exports.AlgoTools = function (exports) {
     exports.source = {};
     
-    exports.source['IO'] = 'public class IO {\n\n  public static void print(String s) {\n    System.out.print(s);\n  }\n\n  public static void print(char c) {\n    System.out.print(c);\n  }\n\n  public static void println(String s) {\n    print(s + "\\n");\n  }\n  \n  public static void println(boolean b) {\n    print(b + "\\n");\n  }\n  \n  public static void println(byte b) {\n    print(b + "\\n");\n  }\n  \n  public static void println(short s) {\n    print(s + "\\n");\n  }\n  \n  public static void println(char c) {\n    print(c + "\\n");\n  }\n  \n  public static void println(int i) {\n    print(i + "\\n");\n  }\n  \n  public static void println(long l) {\n    print(l + "\\n");\n  }\n  \n  public static void println(long l, int len) {\n    String s = Long.toString(l);\n    while (s.length() < len) {\n      s = " " + s;\n    }\n    println(s);\n  }\n  \n  public static void println(float f) {\n    print(f + "\\n");\n  }\n  \n  public static void println(double d) {\n    print(d + "\\n");\n  }\n\n  public static int readInt() {\n    int in = Integer.parseInt(System.in.readln());\n    println(in);\n    return in;\n  }\n  \n  public static int readInt(String s) {\n    print(s);\n    int in = Integer.parseInt(System.in.readln(s));\n    println(in);\n    return in;\n  }\n  \n  public static void main(String[] args) {\n    println("Hi");\n    println(true);\n    println(5);\n    println(5f);\n  }\n\n}\n';
+    exports.source['IO'] = 'public class IO {\n\n  public static void print(String s) {\n    System.out.print(s);\n  }\n\n  public static void print(char c) {\n    System.out.print(c);\n  }\n\n  public static void print(long l, int len) {\n    String s = Long.toString(l);\n    while (s.length() < len) {\n      s = " " + s;\n    }\n    print(s);\n  }\n\n  public static void println() {\n    print("\\n");\n  }\n  \n  public static void println(String s) {\n    print(s + "\\n");\n  }\n  \n  public static void println(boolean b) {\n    print(b + "\\n");\n  }\n  \n  public static void println(byte b) {\n    print(b + "\\n");\n  }\n  \n  public static void println(short s) {\n    print(s + "\\n");\n  }\n  \n  public static void println(char c) {\n    print(c + "\\n");\n  }\n  \n  public static void println(int i) {\n    print(i + "\\n");\n  }\n  \n  public static void println(long l) {\n    print(l + "\\n");\n  }\n  \n  public static void println(long l, int len) {\n    String s = Long.toString(l);\n    while (s.length() < len) {\n      s = " " + s;\n    }\n    println(s);\n  }\n  \n  public static void println(float f) {\n    print(f + "\\n");\n  }\n  \n  public static void println(double d) {\n    print(d + "\\n");\n  }\n\n  public static int readInt() {\n    int in = Integer.parseInt(System.in.readln());\n    println(in);\n    return in;\n  }\n  \n  public static int readInt(String s) {\n    print(s);\n    int in = Integer.parseInt(System.in.readln(s));\n    println(in);\n    return in;\n  }\n  \n  public static char readChar() {\n    char c = Character.parseChar(System.in.readln());\n    println(c);\n    return c;\n  }\n  \n  public static char readChar(String s) {\n    print(s);\n    char c = Character.parseChar(System.in.readln(s));\n    println(c);\n    return c;\n  }\n  \n  public static void main(String[] args) {\n    println("Hi");\n    println(true);\n    println(5);\n    println(5f);\n  }\n\n}\n';
   
     return exports;
   
@@ -3889,7 +3916,7 @@ var hobbes = function (exports) {
     break;
     }
     };
-    lexer.rules = [/^\/\/.*/,/^\/\*/,/^\*\//,/^./,/^\s+/,/^\{/,/^\}/,/^\(/,/^\)/,/^\[/,/^\]/,/^,/,/^\?/,/^:/,/^;/,/^public\b/,/^private\b/,/^protected\b/,/^static\b/,/^final\b/,/^void\b/,/^package\b/,/^import\b/,/^if\b/,/^else\b/,/^while\b/,/^do\b/,/^for\b/,/^break\b/,/^switch\b/,/^case\b/,/^default\b/,/^true\b/,/^false\b/,/^class\b/,/^return\b/,/^boolean\b/,/^byte\b/,/^short\b/,/^int\b/,/^long\b/,/^char\b/,/^float\b/,/^double\b/,/^String\b/,/^<</,/^>>>/,/^>>/,/^<=/,/^</,/^==/,/^>=/,/^>/,/^!=/,/^instanceof\b/,/^\|\|/,/^\|/,/^\^/,/^&&/,/^&/,/^~/,/^!/,/^=/,/^\+=/,/^-=/,/^\*=/,/^\/=/,/^%=/,/^&=/,/^\^=/,/^\|=/,/^<<=/,/^>>=/,/^>>>=/,/^\+\+/,/^\+/,/^--/,/^-/,/^\*/,/^\//,/^%/,/^null\b/,/^[a-zA-Z][a-zA-Z0-9_]*/,/^((0|[1-9][0-9]*)\.(0|[1-9][0-9]*)?([Ee][+-]?(0|[1-9][0-9]*))?[fFdD]?|\.(0|[1-9][0-9]*)([Ee][+-]?(0|[1-9][0-9]*))?[fFdD]?|(0|[1-9][0-9]*)([Ee][+-]?(0|[1-9][0-9]*))[fFdD]?|(0|[1-9][0-9]*)([Ee][+-]?(0|[1-9][0-9]*))?[fFdD])(?=([^\w]|$))/,/^(0|[1-9][0-9]*)[lL]?\b\b/,/^""/,/^".*"/,/^'.'/,/^\./,/^$/,/^./];
+    lexer.rules = [/^\/\/.*/,/^\/\*/,/^\*\//,/^./,/^\s+/,/^\{/,/^\}/,/^\(/,/^\)/,/^\[/,/^\]/,/^,/,/^\?/,/^:/,/^;/,/^public\b/,/^private\b/,/^protected\b/,/^static\b/,/^final\b/,/^void\b/,/^package\b/,/^import\b/,/^if\b/,/^else\b/,/^while\b/,/^do\b/,/^for\b/,/^break\b/,/^switch\b/,/^case\b/,/^default\b/,/^true\b/,/^false\b/,/^class\b/,/^return\b/,/^boolean\b/,/^byte\b/,/^short\b/,/^int\b/,/^long\b/,/^char\b/,/^float\b/,/^double\b/,/^String\b/,/^<</,/^>>>/,/^>>/,/^<=/,/^</,/^==/,/^>=/,/^>/,/^!=/,/^instanceof\b/,/^\|\|/,/^\|/,/^\^/,/^&&/,/^&/,/^~/,/^!/,/^=/,/^\+=/,/^-=/,/^\*=/,/^\/=/,/^%=/,/^&=/,/^\^=/,/^\|=/,/^<<=/,/^>>=/,/^>>>=/,/^\+\+/,/^\+/,/^--/,/^-/,/^\*/,/^\//,/^%/,/^null\b/,/^[a-zA-Z][a-zA-Z0-9_]*/,/^((0|[1-9][0-9]*)\.(0|[1-9][0-9]*)?([Ee][+-]?(0|[1-9][0-9]*))?[fFdD]?|\.(0|[1-9][0-9]*)([Ee][+-]?(0|[1-9][0-9]*))?[fFdD]?|(0|[1-9][0-9]*)([Ee][+-]?(0|[1-9][0-9]*))[fFdD]?|(0|[1-9][0-9]*)([Ee][+-]?(0|[1-9][0-9]*))?[fFdD])(?=([^\w]|$))/,/^(0|[1-9][0-9]*)[lL]?\b\b/,/^""/,/^".*"/,/^'(.|\\.)'/,/^\./,/^$/,/^./];
     lexer.conditions = {"comment":{"rules":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90],"inclusive":true},"INITIAL":{"rules":[0,1,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90],"inclusive":true}};return lexer;})()
     parser.lexer = lexer;
     return parser;
@@ -4697,7 +4724,7 @@ var hobbes = function (exports) {
         if (!this.vavaType) {
           for (var i = 0; !this.vavaType && i < vavaTypes.length; i++) {
             for (var j = 0; !this.vavaType && MethodInvocation.autoCast[vavaTypes[i]] && j < MethodInvocation.autoCast[vavaTypes[i]]; j++) {
-              methodSig = this.name.simple() + '(' + vavaTypes.splice(0, i).concat(MethodInvocation.autoCast[vavaTypes[i]][j], vavaTypes.splice(i+1, 0)).join(',') + ')';
+              methodSig = this.name.simple() + '(' + vavaTypes.slice(0, i).concat(MethodInvocation.autoCast[vavaTypes[i]][j], vavaTypes.slice(i+1)).join(',') + ')';
               this.vavaType = opts.names[methodSig];
             }
           }
@@ -4715,13 +4742,14 @@ var hobbes = function (exports) {
         } else if (resolvedName) {
           for (var i = 0; !this.vavaType && i < vavaTypes.length; i++) {
             for (var j = 0; !this.vavaType && MethodInvocation.autoCast[vavaTypes[i]] && j < MethodInvocation.autoCast[vavaTypes[i]].length; j++) {
-              methodSig = this.name.simple() + '(' + vavaTypes.splice(0, i).concat(MethodInvocation.autoCast[vavaTypes[i]][j], vavaTypes.splice(i+1, 0)).join(',') + ')';
+              methodSig = this.name.simple() + '(' + vavaTypes.slice(0, i).concat(MethodInvocation.autoCast[vavaTypes[i]][j], vavaTypes.slice(i+1)).join(',') + ')';
               this.vavaType = resolvedName.hasMethod(methodSig);
             }
           }
         // I am really sorry :'(
         } else if (opts.names[this.name.prefix()] === 'String') {
           if (this.name.simple() === 'length') this.vavaType = 'int';
+          return utils.indent('this.' + this.name.prefix() + '.get().send("' + methodSig + '", ' + argumentList + ')', opts.indent);
         }
       }
     
@@ -4729,7 +4757,9 @@ var hobbes = function (exports) {
         return utils.indent('this.' + this.name.prefix() + '.send("' + methodSig + '", ' + argumentList + ')', opts.indent);
       }
     
-      this.fatalError('non-existent method on ' + this.name.qualified(), this.typeMismatchDescription(this.children[0].getVavaType(), this.vavaType), this.children[0].loc);
+      opts.addError(
+        this.nonFatalError('non-existent method on ' + this.name.qualified(), this.typeMismatchDescription(this.children[0].getVavaType(), this.vavaType), this.children[0].loc)
+      );
     };
     
     MethodInvocation.prototype.getSignature = function () {
@@ -4995,7 +5025,7 @@ var hobbes = function (exports) {
       this.setLoc(arguments[arguments.length-1]);
       this.children = [];
       this.vavaType = 'char';
-      this.character = character.substr(1,1);
+      this.character = character.replace(/'/g, '');
     };
     
     CharLiteral.inherits(ASTNode);
@@ -5579,7 +5609,14 @@ var hobbes = function (exports) {
     Equals.inherits(ASTNode);
     
     Equals.prototype.compileNode = function (opts) {
-      return utils.indent('this.__env.BooleanValue.intern(' + this.children[0].compile(opts) + ' === ' + this.children[1].compile(opts) + ')', opts.indent);
+      var childOne = this.children[0].compile(opts);
+      var childTwo = this.children[1].compile(opts);
+      if (this.children[0].isNumber() && this.children[0].isNumber()) {
+        var commonType = BinaryOperatorNode.table[this.children[0].getVavaType()][this.children[1].getVavaType()];
+        return utils.indent('this.__env.BooleanValue.intern(' + childOne + '.to("' + commonType + '") === ' + childTwo + '.to("' + commonType + '"))', opts.indent);
+      }
+      else
+        return utils.indent('this.__env.BooleanValue.intern(' + childOne + ' === ' + childTwo + ')', opts.indent);
     };
     
     /**
@@ -5671,7 +5708,14 @@ var hobbes = function (exports) {
     NotEquals.inherits(ASTNode);
     
     NotEquals.prototype.compileNode = function (opts) {
-      return utils.indent('this.__env.BooleanValue.intern(' + this.children[0].compile(opts) + ' !== ' + this.children[1].compile(opts) + ')', opts.indent);
+      var childOne = this.children[0].compile(opts);
+      var childTwo = this.children[1].compile(opts);
+      if (this.children[0].isNumber() && this.children[0].isNumber()) {
+        var commonType = BinaryOperatorNode.table[this.children[0].getVavaType()][this.children[1].getVavaType()];
+        return utils.indent('this.__env.BooleanValue.intern(' + childOne + '.to("' + commonType + '") !== ' + childTwo + '.to("' + commonType + '"))', opts.indent);
+      }
+      else
+        return utils.indent('this.__env.BooleanValue.intern(' + childOne + ' !== ' + childTwo + ')', opts.indent);
     };
     
     /**
@@ -6200,9 +6244,11 @@ var hobbes = function (exports) {
     
     DoWhileLoop.prototype.compileNode = function (opts) {
       var blockOpts = opts.changeIndent(2);
+      // Need to compile before condition for name insertion
+      var blockCompilation = this.children[0].compile(blockOpts);
       return utils.indent(builder.wrapParens(
         builder.wrapAsFunction(
-          utils.indentSpaces(opts.indent + 2) + 'while (freeRide || this.__env.BooleanValue.intern(true) === ' + this.children[1].compile(blockOpts) + ') { ' + builder.wrapParens(builder.wrapAsFunction(this.children[0].compile(blockOpts))) + '.call(blockScope); freeRide = false; }',
+          utils.indentSpaces(opts.indent + 2) + 'while (freeRide || this.__env.BooleanValue.intern(true) === ' + this.children[1].compile(blockOpts) + ') { ' + builder.wrapParens(builder.wrapAsFunction(blockCompilation)) + '.call(blockScope); freeRide = false; }',
           ['freeRide', 'blockScope']
         )
       ) + '.call(this, true, this.__descend());', opts.indent);
