@@ -1,0 +1,66 @@
+body {
+  background-color: #777;
+}
+a.runner {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  padding: 2px;
+  text-indent: 100000px;
+  background-color: #FAFAEB;
+  background-image: url('images/gears.gif');
+  background-repeat: no-repeat;
+  background-position: 2px 2px;
+}
+a.runner:hover {
+  background-image: url('images/gears-active.gif');
+}
+#examples, #output {
+  width: 50%;
+  margin: 0;
+  padding: 1em 0;
+  float: left;
+  text-align: center;
+}
+*.toolbar {
+  width: 90%;
+  min-height: 36px;
+  margin: 0 auto;
+  position: relative;
+  text-align: right;
+}
+*.toolbar *.runner {
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+}
+*.toolbar *.selector {
+  min-height: 32px;
+  padding: 2px;
+  position: absolute;
+  bottom: 0px;
+  right: 38px;
+  line-height: 36px;
+  background-color: #FAFAEB;
+}
+#examples *.hobbesecutable,  #terminal {
+  font-size: 10px;
+  font-family: monospace;
+  width: 90%;
+  min-height: 500px;
+  margin: 0 auto;
+  text-align: left;
+}
+*.hobbesecutable {
+  border-width: 1px 0 0 0;
+  border-color: #342E6B;
+  border-style: solid;
+  background-color: #fff;
+}
+#terminal {
+  margin-top: 36px;
+  min-height: 400px;
+  padding: 5px;
+  color: #fff;
+  background-color: #000;
+}
