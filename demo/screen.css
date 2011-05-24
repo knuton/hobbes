@@ -7,6 +7,7 @@ a.runner {
   height: 32px;
   padding: 2px;
   text-indent: 100000px;
+  overflow: hidden;
   background-color: #FAFAEB;
   background-image: url('images/gears.gif');
   background-repeat: no-repeat;
