@@ -2317,6 +2317,30 @@ var hobbes = function (exports) {
     
     StringValue.stored = {};
     
+    StringValue.prototype.vavaMethods = [];
+    
+    /**
+     * Returns a truthy/false value depending on the string possessing a method
+     * with the given signature.
+     *
+     * Returns the method's return type, if it does, otherwise returns false.
+     *
+     * e.g. StringValue.intern("foo").hasMethod('fib(int)')
+     */
+    StringValue.prototype.hasMethod = function (methodSignature) {
+      return !!this.vavaMethods[methodSignature] && this.vavaMethods[methodSignature].getVavaType();
+    };
+    
+    /**
+     * Sends the string a message to call its method of the provided name.
+     *
+     * @param methodName Name of the method to call
+     * @param params Parameters to pass
+     */
+    StringValue.prototype.send = function (methodSignature, params) {
+      return this.vavaMethods[methodSignature].call(this, params);
+    };
+    
     StringValue.prototype.add = function (other) {
       return StringValue.intern(this.toString() + other.toString());
     };
@@ -2500,6 +2524,12 @@ var hobbes = function (exports) {
   
   }({});
   
+  // Add some String instance methods
+  vavaType.StringValue.prototype.vavaMethods['length()'] = new vavaMethod.VavaMethod('length', 'int', [], function () {});
+  vavaType.StringValue.prototype.vavaMethods['length()'].call = function (stringObj, args) {
+    return vavaType.IntValue.intern(stringObj.length);
+  };
+  
   exports.scope = function (exports) {
     var Scope = exports.Scope = function (initialize) {
       if (typeof initialize === "object") {
@@ -2570,23 +2600,27 @@ var hobbes = function (exports) {
                   elem = { print : function (arg) { alert(arg); } };
                 }
               
+              
+                // Construct input element
+                var inputElem = document.createElement('textarea');
+                inputElem.setAttribute('style', 'display: none;');
+                if(typeof document !== 'undefined' && document.body)
+                  document.body.appendChild(inputElem);
+              
                 // Return classes with elem as output element
                 return {
                   'in' : new vava.env.VavaClass(
                     'In',
                     {
                       methods : [
+                        // :'(
                         new vava.env.VavaMethod(
                           'readln',
                           'String',
                           [],
-                          function () { return new this.__env.StringValue("5"); }
-                        ),
-                        new vava.env.VavaMethod(
-                          'readInt',
-                          'int',
-                          [],
-                          function () { var max = 9, min = 0; return this.__env.IntValue.intern(Number(prompt())); }
+                          function () {
+                            return this.__env.StringValue.intern(prompt());
+                          }
                         )
                       ]
                     },
@@ -2701,6 +2735,12 @@ var hobbes = function (exports) {
                 'byte',
                 [{identifier: 'str', vavaType: 'String'}, {identifier: 'radix', vavaType: 'int'}],
                 function () { return this.__env.ByteValue.intern(parseInt(this.str.get(), this.radix.get())); }
+              ),
+              new vava.env.VavaMethod(
+                'toString',
+                'String',
+                [{identifier: 'n', vavaType: 'byte'}],
+                function () { return this.__env.StringValue.intern(this.n.get().toString()); }
               )
             ]
           },
@@ -2722,6 +2762,12 @@ var hobbes = function (exports) {
                 'short',
                 [{identifier: 'str', vavaType: 'String'}, {identifier: 'radix', vavaType: 'int'}],
                 function () { return this.__env.ShortValue.intern(parseInt(this.str.get(), this.radix.get())); }
+              ),
+              new vava.env.VavaMethod(
+                'toString',
+                'String',
+                [{identifier: 'n', vavaType: 'short'}],
+                function () { return this.__env.StringValue.intern(this.n.get().toString()); }
               )
             ]
           },
@@ -2743,6 +2789,12 @@ var hobbes = function (exports) {
                 'int',
                 [{identifier: 'str', vavaType: 'String'}, {identifier: 'radix', vavaType: 'int'}],
                 function () { return this.__env.IntValue.intern(parseInt(this.str.get(), this.radix.get())); }
+              ),
+              new vava.env.VavaMethod(
+                'toString',
+                'String',
+                [{identifier: 'n', vavaType: 'int'}],
+                function () { return this.__env.StringValue.intern(this.n.get().toString()); }
               )
             ]
           },
@@ -2764,6 +2816,12 @@ var hobbes = function (exports) {
                 'long',
                 [{identifier: 'str', vavaType: 'String'}, {identifier: 'radix', vavaType: 'int'}],
                 function () { return this.__env.LongValue.intern(parseInt(this.str.get(), this.radix.get())); }
+              ),
+              new vava.env.VavaMethod(
+                'toString',
+                'String',
+                [{identifier: 'n', vavaType: 'long'}],
+                function () { return this.__env.StringValue.intern(this.n.get().toString()); }
               )
             ]
           },
@@ -2779,6 +2837,12 @@ var hobbes = function (exports) {
                 'float',
                 [{identifier: 'str', vavaType: 'String'}],
                 function () { return this.__env.FloatValue.intern(parseFloat(this.str.get(), 10)); }
+              ),
+              new vava.env.VavaMethod(
+                'toString',
+                'String',
+                [{identifier: 'n', vavaType: 'float'}],
+                function () { return this.__env.StringValue.intern(this.n.get().toString()); }
               )
             ]
           },
@@ -2794,6 +2858,12 @@ var hobbes = function (exports) {
                 'double',
                 [{identifier: 'str', vavaType: 'String'}],
                 function () { return this.__env.DoubleValue.intern(parseFloat(this.str.get(), 10)); }
+              ),
+              new vava.env.VavaMethod(
+                'toString',
+                'String',
+                [{identifier: 'n', vavaType: 'double'}],
+                function () { return this.__env.StringValue.intern(this.n.get().toString()); }
               )
             ]
           },
@@ -2832,7 +2902,7 @@ var hobbes = function (exports) {
   exports.AlgoTools = function (exports) {
     exports.source = {};
     
-    exports.source['IO'] = 'public class AlgoToolsIO {\n\n  public static void print(String s) {\n    System.out.print(s);\n  }\n\n  public static void print(char c) {\n    System.out.print(c);\n  }\n\n  public static void println(String s) {\n    print(s + "\\n");\n  }\n  \n  public static void println(boolean b) {\n    print(b + "\\n");\n  }\n  \n  public static void println(byte b) {\n    print(b + "\\n");\n  }\n  \n  public static void println(short s) {\n    print(s + "\\n");\n  }\n  \n  public static void println(char c) {\n    print(c + "\\n");\n  }\n  \n  public static void println(int i) {\n    print(i + "\\n");\n  }\n  \n  public static void println(long l) {\n    print(l + "\\n");\n  }\n  \n  public static void println(float f) {\n    print(f + "\\n");\n  }\n  \n  public static void println(double d) {\n    print(d + "\\n");\n  }\n\n  public static int readInt() {\n    int in = System.in.readInt();\n    return in;\n  }\n  \n  public static int readInt(String s) {\n    print(s);\n    int in = System.in.readInt();\n    println(in);\n    return in;\n  }\n  \n  public static void main(String[] args) {\n    println("Hi");\n    println(true);\n    println(5);\n    println(5f);\n  }\n\n}\n';
+    exports.source['IO'] = 'public class IO {\n\n  public static void print(String s) {\n    System.out.print(s);\n  }\n\n  public static void print(char c) {\n    System.out.print(c);\n  }\n\n  public static void println(String s) {\n    print(s + "\\n");\n  }\n  \n  public static void println(boolean b) {\n    print(b + "\\n");\n  }\n  \n  public static void println(byte b) {\n    print(b + "\\n");\n  }\n  \n  public static void println(short s) {\n    print(s + "\\n");\n  }\n  \n  public static void println(char c) {\n    print(c + "\\n");\n  }\n  \n  public static void println(int i) {\n    print(i + "\\n");\n  }\n  \n  public static void println(long l) {\n    print(l + "\\n");\n  }\n  \n  public static void println(float f) {\n    print(f + "\\n");\n  }\n  \n  public static void println(double d) {\n    print(d + "\\n");\n  }\n\n  public static int readInt() {\n    int in = Integer.parseInt(System.in.readln());\n    println(in);\n    return in;\n  }\n  \n  public static int readInt(String s) {\n    print(s);\n    return readInt();\n  }\n  \n  public static void main(String[] args) {\n    println("Hi");\n    println(true);\n    println(5);\n    println(5f);\n  }\n\n}\n';
   
     return exports;
   
@@ -4594,20 +4664,57 @@ var hobbes = function (exports) {
     
     MethodInvocation.inherits(ASTNode);
     
+    MethodInvocation.autoCast = {
+      'byte': ['short', 'char', 'int', 'long', 'float', 'double'],
+      'short': ['char', 'int', 'long', 'float', 'double'],
+      'char': ['short', 'int', 'long', 'float', 'double'],
+      'int': ['long', 'float', 'double'],
+      'long': ['float', 'double'],
+      'float': ['double']
+    };
+    
     MethodInvocation.prototype.compileNode = function (opts) {
       var argumentList = this.children[0].compile(opts);
-      var methodSig = this.name.simple() + '(' + this.children[0].getVavaTypes().join(',') + ')';
+      var vavaTypes = this.children[0].getVavaTypes();
+      var methodSig = this.name.simple() + '(' + vavaTypes.join(',') + ')';
+      // method call with simple name
       if (this.name.isSimple()) {
         this.vavaType = opts.names[methodSig];
+        // look for compatible types if no exact match found
+        if (!this.vavaType) {
+          for (var i = 0; !this.vavaType && i < vavaTypes.length; i++) {
+            for (var j = 0; !this.vavaType && j < MethodInvocation.autoCast[vavaTypes[i]]; j++) {
+              methodSig = this.name.simple() + '(' + vavaTypes.splice(0, i).concat(MethodInvocation.autoCast[vavaTypes[i]][j], vavaTypes.splice(i+1, 0)).join(',') + ')';
+              this.vavaType = opts.names[methodSig];
+            }
+          }
+        }
+        // finally found no matching method
+        if (!this.vavaType)
+          this.fatalError('non-existent method on ' + this.name.qualified(), this.typeMismatchDescription(this.children[0].getVavaType(), this.vavaType), this.children[0].loc);
         return utils.indent('this.__self.send("' + methodSig + '", ' + argumentList + ')', opts.indent);
+      // method call on qualified name
       } else {
         var resolvedName = utils.objectPath(opts.names, this.name.prefixParts());
         if (resolvedName && (this.vavaType = resolvedName.hasMethod(methodSig))) {
-          return utils.indent('this.' + this.name.prefix() + '.send("' + methodSig + '", ' + argumentList + ')', opts.indent);
-        } else {
-          throw {message: "Called non-existent method on class " + this.name.qualified()};
+          // found method, will call later
+        // otherwise look for compatible types
+        } else if (resolvedName) {
+          for (var i = 0; !this.vavaType && i < vavaTypes.length; i++) {
+            for (var j = 0; !this.vavaType && j < MethodInvocation.autoCast[vavaTypes[i]].length; j++) {
+              methodSig = this.name.simple() + '(' + vavaTypes.splice(0, i).concat(MethodInvocation.autoCast[vavaTypes[i]][j], vavaTypes.splice(i+1, 0)).join(',') + ')';
+              console.log(methodSig)
+              this.vavaType = resolvedName.hasMethod(methodSig);
+            }
+          }
         }
       }
+    
+      if (this.vavaType) {
+        return utils.indent('this.' + this.name.prefix() + '.send("' + methodSig + '", ' + argumentList + ')', opts.indent);
+      }
+      
+      this.fatalError('non-existent method on ' + this.name.qualified(), this.typeMismatchDescription(this.children[0].getVavaType(), this.vavaType), this.children[0].loc);
     };
     
     MethodInvocation.prototype.getSignature = function () {
@@ -5192,7 +5299,6 @@ var hobbes = function (exports) {
     };
     
     BinaryOperatorNode.prototype.compileTimeCheck = function (opts) {
-      console.log(this, String(this.isApplicable));
       if (!this.isApplicable())
         opts.addError(
           this.nonFatalError('operator ' + this.operator + ' cannot be applied to ' + this.children[0].getVavaType() + ',' + this.children[1].getVavaType())
@@ -5609,7 +5715,7 @@ var hobbes = function (exports) {
       );
     };
     
-    LogicalAnd.prototype.iisApplicable = function () {
+    LogicalAnd.prototype.isApplicable = function () {
       return this.children[0].isVavaType('boolean') && this.children[1].isVavaType('boolean');
     };
     
@@ -5639,7 +5745,7 @@ var hobbes = function (exports) {
       );
     };
     
-    LogicalOr.prototype.iisApplicable = LogicalAnd.prototype.isApplicable;
+    LogicalOr.prototype.isApplicable = LogicalAnd.prototype.isApplicable;
     
     /**
      * Supertype for bitwise binary operators working on both booleans and integrals
@@ -5647,7 +5753,7 @@ var hobbes = function (exports) {
     var BitwiseBinaryOperatorNode = function () {};
     BitwiseBinaryOperatorNode.inherits(BinaryOperatorNode);
     
-    BitwiseBinaryOperatorNode.prototype.iisApplicable = function () {
+    BitwiseBinaryOperatorNode.prototype.isApplicable = function () {
       return (!!this.constructor.table[this.children[0].getVavaType()] &&
         !!this.constructor.table[this.children[0].getVavaType()][this.children[1].getVavaType()] &&
         !this.children[0].isVavaType('String') && !this.children[1].isVavaType('String') &&
@@ -5786,7 +5892,7 @@ var hobbes = function (exports) {
     var ShiftOperator = function () {};
     ShiftOperator.inherits(BitwiseBinaryOperatorNode);
     
-    ShiftOperator.prototype.iisApplicable = function () {
+    ShiftOperator.prototype.isApplicable = function () {
       return (!!this.constructor.table[this.children[0].getVavaType()] &&
         !!this.constructor.table[this.children[0].getVavaType()][this.children[1].getVavaType()] &&
         !this.children[0].isVavaType('String') && !this.children[1].isVavaType('String') &&

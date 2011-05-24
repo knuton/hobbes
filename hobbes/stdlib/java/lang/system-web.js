@@ -17,23 +17,27 @@ var System = exports.System = function (elem) {
     elem = { print : function (arg) { alert(arg); } };
   }
 
+
+  // Construct input element
+  var inputElem = document.createElement('textarea');
+  inputElem.setAttribute('style', 'display: none;');
+  if(typeof document !== 'undefined' && document.body)
+    document.body.appendChild(inputElem);
+
   // Return classes with elem as output element
   return {
     'in' : new vava.env.VavaClass(
       'In',
       {
         methods : [
+          // :'(
           new vava.env.VavaMethod(
             'readln',
             'String',
             [],
-            function () { return new this.__env.StringValue("5"); }
-          ),
-          new vava.env.VavaMethod(
-            'readInt',
-            'int',
-            [],
-            function () { var max = 9, min = 0; return this.__env.IntValue.intern(Number(prompt())); }
+            function () {
+              return this.__env.StringValue.intern(prompt());
+            }
           )
         ]
       },

@@ -2,7 +2,6 @@ var vava = (typeof hobbes !== 'undefined' && hobbes.vava) || require('../../../v
 
 exports.System = {
 
-  // TODO Look up proper name for IO classes
   'in' : new vava.env.VavaClass(
     'In',
     {
@@ -11,13 +10,7 @@ exports.System = {
           'readln',
           'String',
           [],
-          function () { return new this.__env.StringValue("5"); }
-        ),
-        new vava.env.VavaMethod(
-          'readInt',
-          'int',
-          [],
-          function () { var max = 9, min = 0; return this.__env.IntValue.intern(Math.floor(Math.random() * (max - min + 1)) + min); }
+          function () { var max = 9, min = 0; return this.__env.StringValue.intern(String(Math.floor(Math.random() * (max - min + 1)) + min)); }
         )
       ]
     },

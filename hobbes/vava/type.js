@@ -703,6 +703,30 @@ StringValue.inherits(TypedValue);
 
 StringValue.stored = {};
 
+StringValue.prototype.vavaMethods = [];
+
+/**
+ * Returns a truthy/false value depending on the string possessing a method
+ * with the given signature.
+ *
+ * Returns the method's return type, if it does, otherwise returns false.
+ *
+ * e.g. StringValue.intern("foo").hasMethod('fib(int)')
+ */
+StringValue.prototype.hasMethod = function (methodSignature) {
+  return !!this.vavaMethods[methodSignature] && this.vavaMethods[methodSignature].getVavaType();
+};
+
+/**
+ * Sends the string a message to call its method of the provided name.
+ *
+ * @param methodName Name of the method to call
+ * @param params Parameters to pass
+ */
+StringValue.prototype.send = function (methodSignature, params) {
+  return this.vavaMethods[methodSignature].call(this, params);
+};
+
 StringValue.prototype.add = function (other) {
   return StringValue.intern(this.toString() + other.toString());
 };

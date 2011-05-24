@@ -107,10 +107,10 @@
         $('#examples .toolbar').prepend(fileSelectorContainer.prepend(fileSelector));
         // add runner handler
         $('#examples *.runner').click(function (e) {
+          e.preventDefault();
           if (current) {
             hobbes.web.execute(current.getValue(), document.getElementById('terminal'));
           }
-          return false;
         });
       });
     </script>
@@ -121,46 +121,34 @@
         <div class="toolbar">
           <a class="runner" href="#run" alt="Run" title="Run">Run</a>
         </div>
-        <textarea data-filename="Fall.java" class="hobbesecutable current">
-/****************************  Fall.java  *************************************/
+        <textarea data-filename="Collatz.java" class="hobbesecutable">
+/*****************************  Collatz.java  *********************************/
 
 import AlgoTools.IO;
 
-/**  Verzweigung durch Fallunterscheidung (switch/case-Anweisung) 
- *
- */  
+/**  Berechnet Collatz-Funktion, d.h.                     
+ *   Anzahl der Iterationen der Funktion g: N -> N        
+ *   bis die Eingabe auf 1 transformiert ist              
+ *   mit g(x) = x/2 falls x gerade, 3*x+1 sonst          
+ */
 
-public class Fall {
+public class Collatz {
 
-  public static void main (String [] argv) {
+  public static void main(String [] argv) {
 
-    int zahl  = 42;
-    int monat = 11;
+    int x, z;                                   // definiere 2 Variablen
+ 
+    x = IO.readInt("Bitte eine Zahl: ");        // lies einen Wert ein 
+    z = 0;                                      // setze z auf 0
 
-   switch (zahl % 10) {// verzweige in Abhaengigkeit der letzten Ziffer von zahl
-
-        case 0:  IO.println("null  "); break;
-        case 1:  IO.println("eins  "); break;
-        case 2:  IO.println("zwei  "); break;
-        case 3:  IO.println("drei  "); break;
-        case 4:  IO.println("vier  "); break;
-        case 5:  IO.println("fuenf "); break;
-        case 6:  IO.println("sechs "); break;
-        case 7:  IO.println("sieben"); break;
-        case 8:  IO.println("acht  "); break;
-        case 9:  IO.println("neun  "); break;
+    while (x != 1) {                            // solange x ungleich 1 ist
+        if (x % 2 == 0)                         // falls x gerade ist
+            x = x / 2;                          // halbiere x 
+        else                                    // andernfalls
+            x = 3*x+1;                          // verdreifache x und add. 1
+        z = z+1;                                // erhoehe z um eins
     }
-
-
-    switch(monat) {                  // verzweige in Abhaengigkeit von monat
-        
-        case  3: case  4: case  5:   IO.println("Fruehling"); break;        
-        case  6: case  7: case  8:   IO.println("Sommer   "); break;        
-        case  9: case 10: case 11:   IO.println("Herbst   "); break;        
-        case 12: case  1: case  2:   IO.println("Winter   "); break;        
-        default:                     IO.println("unbekannte Jahreszeit"); 
-    }
-                     
+    IO.println("Anzahl der Iterationen: " + z); // gib z aus
   }
 }
         </textarea>
@@ -208,6 +196,90 @@ public class Bedingung {
                                           // den Ausdruck vor ':' zu,
                                           // falls Bedingung vor '?' wahr;
   }                                       // sonst Ausdruck hinter ':'
+}
+        </textarea>
+        <textarea data-filename="Fall.java" class="hobbesecutable">
+/****************************  Fall.java  *************************************/
+
+import AlgoTools.IO;
+
+/**  Verzweigung durch Fallunterscheidung (switch/case-Anweisung) 
+ *
+ */  
+
+public class Fall {
+
+  public static void main (String [] argv) {
+
+    int zahl  = 42;
+    int monat = 11;
+
+   switch (zahl % 10) {// verzweige in Abhaengigkeit der letzten Ziffer von zahl
+
+        case 0:  IO.println("null  "); break;
+        case 1:  IO.println("eins  "); break;
+        case 2:  IO.println("zwei  "); break;
+        case 3:  IO.println("drei  "); break;
+        case 4:  IO.println("vier  "); break;
+        case 5:  IO.println("fuenf "); break;
+        case 6:  IO.println("sechs "); break;
+        case 7:  IO.println("sieben"); break;
+        case 8:  IO.println("acht  "); break;
+        case 9:  IO.println("neun  "); break;
+    }
+
+
+    switch(monat) {                  // verzweige in Abhaengigkeit von monat
+        
+        case  3: case  4: case  5:   IO.println("Fruehling"); break;        
+        case  6: case  7: case  8:   IO.println("Sommer   "); break;        
+        case  9: case 10: case 11:   IO.println("Herbst   "); break;        
+        case 12: case  1: case  2:   IO.println("Winter   "); break;        
+        default:                     IO.println("unbekannte Jahreszeit"); 
+    }
+                     
+  }
+}
+        </textarea>
+        <textarea data-filename="Schleife.java" class="hobbesecutable">
+/***************************  Schleife.java  **********************************/
+
+import AlgoTools.IO;
+
+/**  while-Schleife, do-while-Schleife, break, continue, for-Schleife
+ */
+
+public class Schleife {
+
+  public static void main (String [] argv) {
+
+    int i, x=10, y=2, summe;                  // 4 Integer-Variablen
+       
+    while (x > 0) {                           // solange x groesser als 0 
+        x--;                                  // erniedrige x um eins 
+        y = y + 2;                            // erhoehe y um zwei
+    }
+
+    do {                                                               
+        x++;                                  // erhoehe x um eins
+        y += 2;                               // erhoehe y um 2
+    } while (x < 10);                         // solange x kleiner als 10 
+        
+    IO.println("Bitte Zahlen eingeben. 0 als Abbruch");
+    summe = 0;                                // initialisiere summe
+    x = IO.readInt();                         // lies x ein 
+    while (x != 0) {                          // solange x ungleich 0 ist
+        summe += x;                           // erhoehe summe
+        x = IO.readInt();                     // lies x ein
+    }
+    IO.println("Die Summe lautet " + summe);
+
+    do {
+        x=IO.readInt("Bitte 1<= Zahl <=12");  // lies x ein
+    } while (( x < 1) || (x > 12));           // solange x unzulaessig 
+
+    for (i=1; i<=10; i++) IO.println(i*i,6);  // drucke 10 Quadratzahlen
+  }
 }
         </textarea>
       </form>

@@ -754,20 +754,57 @@ var MethodInvocation = exports.MethodInvocation = function (name, argumentList) 
 
 MethodInvocation.inherits(ASTNode);
 
+MethodInvocation.autoCast = {
+  'byte': ['short', 'char', 'int', 'long', 'float', 'double'],
+  'short': ['char', 'int', 'long', 'float', 'double'],
+  'char': ['short', 'int', 'long', 'float', 'double'],
+  'int': ['long', 'float', 'double'],
+  'long': ['float', 'double'],
+  'float': ['double']
+};
+
 MethodInvocation.prototype.compileNode = function (opts) {
   var argumentList = this.children[0].compile(opts);
-  var methodSig = this.name.simple() + '(' + this.children[0].getVavaTypes().join(',') + ')';
+  var vavaTypes = this.children[0].getVavaTypes();
+  var methodSig = this.name.simple() + '(' + vavaTypes.join(',') + ')';
+  // method call with simple name
   if (this.name.isSimple()) {
     this.vavaType = opts.names[methodSig];
+    // look for compatible types if no exact match found
+    if (!this.vavaType) {
+      for (var i = 0; !this.vavaType && i < vavaTypes.length; i++) {
+        for (var j = 0; !this.vavaType && j < MethodInvocation.autoCast[vavaTypes[i]]; j++) {
+          methodSig = this.name.simple() + '(' + vavaTypes.splice(0, i).concat(MethodInvocation.autoCast[vavaTypes[i]][j], vavaTypes.splice(i+1, 0)).join(',') + ')';
+          this.vavaType = opts.names[methodSig];
+        }
+      }
+    }
+    // finally found no matching method
+    if (!this.vavaType)
+      this.fatalError('non-existent method on ' + this.name.qualified(), this.typeMismatchDescription(this.children[0].getVavaType(), this.vavaType), this.children[0].loc);
     return utils.indent('this.__self.send("' + methodSig + '", ' + argumentList + ')', opts.indent);
+  // method call on qualified name
   } else {
     var resolvedName = utils.objectPath(opts.names, this.name.prefixParts());
     if (resolvedName && (this.vavaType = resolvedName.hasMethod(methodSig))) {
-      return utils.indent('this.' + this.name.prefix() + '.send("' + methodSig + '", ' + argumentList + ')', opts.indent);
-    } else {
-      throw {message: "Called non-existent method on class " + this.name.qualified()};
+      // found method, will call later
+    // otherwise look for compatible types
+    } else if (resolvedName) {
+      for (var i = 0; !this.vavaType && i < vavaTypes.length; i++) {
+        for (var j = 0; !this.vavaType && j < MethodInvocation.autoCast[vavaTypes[i]].length; j++) {
+          methodSig = this.name.simple() + '(' + vavaTypes.splice(0, i).concat(MethodInvocation.autoCast[vavaTypes[i]][j], vavaTypes.splice(i+1, 0)).join(',') + ')';
+          console.log(methodSig)
+          this.vavaType = resolvedName.hasMethod(methodSig);
+        }
+      }
     }
   }
+
+  if (this.vavaType) {
+    return utils.indent('this.' + this.name.prefix() + '.send("' + methodSig + '", ' + argumentList + ')', opts.indent);
+  }
+  
+  this.fatalError('non-existent method on ' + this.name.qualified(), this.typeMismatchDescription(this.children[0].getVavaType(), this.vavaType), this.children[0].loc);
 };
 
 MethodInvocation.prototype.getSignature = function () {
@@ -1352,7 +1389,6 @@ BinaryOperatorNode.table = {
 };
 
 BinaryOperatorNode.prototype.compileTimeCheck = function (opts) {
-  console.log(this, String(this.isApplicable));
   if (!this.isApplicable())
     opts.addError(
       this.nonFatalError('operator ' + this.operator + ' cannot be applied to ' + this.children[0].getVavaType() + ',' + this.children[1].getVavaType())
@@ -1769,7 +1805,7 @@ LogicalAnd.prototype.compileNode = function (opts) {
   );
 };
 
-LogicalAnd.prototype.iisApplicable = function () {
+LogicalAnd.prototype.isApplicable = function () {
   return this.children[0].isVavaType('boolean') && this.children[1].isVavaType('boolean');
 };
 
@@ -1799,7 +1835,7 @@ LogicalOr.prototype.compileNode = function (opts) {
   );
 };
 
-LogicalOr.prototype.iisApplicable = LogicalAnd.prototype.isApplicable;
+LogicalOr.prototype.isApplicable = LogicalAnd.prototype.isApplicable;
 
 /**
  * Supertype for bitwise binary operators working on both booleans and integrals
@@ -1807,7 +1843,7 @@ LogicalOr.prototype.iisApplicable = LogicalAnd.prototype.isApplicable;
 var BitwiseBinaryOperatorNode = function () {};
 BitwiseBinaryOperatorNode.inherits(BinaryOperatorNode);
 
-BitwiseBinaryOperatorNode.prototype.iisApplicable = function () {
+BitwiseBinaryOperatorNode.prototype.isApplicable = function () {
   return (!!this.constructor.table[this.children[0].getVavaType()] &&
     !!this.constructor.table[this.children[0].getVavaType()][this.children[1].getVavaType()] &&
     !this.children[0].isVavaType('String') && !this.children[1].isVavaType('String') &&
@@ -1946,7 +1982,7 @@ BitwiseNegation.prototype.compileTimeCheck = function (opts) {
 var ShiftOperator = function () {};
 ShiftOperator.inherits(BitwiseBinaryOperatorNode);
 
-ShiftOperator.prototype.iisApplicable = function () {
+ShiftOperator.prototype.isApplicable = function () {
   return (!!this.constructor.table[this.children[0].getVavaType()] &&
     !!this.constructor.table[this.children[0].getVavaType()][this.children[1].getVavaType()] &&
     !this.children[0].isVavaType('String') && !this.children[1].isVavaType('String') &&

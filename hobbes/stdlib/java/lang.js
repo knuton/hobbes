@@ -17,6 +17,12 @@ exports.Byte = new vava.env.VavaClass(
         'byte',
         [{identifier: 'str', vavaType: 'String'}, {identifier: 'radix', vavaType: 'int'}],
         function () { return this.__env.ByteValue.intern(parseInt(this.str.get(), this.radix.get())); }
+      ),
+      new vava.env.VavaMethod(
+        'toString',
+        'String',
+        [{identifier: 'n', vavaType: 'byte'}],
+        function () { return this.__env.StringValue.intern(this.n.get().toString()); }
       )
     ]
   },
@@ -38,6 +44,12 @@ exports.Short = new vava.env.VavaClass(
         'short',
         [{identifier: 'str', vavaType: 'String'}, {identifier: 'radix', vavaType: 'int'}],
         function () { return this.__env.ShortValue.intern(parseInt(this.str.get(), this.radix.get())); }
+      ),
+      new vava.env.VavaMethod(
+        'toString',
+        'String',
+        [{identifier: 'n', vavaType: 'short'}],
+        function () { return this.__env.StringValue.intern(this.n.get().toString()); }
       )
     ]
   },
@@ -59,6 +71,12 @@ exports.Integer = new vava.env.VavaClass(
         'int',
         [{identifier: 'str', vavaType: 'String'}, {identifier: 'radix', vavaType: 'int'}],
         function () { return this.__env.IntValue.intern(parseInt(this.str.get(), this.radix.get())); }
+      ),
+      new vava.env.VavaMethod(
+        'toString',
+        'String',
+        [{identifier: 'n', vavaType: 'int'}],
+        function () { return this.__env.StringValue.intern(this.n.get().toString()); }
       )
     ]
   },
@@ -80,6 +98,12 @@ exports.Long = new vava.env.VavaClass(
         'long',
         [{identifier: 'str', vavaType: 'String'}, {identifier: 'radix', vavaType: 'int'}],
         function () { return this.__env.LongValue.intern(parseInt(this.str.get(), this.radix.get())); }
+      ),
+      new vava.env.VavaMethod(
+        'toString',
+        'String',
+        [{identifier: 'n', vavaType: 'long'}],
+        function () { return this.__env.StringValue.intern(this.n.get().toString()); }
       )
     ]
   },
@@ -95,6 +119,12 @@ exports.Float = new vava.env.VavaClass(
         'float',
         [{identifier: 'str', vavaType: 'String'}],
         function () { return this.__env.FloatValue.intern(parseFloat(this.str.get(), 10)); }
+      ),
+      new vava.env.VavaMethod(
+        'toString',
+        'String',
+        [{identifier: 'n', vavaType: 'float'}],
+        function () { return this.__env.StringValue.intern(this.n.get().toString()); }
       )
     ]
   },
@@ -110,6 +140,12 @@ exports.Double = new vava.env.VavaClass(
         'double',
         [{identifier: 'str', vavaType: 'String'}],
         function () { return this.__env.DoubleValue.intern(parseFloat(this.str.get(), 10)); }
+      ),
+      new vava.env.VavaMethod(
+        'toString',
+        'String',
+        [{identifier: 'n', vavaType: 'double'}],
+        function () { return this.__env.StringValue.intern(this.n.get().toString()); }
       )
     ]
   },
