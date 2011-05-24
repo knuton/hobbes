@@ -2621,6 +2621,14 @@ var hobbes = function (exports) {
                           function () {
                             return this.__env.StringValue.intern(prompt());
                           }
+                        ),
+                        new vava.env.VavaMethod(
+                          'readln',
+                          'String',
+                          [{identifier: 's', vavaType: 'String'}],
+                          function () {
+                            return this.__env.StringValue.intern(prompt(this.s.get()));
+                          }
                         )
                       ]
                     },
@@ -2902,7 +2910,7 @@ var hobbes = function (exports) {
   exports.AlgoTools = function (exports) {
     exports.source = {};
     
-    exports.source['IO'] = 'public class IO {\n\n  public static void print(String s) {\n    System.out.print(s);\n  }\n\n  public static void print(char c) {\n    System.out.print(c);\n  }\n\n  public static void println(String s) {\n    print(s + "\\n");\n  }\n  \n  public static void println(boolean b) {\n    print(b + "\\n");\n  }\n  \n  public static void println(byte b) {\n    print(b + "\\n");\n  }\n  \n  public static void println(short s) {\n    print(s + "\\n");\n  }\n  \n  public static void println(char c) {\n    print(c + "\\n");\n  }\n  \n  public static void println(int i) {\n    print(i + "\\n");\n  }\n  \n  public static void println(long l) {\n    print(l + "\\n");\n  }\n  \n  public static void println(float f) {\n    print(f + "\\n");\n  }\n  \n  public static void println(double d) {\n    print(d + "\\n");\n  }\n\n  public static int readInt() {\n    int in = Integer.parseInt(System.in.readln());\n    println(in);\n    return in;\n  }\n  \n  public static int readInt(String s) {\n    print(s);\n    return readInt();\n  }\n  \n  public static void main(String[] args) {\n    println("Hi");\n    println(true);\n    println(5);\n    println(5f);\n  }\n\n}\n';
+    exports.source['IO'] = 'public class IO {\n\n  public static void print(String s) {\n    System.out.print(s);\n  }\n\n  public static void print(char c) {\n    System.out.print(c);\n  }\n\n  public static void println(String s) {\n    print(s + "\\n");\n  }\n  \n  public static void println(boolean b) {\n    print(b + "\\n");\n  }\n  \n  public static void println(byte b) {\n    print(b + "\\n");\n  }\n  \n  public static void println(short s) {\n    print(s + "\\n");\n  }\n  \n  public static void println(char c) {\n    print(c + "\\n");\n  }\n  \n  public static void println(int i) {\n    print(i + "\\n");\n  }\n  \n  public static void println(long l) {\n    print(l + "\\n");\n  }\n  \n  public static void println(long l, int len) {\n    String s = Long.toString(l);\n    while (s.length() < len) {\n      s = " " + s;\n    }\n    println(s);\n  }\n  \n  public static void println(float f) {\n    print(f + "\\n");\n  }\n  \n  public static void println(double d) {\n    print(d + "\\n");\n  }\n\n  public static int readInt() {\n    int in = Integer.parseInt(System.in.readln());\n    println(in);\n    return in;\n  }\n  \n  public static int readInt(String s) {\n    print(s);\n    int in = Integer.parseInt(System.in.readln(s));\n    println(in);\n    return in;\n  }\n  \n  public static void main(String[] args) {\n    println("Hi");\n    println(true);\n    println(5);\n    println(5f);\n  }\n\n}\n';
   
     return exports;
   
@@ -4676,6 +4684,11 @@ var hobbes = function (exports) {
     MethodInvocation.prototype.compileNode = function (opts) {
       var argumentList = this.children[0].compile(opts);
       var vavaTypes = this.children[0].getVavaTypes();
+      // Before we go on, let's see whether there might have been errors earlier in compiling
+      for (var i = 0; i < vavaTypes.length; i++) {
+        if (typeof vavaTypes[i] === 'undefined') return;
+      }
+      // OK, looks legit
       var methodSig = this.name.simple() + '(' + vavaTypes.join(',') + ')';
       // method call with simple name
       if (this.name.isSimple()) {
@@ -4683,7 +4696,7 @@ var hobbes = function (exports) {
         // look for compatible types if no exact match found
         if (!this.vavaType) {
           for (var i = 0; !this.vavaType && i < vavaTypes.length; i++) {
-            for (var j = 0; !this.vavaType && j < MethodInvocation.autoCast[vavaTypes[i]]; j++) {
+            for (var j = 0; !this.vavaType && MethodInvocation.autoCast[vavaTypes[i]] && j < MethodInvocation.autoCast[vavaTypes[i]]; j++) {
               methodSig = this.name.simple() + '(' + vavaTypes.splice(0, i).concat(MethodInvocation.autoCast[vavaTypes[i]][j], vavaTypes.splice(i+1, 0)).join(',') + ')';
               this.vavaType = opts.names[methodSig];
             }
@@ -4691,29 +4704,31 @@ var hobbes = function (exports) {
         }
         // finally found no matching method
         if (!this.vavaType)
-          this.fatalError('non-existent method on ' + this.name.qualified(), this.typeMismatchDescription(this.children[0].getVavaType(), this.vavaType), this.children[0].loc);
+          this.fatalError('non-existent method on ' + this.name.qualified(), this.children[0].loc);
         return utils.indent('this.__self.send("' + methodSig + '", ' + argumentList + ')', opts.indent);
       // method call on qualified name
       } else {
         var resolvedName = utils.objectPath(opts.names, this.name.prefixParts());
         if (resolvedName && (this.vavaType = resolvedName.hasMethod(methodSig))) {
-          // found method, will call later
+          // found method, will return later
         // otherwise look for compatible types
         } else if (resolvedName) {
           for (var i = 0; !this.vavaType && i < vavaTypes.length; i++) {
-            for (var j = 0; !this.vavaType && j < MethodInvocation.autoCast[vavaTypes[i]].length; j++) {
+            for (var j = 0; !this.vavaType && MethodInvocation.autoCast[vavaTypes[i]] && j < MethodInvocation.autoCast[vavaTypes[i]].length; j++) {
               methodSig = this.name.simple() + '(' + vavaTypes.splice(0, i).concat(MethodInvocation.autoCast[vavaTypes[i]][j], vavaTypes.splice(i+1, 0)).join(',') + ')';
-              console.log(methodSig)
               this.vavaType = resolvedName.hasMethod(methodSig);
             }
           }
+        // I am really sorry :'(
+        } else if (opts.names[this.name.prefix()] === 'String') {
+          if (this.name.simple() === 'length') this.vavaType = 'int';
         }
       }
     
       if (this.vavaType) {
         return utils.indent('this.' + this.name.prefix() + '.send("' + methodSig + '", ' + argumentList + ')', opts.indent);
       }
-      
+    
       this.fatalError('non-existent method on ' + this.name.qualified(), this.typeMismatchDescription(this.children[0].getVavaType(), this.vavaType), this.children[0].loc);
     };
     

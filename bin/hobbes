@@ -38,6 +38,8 @@ function execute(src) {
       process.stdout.write(err.message + '\n');
     } else {
       process.stdout.write(filename + '\n');
+      console.log(err.message);
+      console.log(err.stack);
       console.log(err);
       throw err;
     }

@@ -766,6 +766,11 @@ MethodInvocation.autoCast = {
 MethodInvocation.prototype.compileNode = function (opts) {
   var argumentList = this.children[0].compile(opts);
   var vavaTypes = this.children[0].getVavaTypes();
+  // Before we go on, let's see whether there might have been errors earlier in compiling
+  for (var i = 0; i < vavaTypes.length; i++) {
+    if (typeof vavaTypes[i] === 'undefined') return;
+  }
+  // OK, looks legit
   var methodSig = this.name.simple() + '(' + vavaTypes.join(',') + ')';
   // method call with simple name
   if (this.name.isSimple()) {
@@ -773,7 +778,7 @@ MethodInvocation.prototype.compileNode = function (opts) {
     // look for compatible types if no exact match found
     if (!this.vavaType) {
       for (var i = 0; !this.vavaType && i < vavaTypes.length; i++) {
-        for (var j = 0; !this.vavaType && j < MethodInvocation.autoCast[vavaTypes[i]]; j++) {
+        for (var j = 0; !this.vavaType && MethodInvocation.autoCast[vavaTypes[i]] && j < MethodInvocation.autoCast[vavaTypes[i]]; j++) {
           methodSig = this.name.simple() + '(' + vavaTypes.splice(0, i).concat(MethodInvocation.autoCast[vavaTypes[i]][j], vavaTypes.splice(i+1, 0)).join(',') + ')';
           this.vavaType = opts.names[methodSig];
         }
@@ -781,29 +786,31 @@ MethodInvocation.prototype.compileNode = function (opts) {
     }
     // finally found no matching method
     if (!this.vavaType)
-      this.fatalError('non-existent method on ' + this.name.qualified(), this.typeMismatchDescription(this.children[0].getVavaType(), this.vavaType), this.children[0].loc);
+      this.fatalError('non-existent method on ' + this.name.qualified(), this.children[0].loc);
     return utils.indent('this.__self.send("' + methodSig + '", ' + argumentList + ')', opts.indent);
   // method call on qualified name
   } else {
     var resolvedName = utils.objectPath(opts.names, this.name.prefixParts());
     if (resolvedName && (this.vavaType = resolvedName.hasMethod(methodSig))) {
-      // found method, will call later
+      // found method, will return later
     // otherwise look for compatible types
     } else if (resolvedName) {
       for (var i = 0; !this.vavaType && i < vavaTypes.length; i++) {
-        for (var j = 0; !this.vavaType && j < MethodInvocation.autoCast[vavaTypes[i]].length; j++) {
+        for (var j = 0; !this.vavaType && MethodInvocation.autoCast[vavaTypes[i]] && j < MethodInvocation.autoCast[vavaTypes[i]].length; j++) {
           methodSig = this.name.simple() + '(' + vavaTypes.splice(0, i).concat(MethodInvocation.autoCast[vavaTypes[i]][j], vavaTypes.splice(i+1, 0)).join(',') + ')';
-          console.log(methodSig)
           this.vavaType = resolvedName.hasMethod(methodSig);
         }
       }
+    // I am really sorry :'(
+    } else if (opts.names[this.name.prefix()] === 'String') {
+      if (this.name.simple() === 'length') this.vavaType = 'int';
     }
   }
 
   if (this.vavaType) {
     return utils.indent('this.' + this.name.prefix() + '.send("' + methodSig + '", ' + argumentList + ')', opts.indent);
   }
-  
+
   this.fatalError('non-existent method on ' + this.name.qualified(), this.typeMismatchDescription(this.children[0].getVavaType(), this.vavaType), this.children[0].loc);
 };
 

@@ -11,6 +11,12 @@ exports.System = {
           'String',
           [],
           function () { var max = 9, min = 0; return this.__env.StringValue.intern(String(Math.floor(Math.random() * (max - min + 1)) + min)); }
+        ),
+        new vava.env.VavaMethod(
+          'readln',
+          'String',
+          [{identifier: 's', vavaType: 'String'}],
+          function () { var max = 9, min = 0; return this.__env.StringValue.intern(String(Math.floor(Math.random() * (max - min + 1)) + min)); }
         )
       ]
     },

@@ -282,6 +282,52 @@ public class Schleife {
   }
 }
         </textarea>
+        <textarea data-filename="Fakultaet.java" class="hobbesecutable">
+/***************************  Fakultaet.java  *********************************/
+
+import AlgoTools.IO;
+
+/**  Berechnung der Fakultaet mit for-, while- und do-while-Schleifen
+  *
+  *  n! :=   1 fuer n=0, 
+  *          1*2*3* ... *n sonst
+  *
+  */  
+
+public class Fakultaet {
+
+  public static void main (String [] argv) {
+
+    int i, n, fakultaet;                   // 3 Integer-Variablen
+     
+    n = IO.readInt("Bitte Zahl: ");        // fordere Zahl an 
+ 
+
+    fakultaet = 1;                         // berechne n! mit for-Schleife
+    for (i = 1; i <= n; i++)              
+        fakultaet = fakultaet * i;
+    IO.println(n + " ! = " + fakultaet);
+
+
+    fakultaet = 1;                         // berechne n! mit while-Schleife
+    i = 1;
+    while (i <= n) { 
+        fakultaet = fakultaet * i;
+        i++;
+    }
+    IO.println(n + " ! = " + fakultaet);
+
+
+    fakultaet = 1;                         // berechne n! mit do-while-Schleife
+    i = 1;
+    do { 
+        fakultaet = fakultaet * i;
+        i++;
+    } while (i <= n);
+    IO.println(n + " ! = " + fakultaet);
+  }
+}
+        </textarea>
       </form>
     </div>
     <div id="output">

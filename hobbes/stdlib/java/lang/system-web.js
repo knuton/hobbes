@@ -38,6 +38,14 @@ var System = exports.System = function (elem) {
             function () {
               return this.__env.StringValue.intern(prompt());
             }
+          ),
+          new vava.env.VavaMethod(
+            'readln',
+            'String',
+            [{identifier: 's', vavaType: 'String'}],
+            function () {
+              return this.__env.StringValue.intern(prompt(this.s.get()));
+            }
           )
         ]
       },
