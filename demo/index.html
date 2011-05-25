@@ -32,7 +32,8 @@
         });
         fileSelector.change(function () {
           $(current.getWrapperElement()).removeClass("current").hide();
-          $((current = filenameToElem[$(this).val()]).getWrapperElement()).addClass("current").show().focus();
+          $((current = filenameToElem[$(this).val()]).getWrapperElement()).addClass("current").show();
+          current.refresh();
         });
         // add selector to toolbar
         $('#examples .toolbar').prepend(fileSelectorContainer.prepend(fileSelector));
