@@ -1199,7 +1199,7 @@ var hobbes = function (exports) {
       };
       // copy constructor members
       for (var prop in parent) {
-        if (parent.hasOwnProperty(prop)) {
+        if (parent.hasOwnProperty(prop) && prop != 'prototype') {
           this[prop] = parent[prop];
         }
       }
@@ -6341,7 +6341,6 @@ var hobbes = function (exports) {
   
     // Invoke `main`
     if (vavaClass && vavaClass.hasMethod('main(String[])')) {
-      // TODO replace args for main with yet-to-come array
       vavaClass.send('main(String[])', [{getVavaType: function () { return true; }, to: function () {return this;}}]);
     } else {
       throw {type: 'NoSuchMethodError', message: 'Exception in thread "main" java.lang.NoSuchMethodError: main'};
@@ -6435,23 +6434,26 @@ var hobbes = function (exports) {
   
     var sources = getElementsByClass('hobbesecutable');
   
+    ioElem = typeof ioElem === 'string' ? document.getElementById(ioElem) : ioElem;
+  
     for (var i = 0; i < sources.length; i++) {
       var sourceElem = sources[i];
-      var sourceElemStyle = window.getComputedStyle(sourceElem);
+      var sourceElemStyle = window.getComputedStyle(sourceElem, null);
       var outerContainer = sourceElem.parentNode;
       var sourceContainer = document.createElement('div');
       sourceContainer.setAttribute('style', 'position: relative; padding: 0; margin: auto;');
       var linkContainer = document.createElement('p');
       linkContainer.setAttribute('style', 'width:' + sourceElemStyle.width + '; position: absolute; top: 3px; right: 3px; text-align:right;');
       var execButton = document.createElement('a');
-      execButton.innerText = 'Run';
+      execButton.innerHTML = 'Run';
       execButton.setAttribute('href', '#run');
       execButton.setAttribute('class', 'runner');
       linkContainer.appendChild(execButton);
+      outerContainer.replaceChild(sourceContainer, sourceElem);
       sourceContainer.appendChild(sourceElem);
       sourceContainer.appendChild(linkContainer);
-      outerContainer.appendChild(sourceContainer);
       execButton.addEventListener('click', function (e) {
+        e.preventDefault();
         e.cancelBubble = true;
         if (e.stopPropagation) {
           e.stopPropagation();
@@ -6459,7 +6461,7 @@ var hobbes = function (exports) {
           e.cancelBubble = true;
         } 
         exports.execute(sourceElem, ioElem);
-      });
+      }, null);
     }
   
   };

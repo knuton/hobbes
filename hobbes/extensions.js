@@ -30,7 +30,7 @@ if (!Function.prototype.inherits) {
     };
     // copy constructor members
     for (var prop in parent) {
-      if (parent.hasOwnProperty(prop)) {
+      if (parent.hasOwnProperty(prop) && prop != 'prototype') {
         this[prop] = parent[prop];
       }
     }

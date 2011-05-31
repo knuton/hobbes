@@ -1,4 +1,4 @@
-/* description: Parses end executes Vava. */
+/* description: Parses Vava and constructs AST. */
 
 /* lexical grammar */
 %lex

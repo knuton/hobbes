@@ -25,7 +25,6 @@ exports.run = function (vavaSrc, options) {
 
   // Invoke `main`
   if (vavaClass && vavaClass.hasMethod('main(String[])')) {
-    // TODO replace args for main with yet-to-come array
     vavaClass.send('main(String[])', [{getVavaType: function () { return true; }, to: function () {return this;}}]);
   } else {
     throw {type: 'NoSuchMethodError', message: 'Exception in thread "main" java.lang.NoSuchMethodError: main'};

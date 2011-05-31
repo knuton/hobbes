@@ -2,23 +2,26 @@ exports.setup = function (ioElem) {
 
   var sources = getElementsByClass('hobbesecutable');
 
+  ioElem = typeof ioElem === 'string' ? document.getElementById(ioElem) : ioElem;
+
   for (var i = 0; i < sources.length; i++) {
     var sourceElem = sources[i];
-    var sourceElemStyle = window.getComputedStyle(sourceElem);
+    var sourceElemStyle = window.getComputedStyle(sourceElem, null);
     var outerContainer = sourceElem.parentNode;
     var sourceContainer = document.createElement('div');
     sourceContainer.setAttribute('style', 'position: relative; padding: 0; margin: auto;');
     var linkContainer = document.createElement('p');
     linkContainer.setAttribute('style', 'width:' + sourceElemStyle.width + '; position: absolute; top: 3px; right: 3px; text-align:right;');
     var execButton = document.createElement('a');
-    execButton.innerText = 'Run';
+    execButton.innerHTML = 'Run';
     execButton.setAttribute('href', '#run');
     execButton.setAttribute('class', 'runner');
     linkContainer.appendChild(execButton);
+    outerContainer.replaceChild(sourceContainer, sourceElem);
     sourceContainer.appendChild(sourceElem);
     sourceContainer.appendChild(linkContainer);
-    outerContainer.appendChild(sourceContainer);
     execButton.addEventListener('click', function (e) {
+      e.preventDefault();
       e.cancelBubble = true;
       if (e.stopPropagation) {
         e.stopPropagation();
@@ -26,7 +29,7 @@ exports.setup = function (ioElem) {
         e.cancelBubble = true;
       } 
       exports.execute(sourceElem, ioElem);
-    });
+    }, null);
   }
 
 };
