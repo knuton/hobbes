@@ -1506,6 +1506,17 @@ var hobbes = function (exports) {
     };
     
     /**
+     * Turns an array of strings into a chain of key access operations, e.g.
+     *
+     *   ['a', 'b', 'c'] --> ["a"]["b"]["c"]
+     */
+    var keyAccessChain = exports.keyAccessChain = function (arr) {
+      return arr.map(function (str) {
+        return '[' + string(str) + ']';
+      }).join('');
+    }
+    
+    /**
      * Builds an object literal string from an actual object using JSON.stringify.
      *
      * @param object The object to stringify
@@ -2408,6 +2419,7 @@ var hobbes = function (exports) {
       this.setScope(scope);
       this.addFields(vavaClassDefinition.fields);
       this.scope.__class = this.scope.__self = this;
+      this.vavaMethods = [];
       this.addMethods(vavaClassDefinition.methods);
       
       setModifiers(this, vavaClassDefinition.vavaModifiers);
@@ -2425,8 +2437,7 @@ var hobbes = function (exports) {
     };
     
     VavaClass.prototype.addMethods = function (methodDefinitions) {
-      if (!methodDefinitions || !methodDefinitions.length || this.vavaMethods) return;
-      this.vavaMethods = [];
+      if (!methodDefinitions || !methodDefinitions.length || this.vavaMethods.length > 0) return;
       for (var i = 0; i < methodDefinitions.length; i++) {
         var methodDef = methodDefinitions[i];
         this.vavaMethods[methodDef.signature()] = methodDef;
@@ -4475,7 +4486,7 @@ var hobbes = function (exports) {
     
     VariableDeclarator.prototype.compileNode = function (opts) {
       var result = builder.keyValue(
-        this.vavaIdentifier,
+        builder.string(this.vavaIdentifier),
         builder.constructorCall(
           'this.__env.TypedVariable',
           [builder.string(opts.vavaType), builder.string(this.vavaIdentifier), this.vavaInitializer && this.vavaInitializer.compile(opts)].filter(
@@ -4754,7 +4765,7 @@ var hobbes = function (exports) {
       }
     
       if (this.vavaType) {
-        return utils.indent('this.' + this.name.prefix() + '.send("' + methodSig + '", ' + argumentList + ')', opts.indent);
+        return utils.indent('this' + builder.keyAccessChain(this.name.prefixParts()) + '.send("' + methodSig + '", ' + argumentList + ')', opts.indent);
       }
     
       opts.addError(
@@ -4932,8 +4943,8 @@ var hobbes = function (exports) {
      *   [noGet] If truthy, don't call #get
      */
     Name.prototype.compileNode = function (opts) {
-      var result = 'this.' + this.name + (opts.noGet ? '' : '.get()');
-      // TODO Too simplified
+      var keyAccessChain = builder.keyAccessChain(this.parts());
+      var result = 'this' + keyAccessChain + (opts.noGet ? '' : '.get()');
       this.vavaType = opts.names[this.simple()];
       return result;
     };

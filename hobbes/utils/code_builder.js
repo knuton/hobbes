@@ -117,6 +117,17 @@ var joinToObject = exports.joinToObject = function () {
 };
 
 /**
+ * Turns an array of strings into a chain of key access operations, e.g.
+ *
+ *   ['a', 'b', 'c'] --> ["a"]["b"]["c"]
+ */
+var keyAccessChain = exports.keyAccessChain = function (arr) {
+  return arr.map(function (str) {
+    return '[' + string(str) + ']';
+  }).join('');
+}
+
+/**
  * Builds an object literal string from an actual object using JSON.stringify.
  *
  * @param object The object to stringify

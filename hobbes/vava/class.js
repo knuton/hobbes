@@ -6,6 +6,7 @@ var VavaClass = exports.VavaClass = function (vavaClassName, vavaClassDefinition
   this.setScope(scope);
   this.addFields(vavaClassDefinition.fields);
   this.scope.__class = this.scope.__self = this;
+  this.vavaMethods = [];
   this.addMethods(vavaClassDefinition.methods);
   
   setModifiers(this, vavaClassDefinition.vavaModifiers);
@@ -23,8 +24,7 @@ VavaClass.prototype.addFields = function (fieldDefinitions) {
 };
 
 VavaClass.prototype.addMethods = function (methodDefinitions) {
-  if (!methodDefinitions || !methodDefinitions.length || this.vavaMethods) return;
-  this.vavaMethods = [];
+  if (!methodDefinitions || !methodDefinitions.length || this.vavaMethods.length > 0) return;
   for (var i = 0; i < methodDefinitions.length; i++) {
     var methodDef = methodDefinitions[i];
     this.vavaMethods[methodDef.signature()] = methodDef;

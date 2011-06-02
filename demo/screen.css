@@ -9,11 +9,14 @@ a.runner {
   text-indent: 100000px;
   overflow: hidden;
   background-color: #FAFAEB;
-  background-image: url('images/gears.gif');
+  background-image: url('images/gears-active.gif');
   background-repeat: no-repeat;
   background-position: 2px 2px;
 }
-a.runner:hover {
+a.runner:link {
+  background-image: url('images/gears.gif');
+}
+a.runner:hover, a.runner:focus, a.runner:active {
   background-image: url('images/gears-active.gif');
 }
 #examples, #output {

@@ -530,7 +530,7 @@ VariableDeclarator.prototype.compile = function (opts) {
 
 VariableDeclarator.prototype.compileNode = function (opts) {
   var result = builder.keyValue(
-    this.vavaIdentifier,
+    builder.string(this.vavaIdentifier),
     builder.constructorCall(
       'this.__env.TypedVariable',
       [builder.string(opts.vavaType), builder.string(this.vavaIdentifier), this.vavaInitializer && this.vavaInitializer.compile(opts)].filter(
@@ -809,7 +809,7 @@ MethodInvocation.prototype.compileNode = function (opts) {
   }
 
   if (this.vavaType) {
-    return utils.indent('this.' + this.name.prefix() + '.send("' + methodSig + '", ' + argumentList + ')', opts.indent);
+    return utils.indent('this' + builder.keyAccessChain(this.name.prefixParts()) + '.send("' + methodSig + '", ' + argumentList + ')', opts.indent);
   }
 
   opts.addError(
@@ -987,8 +987,8 @@ Name.prototype.prefixParts = function () {
  *   [noGet] If truthy, don't call #get
  */
 Name.prototype.compileNode = function (opts) {
-  var result = 'this.' + this.name + (opts.noGet ? '' : '.get()');
-  // TODO Too simplified
+  var keyAccessChain = builder.keyAccessChain(this.parts());
+  var result = 'this' + keyAccessChain + (opts.noGet ? '' : '.get()');
   this.vavaType = opts.names[this.simple()];
   return result;
 };
