@@ -804,7 +804,8 @@ MethodInvocation.prototype.compileNode = function (opts) {
     // I am really sorry :'(
     } else if (opts.names[this.name.prefix()] === 'String') {
       if (this.name.simple() === 'length') this.vavaType = 'int';
-      return utils.indent('this.' + this.name.prefix() + '.get().send("' + methodSig + '", ' + argumentList + ')', opts.indent);
+      if (this.name.simple() === 'charAt') this.vavaType = 'char';
+      return utils.indent('this' + builder.keyAccessChain(this.name.prefixParts()) + '.get().send("' + methodSig + '", ' + argumentList + ')', opts.indent);
     }
   }
 
