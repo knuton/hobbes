@@ -1435,10 +1435,6 @@ var Addition = exports.Addition = function (numA, numB) {
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   this.operator = '+';
-  // TODO Compile-time type checking
-  if (!(numA) || !(numB)) {
-    throw new TypeError('Expected two integer numbers for addition.');
-  }
   this.appendChild(numA);
   this.appendChild(numB);
 };
@@ -1478,10 +1474,6 @@ var Subtraction = exports.Subtraction = function (numA, numB) {
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   this.operator = '-';
-  // TODO Compile-time type checking
-  if (!(numA) || !(numB)) {
-    throw new TypeError('Expected two integer numbers for subtraction.');
-  }
   this.appendChild(numA);
   this.appendChild(numB);
 };
@@ -1503,10 +1495,6 @@ var Multiplication = exports.Multiplication = function (numA, numB) {
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   this.operator = '*';
-  // TODO Compile-time type checking
-  if (!(numA) || !(numB)) {
-    throw new TypeError('Expected two integer numbers for multiplication.');
-  }
   this.appendChild(numA);
   this.appendChild(numB);
 };
@@ -1528,10 +1516,6 @@ var Division = exports.Division = function (numA, numB) {
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   this.operator = '/';
-  // TODO Compile-time type checking
-  if (!(numA) || !(numB)) {
-    throw new TypeError('Expected two integer numbers for division.');
-  }
   this.appendChild(numA);
   this.appendChild(numB);
 };
@@ -1554,10 +1538,6 @@ var Modulo = exports.Modulo = function (numA, numB) {
   this.setLoc(arguments[arguments.length-1]);
   this.children = [];
   this.operator = '%';
-  // TODO Compile-time type checking
-  if (!(numA) || !(numB)) {
-    throw new TypeError('Expected two integer numbers for modulo.');
-  }
   this.appendChild(numA);
   this.appendChild(numB);
 };
