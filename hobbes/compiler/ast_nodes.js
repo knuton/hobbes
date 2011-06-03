@@ -1184,8 +1184,7 @@ StringLiteral.prototype.getSignature = function () {
 };
 
 StringLiteral.prototype.compileNode = function (opts) {
-  console.log(this.value);
-  return 'this.__env.StringValue.intern("' + this.value + '")';
+  return 'this.__env.StringValue.intern(' + this.value + ')';
 };
 
 //// Operations

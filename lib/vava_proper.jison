@@ -114,7 +114,7 @@ BSL               "\\".
 ({Ds}"."{Ds}?{EXPO}?[fFdD]?|"."{Ds}{EXPO}?[fFdD]?|{Ds}{EXPO}[fFdD]?|{Ds}{EXPO}?[fFdD])/([^\w]|$)   {return 'FLOATING_POINT_LITERAL';}
 {Ds}[lL]?\b           {return 'DECIMAL_INTEGER_LITERAL';}
 "\"\""                {return 'STRING_LITERAL';}
-"\""([^"]|BSL)*"\""   {return 'STRING_LITERAL';}
+"\""([^"]|{BSL})*"\"" {return 'STRING_LITERAL';}
 "'"(.|{BSL})"'"       {return 'CHAR_LITERAL';}
 
 "."                   {return 'SEPARATOR_DOT';}
