@@ -539,7 +539,6 @@ VariableDeclarator.prototype.compileNode = function (opts) {
       false
     )
   );
-  // TODO error on wrong type
   this.vavaType = opts.vavaType;
   this.compileTimeCheck(opts);
   opts.names.__addName(this.vavaIdentifier, this.vavaType);
@@ -681,7 +680,6 @@ MethodDeclaration.prototype.getSignature = function () {
  * @param vavaIdentifier The formal parameter's identifier
  */
 var FormalParameter = exports.FormalParameter = function (vavaType, vavaIdentifier) {
-  // TODO Type should be ASTNode later, I suppose
   if (typeof vavaIdentifier !== 'string') {
     throw new TypeError('Expected Vava identifier to be a string.');
   }
@@ -1185,9 +1183,9 @@ StringLiteral.prototype.getSignature = function () {
   return {value : this.value};
 };
 
-// TODO Interned strings
 StringLiteral.prototype.compileNode = function (opts) {
-  return builder.constructorCall('this.__env.StringValue', [this.value], false);
+  console.log(this.value);
+  return 'this.__env.StringValue.intern("' + this.value + '")';
 };
 
 //// Operations

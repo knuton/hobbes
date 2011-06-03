@@ -64,8 +64,6 @@ var TypeChecking = exports.TypeChecking = new utils.Mixin('TypeChecking', {
   /**
    * Checks for compatibility of own and provided type.
    *
-   * TODO Autocasting for natives
-   * TODO Hierarchical compatibility for reference types
    */
   isAssignmentCompatible : function (typedValue) {
     if (this.isPrimitive()) {
@@ -125,7 +123,6 @@ TypedVariable.prototype.set = function (typedValue) {
   if (this.isAssignmentCompatible(typedValue)) {
     this._setAdjusted(typedValue);
   } else {
-    // TODO How to handle Vava errors?
     throw new Error("Vava Type error: Expected " + this.getVavaType() + ", but was " + typedValue.getVavaType() + ".");
   }
 
@@ -478,7 +475,6 @@ IntegralValue.prototype.divide = function (other) {
     var remainder = thisRaw % otherRaw;
     return (other.isVavaType('long') || this.isVavaType('long') ? LongValue : IntValue).intern((thisRaw - remainder) / otherRaw);
   } else {
-    // TODO What about negative/positive zero/infinity?
     return other.constructor.intern(this.get() / other.get());
   }
 };
