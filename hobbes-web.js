@@ -1689,8 +1689,6 @@ var hobbes = function (exports) {
       /**
        * Checks for compatibility of own and provided type.
        *
-       * TODO Autocasting for natives
-       * TODO Hierarchical compatibility for reference types
        */
       isAssignmentCompatible : function (typedValue) {
         if (this.isPrimitive()) {
@@ -1750,7 +1748,6 @@ var hobbes = function (exports) {
       if (this.isAssignmentCompatible(typedValue)) {
         this._setAdjusted(typedValue);
       } else {
-        // TODO How to handle Vava errors?
         throw new Error("Vava Type error: Expected " + this.getVavaType() + ", but was " + typedValue.getVavaType() + ".");
       }
     
@@ -2103,7 +2100,6 @@ var hobbes = function (exports) {
         var remainder = thisRaw % otherRaw;
         return (other.isVavaType('long') || this.isVavaType('long') ? LongValue : IntValue).intern((thisRaw - remainder) / otherRaw);
       } else {
-        // TODO What about negative/positive zero/infinity?
         return other.constructor.intern(this.get() / other.get());
       }
     };
@@ -3927,7 +3923,7 @@ var hobbes = function (exports) {
     break;
     }
     };
-    lexer.rules = [/^\/\/.*/,/^\/\*/,/^\*\//,/^./,/^\s+/,/^\{/,/^\}/,/^\(/,/^\)/,/^\[/,/^\]/,/^,/,/^\?/,/^:/,/^;/,/^public\b/,/^private\b/,/^protected\b/,/^static\b/,/^final\b/,/^void\b/,/^package\b/,/^import\b/,/^if\b/,/^else\b/,/^while\b/,/^do\b/,/^for\b/,/^break\b/,/^switch\b/,/^case\b/,/^default\b/,/^true\b/,/^false\b/,/^class\b/,/^return\b/,/^boolean\b/,/^byte\b/,/^short\b/,/^int\b/,/^long\b/,/^char\b/,/^float\b/,/^double\b/,/^String\b/,/^<</,/^>>>/,/^>>/,/^<=/,/^</,/^==/,/^>=/,/^>/,/^!=/,/^instanceof\b/,/^\|\|/,/^\|/,/^\^/,/^&&/,/^&/,/^~/,/^!/,/^=/,/^\+=/,/^-=/,/^\*=/,/^\/=/,/^%=/,/^&=/,/^\^=/,/^\|=/,/^<<=/,/^>>=/,/^>>>=/,/^\+\+/,/^\+/,/^--/,/^-/,/^\*/,/^\//,/^%/,/^null\b/,/^[a-zA-Z][a-zA-Z0-9_]*/,/^((0|[1-9][0-9]*)\.(0|[1-9][0-9]*)?([Ee][+-]?(0|[1-9][0-9]*))?[fFdD]?|\.(0|[1-9][0-9]*)([Ee][+-]?(0|[1-9][0-9]*))?[fFdD]?|(0|[1-9][0-9]*)([Ee][+-]?(0|[1-9][0-9]*))[fFdD]?|(0|[1-9][0-9]*)([Ee][+-]?(0|[1-9][0-9]*))?[fFdD])(?=([^\w]|$))/,/^(0|[1-9][0-9]*)[lL]?\b\b/,/^""/,/^".*"/,/^'(.|\\.)'/,/^\./,/^$/,/^./];
+    lexer.rules = [/^\/\/.*/,/^\/\*/,/^\*\//,/^./,/^\s+/,/^\{/,/^\}/,/^\(/,/^\)/,/^\[/,/^\]/,/^,/,/^\?/,/^:/,/^;/,/^public\b/,/^private\b/,/^protected\b/,/^static\b/,/^final\b/,/^void\b/,/^package\b/,/^import\b/,/^if\b/,/^else\b/,/^while\b/,/^do\b/,/^for\b/,/^break\b/,/^switch\b/,/^case\b/,/^default\b/,/^true\b/,/^false\b/,/^class\b/,/^return\b/,/^boolean\b/,/^byte\b/,/^short\b/,/^int\b/,/^long\b/,/^char\b/,/^float\b/,/^double\b/,/^String\b/,/^<</,/^>>>/,/^>>/,/^<=/,/^</,/^==/,/^>=/,/^>/,/^!=/,/^instanceof\b/,/^\|\|/,/^\|/,/^\^/,/^&&/,/^&/,/^~/,/^!/,/^=/,/^\+=/,/^-=/,/^\*=/,/^\/=/,/^%=/,/^&=/,/^\^=/,/^\|=/,/^<<=/,/^>>=/,/^>>>=/,/^\+\+/,/^\+/,/^--/,/^-/,/^\*/,/^\//,/^%/,/^null\b/,/^[a-zA-Z][a-zA-Z0-9_]*/,/^((0|[1-9][0-9]*)\.(0|[1-9][0-9]*)?([Ee][+-]?(0|[1-9][0-9]*))?[fFdD]?|\.(0|[1-9][0-9]*)([Ee][+-]?(0|[1-9][0-9]*))?[fFdD]?|(0|[1-9][0-9]*)([Ee][+-]?(0|[1-9][0-9]*))[fFdD]?|(0|[1-9][0-9]*)([Ee][+-]?(0|[1-9][0-9]*))?[fFdD])(?=([^\w]|$))/,/^(0|[1-9][0-9]*)[lL]?\b\b/,/^""/,/^"([^"]|\\.)*"/,/^'(.|\\.)'/,/^\./,/^$/,/^./];
     lexer.conditions = {"comment":{"rules":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90],"inclusive":true},"INITIAL":{"rules":[0,1,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90],"inclusive":true}};return lexer;})()
     parser.lexer = lexer;
     return parser;
@@ -4495,7 +4491,6 @@ var hobbes = function (exports) {
           false
         )
       );
-      // TODO error on wrong type
       this.vavaType = opts.vavaType;
       this.compileTimeCheck(opts);
       opts.names.__addName(this.vavaIdentifier, this.vavaType);
@@ -4637,7 +4632,6 @@ var hobbes = function (exports) {
      * @param vavaIdentifier The formal parameter's identifier
      */
     var FormalParameter = exports.FormalParameter = function (vavaType, vavaIdentifier) {
-      // TODO Type should be ASTNode later, I suppose
       if (typeof vavaIdentifier !== 'string') {
         throw new TypeError('Expected Vava identifier to be a string.');
       }
@@ -5141,9 +5135,8 @@ var hobbes = function (exports) {
       return {value : this.value};
     };
     
-    // TODO Interned strings
     StringLiteral.prototype.compileNode = function (opts) {
-      return builder.constructorCall('this.__env.StringValue', [this.value], false);
+      return 'this.__env.StringValue.intern(' + this.value + ')';
     };
     
     //// Operations
@@ -5394,10 +5387,6 @@ var hobbes = function (exports) {
       this.setLoc(arguments[arguments.length-1]);
       this.children = [];
       this.operator = '+';
-      // TODO Compile-time type checking
-      if (!(numA) || !(numB)) {
-        throw new TypeError('Expected two integer numbers for addition.');
-      }
       this.appendChild(numA);
       this.appendChild(numB);
     };
@@ -5437,10 +5426,6 @@ var hobbes = function (exports) {
       this.setLoc(arguments[arguments.length-1]);
       this.children = [];
       this.operator = '-';
-      // TODO Compile-time type checking
-      if (!(numA) || !(numB)) {
-        throw new TypeError('Expected two integer numbers for subtraction.');
-      }
       this.appendChild(numA);
       this.appendChild(numB);
     };
@@ -5462,10 +5447,6 @@ var hobbes = function (exports) {
       this.setLoc(arguments[arguments.length-1]);
       this.children = [];
       this.operator = '*';
-      // TODO Compile-time type checking
-      if (!(numA) || !(numB)) {
-        throw new TypeError('Expected two integer numbers for multiplication.');
-      }
       this.appendChild(numA);
       this.appendChild(numB);
     };
@@ -5487,10 +5468,6 @@ var hobbes = function (exports) {
       this.setLoc(arguments[arguments.length-1]);
       this.children = [];
       this.operator = '/';
-      // TODO Compile-time type checking
-      if (!(numA) || !(numB)) {
-        throw new TypeError('Expected two integer numbers for division.');
-      }
       this.appendChild(numA);
       this.appendChild(numB);
     };
@@ -5513,10 +5490,6 @@ var hobbes = function (exports) {
       this.setLoc(arguments[arguments.length-1]);
       this.children = [];
       this.operator = '%';
-      // TODO Compile-time type checking
-      if (!(numA) || !(numB)) {
-        throw new TypeError('Expected two integer numbers for modulo.');
-      }
       this.appendChild(numA);
       this.appendChild(numB);
     };
@@ -6489,6 +6462,17 @@ var hobbes = function (exports) {
     if (!ioElem) {
       ioElem = srcOrElem;
     }
+  
+    var log = function (msg) {
+      if (ioElem && typeof ioElem.innerHTML !== 'undefined') {
+        ioElem.innerHTML += msg;
+      } else if (console && console.log) {
+        console.log(msg);
+      } else {
+        alert(msg);
+      }
+    }
+  
     //// Shadow parts that need to be customized
     // Need to shadow stdlib
     var F = function () {};
@@ -6505,7 +6489,20 @@ var hobbes = function (exports) {
     java.lang = lang;
     stdlib.java = java;
     // Call compiler with modified stdlib
-    hobbes.compiler.run(source, {stdlib: stdlib});
+    try {
+      hobbes.compiler.run(source, {stdlib: stdlib});
+    } catch (err) {
+      if (err.type === 'ParseError' || err.type === 'CompileTimeError') {
+        for (var i = 0; i < err.length; i++) {
+          log(err[i]);
+        }
+        log(err.summary + '\n');
+      } else if (err.type === 'NoSuchMethodError') {
+        log(err.message + '\n');
+      } else {
+        throw err;
+      }
+    }
   
   };
   

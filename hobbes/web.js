@@ -45,6 +45,17 @@ exports.execute = function (srcOrElem, ioElem) {
   if (!ioElem) {
     ioElem = srcOrElem;
   }
+
+  var log = function (msg) {
+    if (ioElem && typeof ioElem.innerHTML !== 'undefined') {
+      ioElem.innerHTML += msg;
+    } else if (console && console.log) {
+      console.log(msg);
+    } else {
+      alert(msg);
+    }
+  }
+
   //// Shadow parts that need to be customized
   // Need to shadow stdlib
   var F = function () {};
@@ -61,7 +72,20 @@ exports.execute = function (srcOrElem, ioElem) {
   java.lang = lang;
   stdlib.java = java;
   // Call compiler with modified stdlib
-  hobbes.compiler.run(source, {stdlib: stdlib});
+  try {
+    hobbes.compiler.run(source, {stdlib: stdlib});
+  } catch (err) {
+    if (err.type === 'ParseError' || err.type === 'CompileTimeError') {
+      for (var i = 0; i < err.length; i++) {
+        log(err[i]);
+      }
+      log(err.summary + '\n');
+    } else if (err.type === 'NoSuchMethodError') {
+      log(err.message + '\n');
+    } else {
+      throw err;
+    }
+  }
 
 };
 
