@@ -1,10 +1,4 @@
 /**
- * IDEA
- *
- * Access control is implemented through a chain of scopes, the outermost being
- *
-
-/**
  * Names are used to refer to entities declared in a program. A declared entity
  * is a package, class type, interface type, member (class, interface, field,
  * or method) of a reference type, parameter (to a method, constructor, or
