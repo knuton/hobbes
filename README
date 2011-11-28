@@ -1,4 +1,32 @@
-About hobbes
-============
+hobbes
+======
 
-hobbes is a Java interpreter written in JavaScript.
+hobbes is a Java interpreter written in JavaScript. It can be run using
+node.js (<http://nodejs.org/>) and built into a single JavaScript file 
+for use in modern browsers.
+
+hobbes can run a subset of Java programs using only static methods and
+native types.
+
+Significant Files
+-----------------
+
+bin/........................... Contains executable to run with node.js
+demo/................... Contains a simple use case for the web version
+hobbes/...................... Contains the actual hobbes implementation
+lib/....... Contains Rake tasks and hobbes' lex and yacc specifications
+test/......................... Contains both unit and integration tests
+README....................................................... This file
+hobbes.js........................................... hobbes main module
+
+Dependencies
+------------
+
+Depending on intended use, hobbes requires
+
+  - node.js, for command-line execution,
+  - Jison (<http://zaach.github.com/jison/>), for parser generation,
+  - Ruby and Rake, for running tests and building the web version, and
+  - Google Closure Compiler, for minification of the web version.
+
+(c) 2011 Johannes Emerich
